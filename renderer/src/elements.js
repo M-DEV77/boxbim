@@ -75,9 +75,8 @@ function wallParts(w, layers) {
   const len = Math.hypot(x1 - x0, y1 - y0);
   if (len < 1e-6) throw new Error('Parede com comprimento zero.');
   const ux = (x1 - x0) / len, uy = (y1 - y0) / len, nx = -uy, ny = ux;
-  const profiles = wallProfiles(-extendStart, len + extendEnd, base, base + height, openings.map(o => ({
-    a: o.offset - o.width / 2, b: o.offset + o.width / 2, z0: base + o.sill, z1: base + o.sill + o.height,
-  })));
+  const ops = openings.map(o => ({ a: o.offset - o.width / 2, b: o.offset + o.width / 2, z0: base + o.sill, z1: base + o.sill + o.height }));
+  const profiles = w.perfil?.length ? wallOutline(w, base, ops) : wallProfiles(-extendStart, len + extendEnd, base, base + height, ops);
   const dir = new THREE.Vector3(ux, uy, 0), up = new THREE.Vector3(0, 0, 1), nrm = new THREE.Vector3(nx, ny, 0);
   const T = totalThickness(layers);
   let outer = T / 2;
@@ -143,6 +142,36 @@ export function wallProfiles(u0, u1, zb, zt, openings) {
   return out;
 }
 
+/**
+ * Perfil de elevação próprio da parede (wall.perfil): contorno fechado [[u, z], …] com u a partir do início do eixo
+ * (0…L) e z a partir da base — topo inclinado, recortado pelo telhado, oitão… As pontas em u = 0 e u = L acompanham
+ * os prolongamentos (cantos). Vãos: os que tocam a base viram recortes no pé do contorno; os de dentro, furos.
+ */
+export function wallOutline(w, zb, ops) {
+  const L = Math.hypot(w.end[0] - w.start[0], w.end[1] - w.start[1]);
+  const e0 = w.extendStart || 0, e1 = w.extendEnd || 0;
+  const pts = w.perfil.map(([u, z]) => [u <= 1e-6 ? u - e0 : u >= L - 1e-6 ? u + e1 : u, zb + z]);
+  const rect = (a, b, c, d) => [[a, c], [b, c], [b, d], [a, d]];
+  const holes = [];
+  let outer = pts;
+  for (const o of ops) {
+    if (o.z0 > zb + EPS) { holes.push(rect(o.a, o.b, o.z0, o.z1)); continue; }
+    // vão no pé (porta): entra como recorte no trecho da base que o contém
+    const k = outer.findIndex((p, i) => {
+      const q = outer[(i + 1) % outer.length];
+      return Math.abs(p[1] - zb) < EPS && Math.abs(q[1] - zb) < EPS && Math.min(p[0], q[0]) <= o.a + EPS && Math.max(p[0], q[0]) >= o.b - EPS;
+    });
+    if (k < 0) continue;
+    const p = outer[k], q = outer[(k + 1) % outer.length];
+    const notch = p[0] < q[0] ? [[o.a, zb], [o.a, o.z1], [o.b, o.z1], [o.b, zb]] : [[o.b, zb], [o.b, o.z1], [o.a, o.z1], [o.a, zb]];
+    outer = [...outer.slice(0, k + 1), ...notch, ...outer.slice(k + 1)];
+  }
+  return [{ outer, holes }];
+}
+
+/** Altura máxima do perfil próprio (ou a altura da parede). */
+export const wallTop = w => (w.perfil?.length ? Math.max(...w.perfil.map(p => p[1])) : w.height);
+
 /** Laje/piso: camadas empilhadas de cima (cota do topo) para baixo. */
 function slabParts(s, layers) {
   let top = s.elevation;
@@ -200,6 +229,13 @@ export function roofBands(r, thicknesses) {
     bands.push(t > 1e-6 ? [...top, ...bot.reverse()].map(p => [+p[0].toFixed(6), +p[1].toFixed(6)]) : null);
   }
   return bands;
+}
+
+/** Linha de BAIXO do telhado (face inferior da última camada), no plano do perfil: polilinha [[u, v], …]. */
+export function roofUnderside(r, total) {
+  const meanV = arr => arr.reduce((s, p) => s + p[1], 0) / arr.length;
+  const side = meanV(offsetOpen(r.perfil, 0.01)) < meanV(r.perfil) ? 1 : -1;
+  return offsetOpen(r.perfil, side * total);
 }
 
 function roofParts(r, layers) {
@@ -389,7 +425,7 @@ export function rebuildElement(el) {
     b.wall.thickness = totalThickness(ls);
     parts = wallParts(b.wall, ls);
     for (const pt of parts) applyWallMiter(pt.geo, b.wall);
-    Object.assign(b.props, { Espessura: b.wall.thickness, Altura: b.wall.height, Base: b.wall.base,
+    Object.assign(b.props, { Espessura: b.wall.thickness, Altura: +wallTop(b.wall).toFixed(3), Base: b.wall.base, ...(b.wall.perfil?.length ? { Perfil: 'próprio' } : {}),
       Comprimento: +Math.hypot(b.wall.end[0] - b.wall.start[0], b.wall.end[1] - b.wall.start[1]).toFixed(3) }, typeProps(ls, b.typeName));
   } else if (b.slab) {
     const ls = effectiveLayers(b.layers, b.slab.thickness, 'IfcSlab');

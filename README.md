@@ -2,7 +2,7 @@
 
 Modelagem BIM no navegador, em equipe, com chat de IA e ponte com o Revit 2025.
 
-**Versão 2.14.1** · add-in BoxBim Bridge **1.1.0** · histórico completo em [CHANGELOG.md](CHANGELOG.md) · servidor na nuvem (Easypanel): [DEPLOY.md](DEPLOY.md).
+**Versão 2.15.0** · add-in BoxBim Bridge **1.1.0** · histórico completo em [CHANGELOG.md](CHANGELOG.md) · servidor na nuvem (Easypanel): [DEPLOY.md](DEPLOY.md).
 
 ## Rodar
 
@@ -109,6 +109,8 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
 - **Laje** por croqui 2D, linhas 2D, paredes (face externa/interna/eixo) ou face de sólido — contornos internos viram furos.
 - **Copiar** (2D no plano do nível ou 3D sobre os sólidos), com repetições, para outro nível ou por distância.
 - **Telhado**: perfil desenhado num eixo de trabalho vertical, extrudado; tipos de telhado com camadas (telha, ripas, caibros…).
+- **Espelhar** por uma linha (2D ou 3D; vertical, horizontal ou perpendicular ao eixo de trabalho).
+- **Parede até o telhado** (topo pela face de baixo do telhado) e **editar parede** com clique duplo (perfil de elevação).
 - Sem nada selecionado, a aba Propriedades mostra a faixa da vista ativa (plano de corte, profundidade).
 - Modelagem hospedada em nível: base/topo são deslocamentos a partir do nível e paredes/pilares vão até o
   nível de cima. O IFC exporta um `IfcBuildingStorey` por nível e importa os pavimentos como níveis.

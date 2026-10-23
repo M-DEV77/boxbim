@@ -8,7 +8,7 @@
 // "assadas" nas coordenadas do modelo, como a geometria nativa — o resto do app (hospedagem, IFC, plantas) não muda.
 import * as THREE from 'three';
 import { coerceParams } from './params.js';
-import { wallProfiles, rebuildElement, applyWallMiter, roofFrame, roofBands } from '../elements.js';
+import { wallProfiles, wallOutline, rebuildElement, applyWallMiter, roofFrame, roofBands } from '../elements.js';
 import { toast } from '../ui.js';
 
 const len2 = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]);
@@ -47,9 +47,10 @@ export const SYSTEM = {
     },
     extra: (w, b) => {
       const L = len2(w.start, w.end);
-      const perfis = wallProfiles(-(w.extendStart || 0), L + (w.extendEnd || 0), 0, w.height, (w.openings || []).map(o => ({
-        a: o.offset - o.width / 2, b: o.offset + o.width / 2, z0: o.sill, z1: o.sill + o.height,
-      }))).map(pr => ({ contorno: pr.outer, furos: pr.holes }));
+      const ops = (w.openings || []).map(o => ({ a: o.offset - o.width / 2, b: o.offset + o.width / 2, z0: o.sill, z1: o.sill + o.height }));
+      // perfil próprio (topo inclinado, recorte pelo telhado…) ou o retângulo da altura
+      const perfis = (w.perfil?.length ? wallOutline(w, 0, ops) : wallProfiles(-(w.extendStart || 0), L + (w.extendEnd || 0), 0, w.height, ops))
+        .map(pr => ({ contorno: pr.outer, furos: pr.holes }));
       return { camadas: camadas(b.layers), perfis, inicio: -(w.extendStart || 0), fim: L + (w.extendEnd || 0) };
     },
     frame: w => axisFrame(w.start, w.end, w.base),

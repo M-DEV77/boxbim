@@ -627,3 +627,14 @@ table.budget tr.muted td { color: var(--muted); }
 .seg-btns button:first-child { border-radius: 5px 0 0 5px; margin-left: 0; }
 .seg-btns button:last-child { border-radius: 0 5px 5px 0; }
 .seg-btns button.on { background: var(--green); border-color: var(--green); color: #fff; }
+
+/* editor da parede (perfil de elevação) */
+.wall-edit .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
+.wall-edit .grid2 label { display: flex; flex-direction: column; gap: 2px; font-size: 12px; }
+.wall-profile { background: #11161b; border: 1px solid var(--line); border-radius: 6px; margin: 6px 0; }
+.wall-profile svg { display: block; touch-action: none; }
+.wp-base { stroke: #46505f; stroke-dasharray: 4 3; }
+.wp-outline { fill: rgba(196, 160, 90, .25); stroke: #d9b45a; stroke-width: 2; }
+.wp-opening { fill: #11161b; stroke: #7f8c99; stroke-dasharray: 3 2; }
+.wp-pt { fill: #2f9bff; stroke: #fff; stroke-width: 1.5; cursor: move; }
+.wp-pt:hover, .wp-pt.on { fill: #ff9f1a; }

@@ -6,12 +6,30 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.14.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.15.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.15.0] — 2026-10-23 · Espelhar, parede até o telhado e editor de parede
+
+### Adicionado
+- **Espelhar** (Modificar): espelha a seleção por uma **linha** — dois cliques (2D no plano do nível ou 3D sobre os
+  sólidos) ou "Pegar linha" (uma linha 2D ou o eixo de uma parede). Plano do espelho: **vertical** (planta),
+  **horizontal** (de cabeça para baixo) ou **perpendicular ao eixo de trabalho ativo** (fachada). "Manter o original"
+  espelha cópias. Paredes trocam início/fim (a face externa fica do lado espelhado) e levam portas/janelas; linhas,
+  vigas e o resto (objetos, lajes, telhados, sólidos) também espelham.
+- **Parede até o telhado** (Modificar, e no painel da parede): o topo das paredes selecionadas passa a seguir a
+  **face de baixo do telhado** acima delas — estende as baixas e recorta as altas; nas empenas, vira oitão. Pelas duas
+  faces da parede, para o telhado não entrar nela; trechos sem telhado mantêm a altura.
+- **Editar parede** (clique duplo na parede, ou "Editar parede e perfil…" no painel): nome, tipo, comprimento, base,
+  altura e o **perfil de elevação** num editor 2D — arrastar vértices (Shift alinha), clique duplo numa aresta
+  acrescenta, botão direito/Delete tira; prontos: Retângulo, Oitão, Inclinado e "⌂ Até o telhado"; portas e janelas
+  aparecem no desenho.
+- **Perfil próprio de parede** (`wall.perfil`): contorno de elevação qualquer, com os vãos (portas recortam o pé,
+  janelas viram furos), cantos em meia-esquadria e junções em T; vale também no objeto Parede (`p.perfis`).
 
 ## [2.14.1] — 2026-10-23 · Pronto para VPS (Docker / Easypanel)
 
