@@ -9,7 +9,7 @@ O Easypanel puxa o código de um repositório Git. Crie um repositório **privad
 
 ```bash
 git remote add origin https://github.com/<você>/boxbim.git
-git push -u origin master
+git push -u origin main
 ```
 
 ## 2. App no Easypanel
