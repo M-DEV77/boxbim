@@ -1,0 +1,62 @@
+# BoxBim numa VPS com Easypanel
+
+O BoxBim roda como um app Docker (o `Dockerfile` está na raiz). Os dados — banco SQLite, objetos, tipos, memórias
+da IA e a chave que cifra as chaves de API — ficam na pasta `/data`, que precisa ser um **volume** (senão somem a
+cada atualização).
+
+## 1. Código no GitHub
+O Easypanel puxa o código de um repositório Git. Crie um repositório **privado** e envie este projeto:
+
+```bash
+git remote add origin https://github.com/<você>/boxbim.git
+git push -u origin master
+```
+
+## 2. App no Easypanel
+1. **Create › App** (dentro de um projeto do Easypanel).
+2. **Source › GitHub**: escolha o repositório e o branch. **Build › Dockerfile** (caminho `Dockerfile`).
+3. **Environment** — cole e ajuste (modelo em `.env.example`):
+   ```
+   PORTA=3000
+   BOXBIM_DATA=/data
+   BOXBIM_HTTPS=1
+   BOXBIM_PROXY=1
+   BOXBIM_REMOTO=1
+   BOXBIM_CODIGO_CADASTRO=um-codigo-so-seu
+   ```
+4. **Mounts › Add Volume**: nome `boxbim-dados`, mount path **`/data`**.
+5. **Domains**: adicione o domínio (ex.: `bim.suaempresa.com.br`) apontando para a **porta 3000**, com HTTPS
+   (o Easypanel emite o certificado). O BoxBim usa WebSocket (`/ws`) para a edição em tempo real — o proxy do
+   Easypanel já repassa.
+6. **Deploy**. A verificação de saúde é `GET /api/saude`.
+
+## 3. Primeiro acesso
+- Abra o domínio e **crie a primeira conta: ela vira a de administrador** (não pede o código de cadastro).
+  Faça isso logo depois do primeiro deploy.
+- As outras pessoas criam conta com o `BOXBIM_CODIGO_CADASTRO` (sem essa variável, qualquer um que acessar o
+  domínio pode criar conta).
+- Em ⚙ Configurações, o administrador cadastra as chaves de API da IA (ficam cifradas em `/data`).
+
+## O que muda na nuvem (`BOXBIM_REMOTO=1`)
+- Revit, Unreal, Blender e o acesso a pastas do computador ficam desligados: são do computador onde o BoxBim
+  roda. Para usar o Revit, rode o BoxBim também no Windows (`BoxBim.cmd`) e troque arquivos IFC/DWG.
+- Importar/exportar IFC, DXF, glTF, OBJ, STL, Collada e FBX (o FBX sai pelo Blender só no modo local) funcionam
+  pelo navegador.
+
+## Atualizar
+Envie os commits para o GitHub e clique **Deploy** (ou ligue o deploy automático). O volume `/data` é mantido.
+
+## Backup
+Copie o volume `/data` (por exemplo, com o backup de volumes do Easypanel). O arquivo principal é
+`/data/.servidor/boxbim.sqlite`; `/data/.servidor/segredo.key` é necessário para ler as chaves de API salvas.
+
+## Variáveis
+| Variável | Padrão | Para quê |
+|---|---|---|
+| `PORTA` | 3000 | porta HTTP dentro do contêiner |
+| `HOST` | 0.0.0.0 | interface |
+| `BOXBIM_DATA` | `/data` (na imagem) | pasta de dados (volume) |
+| `BOXBIM_HTTPS` | — | `1`: cookie de sessão só por HTTPS (use com domínio HTTPS) |
+| `BOXBIM_PROXY` | `1` (na imagem) | confia no `X-Forwarded-For` do proxy |
+| `BOXBIM_REMOTO` | `1` (na imagem) | desliga recursos do computador local |
+| `BOXBIM_CODIGO_CADASTRO` | — | código exigido para criar conta |

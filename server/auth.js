@@ -71,11 +71,19 @@ function routes(app) {
     const senha = String(req.body?.senha || '');
     if (!nome || !email || senha.length < 8) return res.status(400).json({ erro: 'Informe nome, e-mail e uma senha com pelo menos 8 caracteres.' });
     throttle(req.ip);
-    if (await db.Usuario.findOne({ where: { email } })) return res.status(409).json({ erro: 'Já existe uma conta com este e-mail.' });
     const admin = (await db.Usuario.count()) === 0;
+    // servidor público: com BOXBIM_CODIGO_CADASTRO, novas contas precisam do código (a 1ª, do administrador, não)
+    const codigo = process.env.BOXBIM_CODIGO_CADASTRO;
+    if (codigo && !admin && String(req.body?.codigo || '') !== codigo) return res.status(403).json({ erro: 'Código de cadastro inválido. Peça o código ao administrador do BoxBim.' });
+    if (await db.Usuario.findOne({ where: { email } })) return res.status(409).json({ erro: 'Já existe uma conta com este e-mail.' });
     const user = await db.Usuario.create({ nome, email, senhaHash: await hashPassword(senha), admin });
     await createSession(res, user);
     res.json({ usuario: publicUser(user) });
+  });
+
+  // a página de cadastro pergunta se precisa do código de convite
+  app.get('/api/auth/config', async (req, res) => {
+    res.json({ codigoCadastro: !!process.env.BOXBIM_CODIGO_CADASTRO && (await db.Usuario.count()) > 0 });
   });
 
   app.post('/api/auth/login', async (req, res) => {

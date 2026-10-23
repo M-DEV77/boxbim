@@ -1,0 +1,8 @@
+node_modules
+renderer/dist
+revit-addin
+.git
+*.log
+*.sqlite
+.env
+BoxBim.cmd

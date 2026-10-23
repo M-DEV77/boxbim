@@ -6,12 +6,26 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.14.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.14.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.14.1] — 2026-10-23 · Pronto para VPS (Docker / Easypanel)
+
+### Adicionado
+- **Dockerfile** (Node 24, build do renderer na imagem, usuário sem privilégios, volume `/data`, verificação de
+  saúde), `.dockerignore`, `.env.example` e o guia **DEPLOY.md** para publicar no Easypanel (GitHub → App →
+  Dockerfile, volume `/data`, domínio com HTTPS na porta 3000).
+- `GET /api/saude` (sem login) para a verificação de saúde.
+- `BOXBIM_PROXY=1`: atrás de proxy reverso, o IP real do cliente vem do `X-Forwarded-For` (limite de tentativas).
+- `BOXBIM_REMOTO=1`: servidor na nuvem — Revit, Unreal, Blender e arquivos do computador desligados (um proxy na
+  mesma máquina não passa mais por "local").
+- `BOXBIM_CODIGO_CADASTRO`: criar conta exige o código (a 1ª conta, do administrador, não); o campo aparece na
+  tela de cadastro só quando o servidor pede.
+- Repositório git, `.gitignore`/`.gitattributes` e `CLAUDE.md` com a regra de um commit por atualização.
 
 ## [2.14.0] — 2026-10-23 · Copiar (2D e 3D) e Telhado por perfil com camadas
 

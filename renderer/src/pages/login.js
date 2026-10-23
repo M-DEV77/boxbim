@@ -36,10 +36,12 @@ $('#form-cadastro').addEventListener('submit', async e => {
   e.preventDefault();
   const f = new FormData(e.target);
   if (f.get('senha') !== f.get('senha2')) return message('As senhas não conferem.');
-  try { await post('/api/auth/cadastro', { nome: f.get('nome'), email: f.get('email'), senha: f.get('senha') }); location.href = destino; }
+  try { await post('/api/auth/cadastro', { nome: f.get('nome'), email: f.get('email'), senha: f.get('senha'), codigo: f.get('codigo') || '' }); location.href = destino; }
   catch (err) { message(err.message); }
 });
 
 // já logado: vai direto
 fetch('/api/auth/eu', { credentials: 'same-origin' }).then(r => { if (r.ok) location.href = destino; });
 if (location.hash === '#cadastro') show('cadastro');
+// servidor com código de cadastro (convite): mostra o campo
+fetch('/api/auth/config').then(r => r.json()).then(c => { const el = document.getElementById('campo-codigo'); if (el && c.codigoCadastro) { el.hidden = false; el.querySelector('input').required = true; } }).catch(() => {});

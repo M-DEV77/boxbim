@@ -1,6 +1,9 @@
 // Servidor web do BoxBim: páginas (login, projetos, editor), API REST, chamadas do editor (/api/rpc) e
 // colaboração em tempo real (/ws). Roda neste PC (acesso pela rede) ou num servidor na internet:
 //   PORTA (padrão 3000) · HOST (padrão 0.0.0.0) · BOXBIM_DATA (pasta de dados) · BOXBIM_HTTPS=1 (cookie Secure)
+//   BOXBIM_PROXY=1 (atrás de proxy reverso — Easypanel/Traefik, nginx: IP real do cliente pelo X-Forwarded-For)
+//   BOXBIM_REMOTO=1 (servidor na nuvem: desliga Revit/Unreal/Blender e o acesso a arquivos do computador)
+//   BOXBIM_CODIGO_CADASTRO (se definido, criar conta exige este código — exceto a 1ª conta, do administrador)
 // Sem o Revit/Blender/ODA/Unreal nesta máquina, essas pontes ficam desligadas (app:capacidades).
 'use strict';
 const http = require('http');
@@ -26,7 +29,8 @@ async function main() {
   const server = http.createServer(app);
   const realtime = realtimeMod.create(server);
   app.disable('x-powered-by');
-  app.set('trust proxy', 'loopback');
+  // atrás do proxy do Easypanel o IP do cliente vem no X-Forwarded-For (limite de tentativas de login por IP)
+  app.set('trust proxy', process.env.BOXBIM_PROXY === '1' ? true : 'loopback');
 
   // cabeçalhos de segurança; o worker dos scripts de Objetos não pode acessar a rede
   app.use((req, res, next) => {
@@ -56,6 +60,8 @@ async function main() {
   rpc.routes(app, { requireUser: auth.requireUser, realtime });
   library.routes(app, { requireUser: auth.requireUser });
 
+  // verificação de saúde (Docker/Easypanel): sem login
+  app.get('/api/saude', (req, res) => res.json({ ok: true, versao: require('../package.json').version }));
   app.get('/api/changelog', auth.requireUser(), (req, res) => res.type('text/markdown').sendFile(path.join(__dirname, '..', 'CHANGELOG.md')));
   app.use('/assets', express.static(path.join(__dirname, '..', 'assets')));
 

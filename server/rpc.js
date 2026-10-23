@@ -57,7 +57,9 @@ function allowedPath(user, p) {
   return full;
 }
 
-const isLocal = req => ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
+// "Local" = o navegador está no próprio computador do servidor (Revit, Unreal, arquivos). Na nuvem (BOXBIM_REMOTO=1)
+// nunca: um proxy reverso na mesma máquina chegaria por 127.0.0.1 e pareceria local.
+const isLocal = req => process.env.BOXBIM_REMOTO !== '1' && ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
 
 // ---------------------------------------------------------------- biblioteca (banco)
 

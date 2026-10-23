@@ -1,0 +1,5 @@
+# fim de linha LF no repositório (a imagem Docker é Linux)
+* text=auto eol=lf
+*.png binary
+*.ico binary
+*.wasm binary

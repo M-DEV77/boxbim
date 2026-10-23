@@ -2,7 +2,7 @@
 
 Modelagem BIM no navegador, em equipe, com chat de IA e ponte com o Revit 2025.
 
-**Versão 2.14.0** · add-in BoxBim Bridge **1.1.0** · histórico completo em [CHANGELOG.md](CHANGELOG.md).
+**Versão 2.14.1** · add-in BoxBim Bridge **1.1.0** · histórico completo em [CHANGELOG.md](CHANGELOG.md) · servidor na nuvem (Easypanel): [DEPLOY.md](DEPLOY.md).
 
 ## Rodar
 
