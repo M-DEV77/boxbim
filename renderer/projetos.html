@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Projetos — BoxBim</title>
+  <link rel="icon" href="/assets/icon.svg">
+  <link rel="stylesheet" href="/pages.css">
+</head>
+<body>
+  <header class="page-top">
+    <a class="brand" href="/projetos.html"><img src="/assets/icon.svg" alt=""><span>BoxBim</span></a>
+    <nav>
+      <a href="/projetos.html" class="active">Projetos</a>
+      <a href="/biblioteca.html">Biblioteca de objetos</a>
+    </nav>
+    <div class="spacer"></div>
+    <span id="user" class="muted"></span>
+    <button id="sair" class="ghost">Sair</button>
+  </header>
+  <main class="page">
+    <div class="page-head">
+      <h2>Projetos</h2>
+      <input id="filtro" placeholder="Buscar projeto…">
+      <div class="spacer"></div>
+      <button id="novo" class="primary">+ Novo projeto</button>
+    </div>
+    <section>
+      <h3>Meus projetos</h3>
+      <div id="meus" class="cards"></div>
+    </section>
+    <section>
+      <h3>Compartilhados comigo</h3>
+      <div id="compartilhados" class="cards"></div>
+    </section>
+  </main>
+  <div id="dialog-root"></div>
+  <script src="/dist/projetos.js"></script>
+</body>
+</html>

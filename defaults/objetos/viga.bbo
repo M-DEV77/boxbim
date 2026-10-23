@@ -1,0 +1,42 @@
+{
+  "format": "boxbim-objeto",
+  "version": 1,
+  "revision": 1,
+  "author": "BoxBim",
+  "created": "2026-10-22",
+  "id": "viga",
+  "name": "Viga",
+  "category": "IfcBeam",
+  "sistema": "viga",
+  "description": "Viga criada pela ferramenta Viga. Seção retangular com o topo na cota informada; revestimentos nas laterais e no fundo.",
+  "parameters": [
+    {
+      "name": "comprimento",
+      "label": "Comprimento",
+      "type": "comprimento",
+      "default": 5,
+      "group": "Seção",
+      "min": 0.05,
+      "max": 200
+    },
+    {
+      "name": "largura",
+      "label": "Largura",
+      "type": "comprimento",
+      "default": 0.2,
+      "group": "Seção",
+      "min": 0.05,
+      "max": 5
+    },
+    {
+      "name": "altura",
+      "label": "Altura",
+      "type": "comprimento",
+      "default": 0.5,
+      "group": "Seção",
+      "min": 0.05,
+      "max": 5
+    }
+  ],
+  "script": "// Objeto de SISTEMA: usado pelas ferramentas da faixa (Modelar). O BoxBim preenche, em cada elemento do modelo:\n//   p.camadas  [{ nome, material, espessura, funcao }] do tipo da viga: a 1ª é o núcleo, as outras revestem\n// Referencial: X ao longo do eixo (do início para o fim), Y transversal, Z = 0 no TOPO da viga (desce).\nconst camadas = (p.camadas || []).length ? p.camadas : [{ nome: 'Genérico', material: null, espessura: 0 }];\nconst C = p.comprimento, B = p.largura, H = p.altura;\n\n// seção (y, z) crescida de \"d\" nas laterais e no fundo; o topo fica no lugar\nconst secao = d => [[-B / 2 - d, -H - d], [B / 2 + d, -H - d], [B / 2 + d, 0], [-B / 2 - d, 0]];\n\nlet d = 0;\ncamadas.forEach((c, i) => {\n  if (i === 0) { g.extrude(secao(0), C, { plane: 'yz', material: c.material, name: c.nome, layer: 0 }); return; }\n  if (c.espessura <= 0) return;\n  const dentro = secao(d);\n  d += c.espessura;\n  g.extrude(secao(d), C, { plane: 'yz', holes: [dentro], material: c.material, name: c.nome, layer: i });\n});\n"
+}

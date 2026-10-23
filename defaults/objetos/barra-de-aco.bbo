@@ -1,0 +1,39 @@
+{
+  "format": "boxbim-objeto",
+  "version": 1,
+  "revision": 1,
+  "author": "BoxBim",
+  "created": "2026-10-21",
+  "id": "barra-de-aco",
+  "name": "Barra de aço",
+  "category": "IfcReinforcingBar",
+  "description": "Vergalhão reto vertical (sobe em Z a partir da origem). Usado dentro do Pilar de concreto armado.",
+  "parameters": [
+    {
+      "name": "diametro",
+      "label": "Diâmetro (bitola)",
+      "type": "comprimento",
+      "default": 0.0125,
+      "min": 0.005,
+      "max": 0.04,
+      "group": "Barra"
+    },
+    {
+      "name": "comprimento",
+      "label": "Comprimento",
+      "type": "comprimento",
+      "default": 3,
+      "min": 0.1,
+      "max": 12,
+      "group": "Barra"
+    },
+    {
+      "name": "aco",
+      "label": "Aço",
+      "type": "material",
+      "default": "Aço",
+      "group": "Materiais"
+    }
+  ],
+  "script": "// Barra de aço (vergalhão): cilindro vertical a partir da origem\ng.cylinder(p.diametro / 2, p.comprimento, { material: p.aco, segments: 12, name: 'Barra Ø' + (p.diametro * 1000).toFixed(1) + ' mm' });\n"
+}

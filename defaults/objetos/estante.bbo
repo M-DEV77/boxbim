@@ -1,0 +1,73 @@
+{
+  "format": "boxbim-objeto",
+  "version": 1,
+  "revision": 1,
+  "author": "BoxBim",
+  "created": "2026-10-21",
+  "id": "estante",
+  "name": "Estante",
+  "category": "IfcFurniture",
+  "description": "Estante com laterais, prateleiras distribuídas igualmente e fundo opcional.",
+  "parameters": [
+    {
+      "name": "largura",
+      "label": "Largura",
+      "type": "comprimento",
+      "default": 0.9,
+      "min": 0.3,
+      "max": 3,
+      "group": "Dimensões"
+    },
+    {
+      "name": "altura",
+      "label": "Altura",
+      "type": "comprimento",
+      "default": 1.8,
+      "min": 0.4,
+      "max": 3,
+      "group": "Dimensões"
+    },
+    {
+      "name": "profundidade",
+      "label": "Profundidade",
+      "type": "comprimento",
+      "default": 0.35,
+      "min": 0.2,
+      "max": 0.8,
+      "group": "Dimensões"
+    },
+    {
+      "name": "espessura",
+      "label": "Espessura das chapas",
+      "type": "comprimento",
+      "default": 0.018,
+      "min": 0.012,
+      "max": 0.05,
+      "group": "Construção"
+    },
+    {
+      "name": "prateleiras",
+      "label": "Prateleiras internas",
+      "type": "inteiro",
+      "default": 4,
+      "min": 0,
+      "max": 10,
+      "group": "Construção"
+    },
+    {
+      "name": "fundo",
+      "label": "Com fundo",
+      "type": "booleano",
+      "default": true,
+      "group": "Construção"
+    },
+    {
+      "name": "material",
+      "label": "Material",
+      "type": "material",
+      "default": "Madeira",
+      "group": "Materiais"
+    }
+  ],
+  "script": "// Estante: base, tampo e prateleiras igualmente espaçadas entre duas laterais\nconst e = p.espessura, L = p.largura, H = p.altura, D = p.profundidade;\ng.box(e, D, H, { x: -L / 2 + e / 2, material: p.material, name: 'Lateral' });\ng.box(e, D, H, { x: L / 2 - e / 2, material: p.material, name: 'Lateral' });\nconst n = p.prateleiras + 1;\nfor (let i = 0; i <= n; i++) {\n  g.box(L - 2 * e, D, e, { z: (H - e) * i / n, material: p.material, name: i === 0 ? 'Base' : i === n ? 'Tampo' : 'Prateleira' });\n}\nif (p.fundo) g.box(L, 0.006, H, { y: D / 2 - 0.003, material: p.material, name: 'Fundo' });\ng.log('Vão livre entre prateleiras:', ((H - e) / n - e).toFixed(3), 'm');\n"
+}

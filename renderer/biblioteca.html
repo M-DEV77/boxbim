@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Biblioteca de objetos — BoxBim</title>
+  <link rel="icon" href="/assets/icon.svg">
+  <link rel="stylesheet" href="/pages.css">
+</head>
+<body>
+  <header class="page-top">
+    <a class="brand" href="/projetos.html"><img src="/assets/icon.svg" alt=""><span>BoxBim</span></a>
+    <nav>
+      <a href="/projetos.html">Projetos</a>
+      <a href="/biblioteca.html" class="active">Biblioteca de objetos</a>
+    </nav>
+    <div class="spacer"></div>
+    <span id="user" class="muted"></span>
+    <button id="sair" class="ghost">Sair</button>
+  </header>
+  <main class="page">
+    <div class="page-head">
+      <h2>Biblioteca de objetos</h2>
+      <input id="filtro" placeholder="Buscar objeto…">
+      <select id="categoria"><option value="">Todas as categorias</option></select>
+      <div class="spacer"></div>
+      <button id="miniaturas" title="Desenha as miniaturas que ainda não existem">Gerar miniaturas</button>
+    </div>
+    <p class="small muted">Biblioteca geral, compartilhada por todos. Cada projeto guarda uma cópia dos objetos que usa (com preço e ícone próprios); editar no projeto não muda os outros projetos.</p>
+    <div id="lista" class="cards objs"></div>
+  </main>
+  <script src="/dist/biblioteca.js"></script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+{
+  "format": "boxbim-objeto",
+  "version": 1,
+  "revision": 1,
+  "author": "BoxBim",
+  "created": "2026-10-22",
+  "id": "caixa",
+  "name": "Caixa",
+  "category": "IfcBuildingElementProxy",
+  "sistema": "caixa",
+  "description": "Caixa/volume criado pela ferramenta Caixa.",
+  "parameters": [
+    {
+      "name": "largura",
+      "label": "Largura (X)",
+      "type": "comprimento",
+      "default": 1,
+      "group": "Dimensões",
+      "min": 0.01,
+      "max": 200
+    },
+    {
+      "name": "profundidade",
+      "label": "Profundidade (Y)",
+      "type": "comprimento",
+      "default": 1,
+      "group": "Dimensões",
+      "min": 0.01,
+      "max": 200
+    },
+    {
+      "name": "altura",
+      "label": "Altura (Z)",
+      "type": "comprimento",
+      "default": 1,
+      "group": "Dimensões",
+      "min": 0.01,
+      "max": 200
+    },
+    {
+      "name": "material",
+      "label": "Material",
+      "type": "material",
+      "default": "",
+      "group": "Aparência"
+    },
+    {
+      "name": "cor",
+      "label": "Cor (sem material)",
+      "type": "cor",
+      "default": "",
+      "group": "Aparência"
+    }
+  ],
+  "script": "// Objeto de SISTEMA: usado pela ferramenta Caixa da faixa (Modelar).\n// Referencial: origem no centro da base, Z para cima.\ng.box(p.largura, p.profundidade, p.altura, { material: p.material || null, color: p.cor || null, name: 'Caixa' });\ng.log('volume (m³):', (p.largura * p.profundidade * p.altura).toFixed(3));\n"
+}

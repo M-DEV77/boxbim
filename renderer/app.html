@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/assets/icon.svg">
+  <title>BoxBim</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/projetos.html" title="Meus projetos"><img src="/assets/icon.svg" alt=""><span>BoxBim</span></a>
+    <div class="project-head"><span id="project-name" class="project-name">…</span><span id="project-role" class="tag"></span></div>
+    <nav class="menus">
+      <button data-menu="file">Arquivo</button>
+      <button data-menu="import">Importar</button>
+      <button data-menu="export">Exportar</button>
+      <button data-menu="revit">Revit</button>
+      <button data-menu="create">Modelar</button>
+      <button data-menu="view">Vista</button>
+    </nav>
+    <div class="spacer"></div>
+    <div id="presence" class="presence" title="Quem está no projeto agora"></div>
+    <span id="sync-state" class="sync-state off">Conectando…</span>
+    <button id="btn-share" class="ghost" hidden title="Convidar pessoas para modelar neste projeto">Compartilhar</button>
+    <span id="user-name" class="user-name"></span>
+    <button id="preset-btn" class="preset-btn" title="Presets de menus e janelas: trocar, criar, personalizar"><span class="ico">▦</span><span id="preset-name">Padrão</span> ▾</button>
+    <button id="revit-pill" class="pill" title="Ponte com o Revit 2025"><span class="dot"></span><span class="label">Revit</span></button>
+    <button id="btn-settings" class="icon-btn" title="Configurações">⚙</button>
+  </header>
+
+  <!-- Barra de ferramentas superior (faixa de opções), recolhível -->
+  <div id="ribbon" class="ribbon">
+    <div class="ribbon-head">
+      <div id="ribbon-tabs" class="ribbon-tabs"></div>
+      <button id="ribbon-toggle" class="ribbon-toggle" title="Recolher a barra de ferramentas (Ctrl+F1)">︿</button>
+    </div>
+    <div class="ribbon-body">
+      <div id="ribbon-groups" class="ribbon-groups"></div>
+      <!-- opções do elemento selecionado (mover/girar) aparecem aqui, no fim da faixa -->
+      <div id="ribbon-context" class="ribbon-context"></div>
+    </div>
+  </div>
+
+  <main class="layout">
+    <aside class="left">
+      <div class="panel-head"><span>Navegador de projeto</span><span class="spacer"></span>
+        <button id="btn-add-level" class="mini" title="Novo nível">+ Nível</button>
+        <button id="left-toggle" class="side-toggle" title="Recolher a barra da esquerda (Ctrl+[)">‹</button></div>
+      <div id="browser" class="tree browser"></div>
+      <div class="panel-head"><span>Elementos</span><input id="tree-filter" placeholder="Filtrar…"></div>
+      <div id="tree" class="tree"></div>
+    </aside>
+
+    <section class="center">
+      <div id="view-tabs" class="view-tabs"></div>
+      <button id="left-expand" class="side-expand at-left" title="Mostrar a barra da esquerda (Ctrl+[)" hidden>›</button>
+      <button id="right-expand" class="side-expand at-right" title="Mostrar a barra da direita (Ctrl+])" hidden>‹</button>
+      <div id="viewport"></div>
+      <div id="view-info" class="view-info dark"></div>
+      <div id="drop-hint" class="drop-hint" hidden>Solte para importar</div>
+      <!-- Chat IA na barra inferior (recolhível; a altura se ajusta arrastando a borda de cima) -->
+      <div id="chat-dock" class="chat-dock">
+        <div id="chat-resize" class="chat-resize" title="Arraste para mudar a altura"></div>
+        <div class="chat-head">
+          <button id="chat-toggle" class="chat-toggle" title="Recolher/mostrar o Chat IA (Ctrl+J)"><span class="chev">▾</span> Chat IA</button>
+          <select id="agent-select" title="Agente"></select>
+          <span id="agent-model" class="muted small"></span>
+          <div class="spacer"></div>
+          <button id="chat-new" class="ghost" title="Nova conversa">Nova</button>
+          <button id="chat-save" class="ghost" title="Salvar conversa em Markdown">Salvar .md</button>
+          <button id="chat-remember" class="ghost" title="Resumir a conversa como memória">Memorizar</button>
+        </div>
+        <div class="chat-dock-body">
+        <div id="messages" class="messages"></div>
+        <form id="chat-form" class="composer">
+          <textarea id="chat-input" rows="3" placeholder="Pergunte ou peça algo ao agente… (Enter envia, Shift+Enter quebra linha)"></textarea>
+          <div class="composer-actions">
+            <label class="small muted"><input type="checkbox" id="chat-scene" checked> enviar resumo da cena</label>
+            <div class="spacer"></div>
+            <button type="button" id="chat-stop" class="ghost" hidden>Parar</button>
+            <button type="submit" id="chat-send" class="primary">Enviar</button>
+          </div>
+        </form>
+      
+        </div>
+      </div>
+      <!-- rodapé: status, vistas rápidas (3D), projeção e estilo da vista, e o lado direito -->
+      <div class="statusbar"><span id="status">Pronto.</span>
+        <div class="viewbar">
+          <button data-view="iso" title="Isométrica">ISO</button>
+          <button data-view="top" title="Planta">Topo</button>
+          <button data-view="front" title="Frontal">Frente</button>
+          <button data-view="right" title="Lateral">Lado</button>
+          <button data-view="fit" title="Enquadrar tudo (F)">⤢</button>
+        </div>
+        <div id="style-bar" class="style-bar" title="Estilo da vista"></div>
+        <span class="status-right"><select id="unit-select" class="unit-select" title="Unidade de comprimento do projeto (exibição e digitação)"></select><button id="grid-btn" class="toggle" title="Mostrar/ocultar a grade e o ponto base em todas as vistas (só para você)">GRADE</button><button id="levels-btn" class="toggle" title="Níveis: editar nomes e cotas (todas as vistas)">NÍVEIS</button><button id="ortho-btn" class="toggle" title="ORTO: trava o ângulo do desenho em 0°/90° (F8)">ORTO</button><span id="counts"></span><button id="version-btn" class="version-btn" title="Versão do BoxBim — clique para ver as novidades">v…</button></span></div>
+      <div id="progress" class="progress" hidden><div></div></div>
+    </section>
+
+    <div class="splitter" id="splitter"></div>
+
+    <aside class="right" id="right">
+      <div class="tabs" id="tabs">
+        <button id="right-toggle" class="side-toggle" title="Recolher a barra da direita (Ctrl+])">›</button>
+        <button data-tab="props" class="active">Propriedades</button>
+        <button data-tab="agents">Agentes</button>
+        <button data-tab="skills">Skills</button>
+        <button data-tab="memory">Memória</button>
+      </div>
+      <div class="tab-body" data-body="props"><div id="props" class="props"></div></div>
+      <div class="tab-body" data-body="agents" hidden><div id="agents-panel" class="editor-panel"></div></div>
+      <div class="tab-body" data-body="skills" hidden><div id="skills-panel" class="editor-panel"></div></div>
+      <div class="tab-body" data-body="memory" hidden><div id="memory-panel" class="editor-panel"></div></div>
+    </aside>
+  </main>
+
+  <div id="menu-root"></div>
+  <div id="modal-root"></div>
+  <div id="toasts" class="toasts"></div>
+  <script src="/dist/app.js"></script>
+</body>
+</html>

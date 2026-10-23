@@ -1,0 +1,48 @@
+{
+  "format": "boxbim-objeto",
+  "version": 1,
+  "revision": 1,
+  "author": "BoxBim",
+  "created": "2026-10-21",
+  "id": "estribo",
+  "name": "Estribo",
+  "category": "IfcReinforcingBar",
+  "description": "Estribo retangular horizontal centrado na origem (largura em X, profundidade em Y).",
+  "parameters": [
+    {
+      "name": "largura",
+      "label": "Largura (eixo das barras)",
+      "type": "comprimento",
+      "default": 0.19,
+      "min": 0.05,
+      "max": 2,
+      "group": "Estribo"
+    },
+    {
+      "name": "profundidade",
+      "label": "Profundidade (eixo das barras)",
+      "type": "comprimento",
+      "default": 0.34,
+      "min": 0.05,
+      "max": 2,
+      "group": "Estribo"
+    },
+    {
+      "name": "diametro",
+      "label": "Diâmetro (bitola)",
+      "type": "comprimento",
+      "default": 0.005,
+      "min": 0.004,
+      "max": 0.02,
+      "group": "Estribo"
+    },
+    {
+      "name": "aco",
+      "label": "Aço",
+      "type": "material",
+      "default": "Aço",
+      "group": "Materiais"
+    }
+  ],
+  "script": "// Estribo: quatro trechos de barra formando um retângulo no plano XY\nconst r = p.diametro / 2, L = p.largura, P = p.profundidade;\nfor (const sy of [-1, 1]) g.cylinder(r, L, { x: -L / 2, y: sy * P / 2, rotY: 90, material: p.aco, segments: 8, name: 'Estribo' });\nfor (const sx of [-1, 1]) g.cylinder(r, P, { x: sx * L / 2, y: -P / 2, rotX: -90, material: p.aco, segments: 8, name: 'Estribo' });\n"
+}

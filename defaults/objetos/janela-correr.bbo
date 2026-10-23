@@ -1,0 +1,82 @@
+{
+  "format": "boxbim-objeto",
+  "version": 1,
+  "revision": 2,
+  "author": "BoxBim",
+  "created": "2026-10-21",
+  "id": "janela-correr",
+  "name": "Janela de correr",
+  "category": "IfcWindow",
+  "description": "Janela de correr com caixilho, 2 a 4 folhas em trilhos alternados e peitoril. Hospedada em parede: abre o vão a partir do peitoril.",
+  "parameters": [
+    {
+      "name": "largura",
+      "label": "Largura",
+      "type": "comprimento",
+      "default": 1.2,
+      "min": 0.4,
+      "max": 4,
+      "group": "Dimensões"
+    },
+    {
+      "name": "altura",
+      "label": "Altura",
+      "type": "comprimento",
+      "default": 1,
+      "min": 0.3,
+      "max": 2.5,
+      "group": "Dimensões"
+    },
+    {
+      "name": "peitoril",
+      "label": "Peitoril",
+      "type": "comprimento",
+      "default": 1.1,
+      "min": 0,
+      "max": 2,
+      "group": "Dimensões"
+    },
+    {
+      "name": "folhas",
+      "label": "Folhas",
+      "type": "inteiro",
+      "default": 2,
+      "min": 2,
+      "max": 4,
+      "group": "Construção"
+    },
+    {
+      "name": "profundidade",
+      "label": "Profundidade do caixilho",
+      "type": "comprimento",
+      "default": 0.08,
+      "min": 0.04,
+      "max": 0.2,
+      "group": "Construção"
+    },
+    {
+      "name": "perfil",
+      "label": "Largura do perfil",
+      "type": "comprimento",
+      "default": 0.04,
+      "min": 0.02,
+      "max": 0.1,
+      "group": "Construção"
+    },
+    {
+      "name": "matCaixilho",
+      "label": "Caixilho",
+      "type": "material",
+      "default": "Aço",
+      "group": "Materiais"
+    },
+    {
+      "name": "matVidro",
+      "label": "Vidro",
+      "type": "material",
+      "default": "Vidro",
+      "group": "Materiais"
+    }
+  ],
+  "script": "// Janela de correr: moldura + folhas alternando entre dois trilhos\nconst L = p.largura, H = p.altura, z0 = p.peitoril, d = p.profundidade, f = p.perfil;\ng.box(L, d, f, { z: z0, material: p.matCaixilho, name: 'Caixilho inferior' });\ng.box(L, d, f, { z: z0 + H - f, material: p.matCaixilho, name: 'Caixilho superior' });\ng.box(f, d, H, { x: -L / 2 + f / 2, z: z0, material: p.matCaixilho, name: 'Caixilho lateral' });\ng.box(f, d, H, { x: L / 2 - f / 2, z: z0, material: p.matCaixilho, name: 'Caixilho lateral' });\ng.opening(L, H, { sill: z0 });  // vão aberto na parede hospedeira, a partir do peitoril\nconst n = p.folhas, vao = L - 2 * f, lf = vao / n + f / 2, hh = H - 2 * f;\nfor (let i = 0; i < n; i++) {\n  const x = -L / 2 + f + vao * (i + 0.5) / n;\n  const y = (i % 2 ? 1 : -1) * d / 4;\n  g.box(lf - f, 0.008, hh - f, { x, y, z: z0 + f + f / 2, material: p.matVidro, name: 'Vidro' });\n  g.box(f / 2, d / 2.5, hh, { x: x - lf / 2 + f / 4, y, z: z0 + f, material: p.matCaixilho, name: 'Perfil da folha' });\n  g.box(f / 2, d / 2.5, hh, { x: x + lf / 2 - f / 4, y, z: z0 + f, material: p.matCaixilho, name: 'Perfil da folha' });\n}\ng.log('Área de ventilação ≈', (vao * hh * (n - 1) / n).toFixed(2), 'm²');\n"
+}

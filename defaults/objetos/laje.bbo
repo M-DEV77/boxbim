@@ -1,0 +1,42 @@
+{
+  "format": "boxbim-objeto",
+  "version": 1,
+  "revision": 2,
+  "author": "BoxBim",
+  "created": "2026-10-22",
+  "id": "laje",
+  "name": "Laje",
+  "category": "IfcSlab",
+  "sistema": "laje",
+  "description": "Laje/piso criada pela ferramenta Laje. Contorno em planta; camadas empilhadas do topo para baixo.",
+  "parameters": [
+    {
+      "name": "espessura",
+      "label": "Espessura (sem tipo)",
+      "type": "comprimento",
+      "default": 0.15,
+      "group": "Dimensões",
+      "min": 0.01,
+      "max": 3
+    },
+    {
+      "name": "largura",
+      "label": "Largura (prévia)",
+      "type": "comprimento",
+      "default": 5,
+      "group": "Prévia no editor",
+      "min": 0.1,
+      "max": 100
+    },
+    {
+      "name": "profundidade",
+      "label": "Profundidade (prévia)",
+      "type": "comprimento",
+      "default": 4,
+      "group": "Prévia no editor",
+      "min": 0.1,
+      "max": 100
+    }
+  ],
+  "script": "// Objeto de SISTEMA: usado pelas ferramentas da faixa (Modelar). O BoxBim preenche, em cada elemento do modelo:\n//   p.pontos   contorno em planta [[x, y], …] (coordenadas do projeto)\n//   p.furos    furos (aberturas) [[[x, y], …], …] dentro do contorno\n//   p.camadas  [{ nome, material, espessura, funcao }] do tipo do piso (vazio = laje genérica)\n// Referencial: X/Y do projeto, Z = 0 no TOPO da laje (cota do nível + deslocamento); as camadas descem.\n// Largura e profundidade só desenham a prévia aqui no editor (no modelo vale o contorno).\nconst pontos = p.pontos || [[0, 0], [p.largura, 0], [p.largura, p.profundidade], [0, p.profundidade]];\nconst camadas = (p.camadas || []).length ? p.camadas : [{ nome: 'Genérico', material: null, espessura: p.espessura }];\n\nlet z = 0;\ncamadas.forEach((c, i) => {\n  z -= c.espessura;\n  if (c.espessura > 0) g.extrude(pontos, c.espessura, { z, holes: p.furos || [], material: c.material, name: c.nome, layer: i });\n});\n"
+}

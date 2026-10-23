@@ -1,0 +1,82 @@
+{
+  "format": "boxbim-objeto",
+  "version": 1,
+  "revision": 1,
+  "author": "BoxBim",
+  "created": "2026-10-21",
+  "id": "mesa-retangular",
+  "name": "Mesa retangular",
+  "category": "IfcFurniture",
+  "description": "Mesa com tampo e quatro pernas, com recuo configurável.",
+  "parameters": [
+    {
+      "name": "largura",
+      "label": "Largura",
+      "type": "comprimento",
+      "default": 1.6,
+      "min": 0.6,
+      "max": 4,
+      "group": "Dimensões"
+    },
+    {
+      "name": "profundidade",
+      "label": "Profundidade",
+      "type": "comprimento",
+      "default": 0.9,
+      "min": 0.4,
+      "max": 2,
+      "group": "Dimensões"
+    },
+    {
+      "name": "altura",
+      "label": "Altura",
+      "type": "comprimento",
+      "default": 0.75,
+      "min": 0.4,
+      "max": 1.2,
+      "group": "Dimensões"
+    },
+    {
+      "name": "tampo",
+      "label": "Espessura do tampo",
+      "type": "comprimento",
+      "default": 0.03,
+      "min": 0.015,
+      "max": 0.1,
+      "group": "Construção"
+    },
+    {
+      "name": "perna",
+      "label": "Seção da perna",
+      "type": "comprimento",
+      "default": 0.05,
+      "min": 0.03,
+      "max": 0.15,
+      "group": "Construção"
+    },
+    {
+      "name": "recuo",
+      "label": "Recuo das pernas",
+      "type": "comprimento",
+      "default": 0.05,
+      "min": 0,
+      "max": 0.3,
+      "group": "Construção"
+    },
+    {
+      "name": "matTampo",
+      "label": "Material do tampo",
+      "type": "material",
+      "default": "Madeira",
+      "group": "Materiais"
+    },
+    {
+      "name": "matPerna",
+      "label": "Material das pernas",
+      "type": "material",
+      "default": "Aço",
+      "group": "Materiais"
+    }
+  ],
+  "script": "// Mesa: tampo apoiado em quatro pernas\nconst t = p.tampo, hp = p.altura - t;\ng.box(p.largura, p.profundidade, t, { z: hp, material: p.matTampo, name: 'Tampo' });\nconst dx = p.largura / 2 - p.recuo - p.perna / 2;\nconst dy = p.profundidade / 2 - p.recuo - p.perna / 2;\nfor (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {\n  g.box(p.perna, p.perna, hp, { x: sx * dx, y: sy * dy, material: p.matPerna, name: 'Perna' });\n}\n"
+}

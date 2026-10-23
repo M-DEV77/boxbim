@@ -1,0 +1,42 @@
+{
+  "format": "boxbim-objeto",
+  "version": 1,
+  "revision": 1,
+  "author": "BoxBim",
+  "created": "2026-10-22",
+  "id": "parede",
+  "name": "Parede",
+  "category": "IfcWall",
+  "sistema": "parede",
+  "description": "Parede desenhada com a ferramenta Desenhar parede / Parede por coordenadas. Uma extrusão por camada do tipo, com os vãos das portas e janelas hospedadas.",
+  "parameters": [
+    {
+      "name": "comprimento",
+      "label": "Comprimento",
+      "type": "comprimento",
+      "default": 4,
+      "group": "Dimensões",
+      "min": 0.05,
+      "max": 200
+    },
+    {
+      "name": "altura",
+      "label": "Altura",
+      "type": "comprimento",
+      "default": 3,
+      "group": "Dimensões",
+      "min": 0.05,
+      "max": 100
+    },
+    {
+      "name": "espessura",
+      "label": "Espessura (sem tipo)",
+      "type": "comprimento",
+      "default": 0.2,
+      "group": "Dimensões",
+      "min": 0.01,
+      "max": 3
+    }
+  ],
+  "script": "// Objeto de SISTEMA: usado pelas ferramentas da faixa (Modelar). O BoxBim preenche, em cada elemento do modelo:\n//   p.camadas  [{ nome, material, espessura, funcao }] do tipo da parede (vazio = parede genérica)\n//   p.perfis   [{ contorno: [[x, z], …], furos: [[[x, z], …]] }] elevação da parede já com os vãos das portas/janelas\n//   p.inicio, p.fim  trecho do eixo, em X, incluindo os prolongamentos das junções\n// Referencial: X ao longo do eixo (do início para o fim), Y para a ESQUERDA do sentido de desenho, Z = base da parede.\nconst camadas = (p.camadas || []).length ? p.camadas : [{ nome: 'Genérico', material: null, espessura: p.espessura }];\nconst perfis = (p.perfis || []).length ? p.perfis\n  : [{ contorno: [[0, 0], [p.comprimento, 0], [p.comprimento, p.altura], [0, p.altura]], furos: [] }];\nconst total = camadas.reduce((s, c) => s + c.espessura, 0);\n\n// a primeira camada fica do lado esquerdo (externo, como no Revit); as outras vêm em seguida\nlet y = total / 2;\ncamadas.forEach((c, i) => {\n  y -= c.espessura;\n  if (c.espessura <= 0) return;\n  for (const pf of perfis) {\n    g.extrude(pf.contorno, c.espessura, { plane: 'xz', y, holes: pf.furos, material: c.material, name: c.nome, layer: i });\n  }\n});\n"
+}

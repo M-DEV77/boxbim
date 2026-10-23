@@ -1,0 +1,116 @@
+{
+  "format": "boxbim-objeto",
+  "version": 1,
+  "revision": 1,
+  "author": "BoxBim",
+  "created": "2026-10-21",
+  "id": "pilar-concreto-armado",
+  "name": "Pilar de concreto armado",
+  "category": "IfcColumn",
+  "description": "Pilar com barras longitudinais e estribos como objetos aninhados. O diâmetro das barras e o aço são compartilhados com a Barra de aço.",
+  "parameters": [
+    {
+      "name": "largura",
+      "label": "Largura",
+      "type": "comprimento",
+      "default": 0.25,
+      "min": 0.14,
+      "max": 1.5,
+      "group": "Seção"
+    },
+    {
+      "name": "profundidade",
+      "label": "Profundidade",
+      "type": "comprimento",
+      "default": 0.4,
+      "min": 0.14,
+      "max": 2,
+      "group": "Seção"
+    },
+    {
+      "name": "altura",
+      "label": "Altura",
+      "type": "comprimento",
+      "default": 3,
+      "min": 0.5,
+      "max": 12,
+      "group": "Seção"
+    },
+    {
+      "name": "cobrimento",
+      "label": "Cobrimento",
+      "type": "comprimento",
+      "default": 0.03,
+      "min": 0.015,
+      "max": 0.08,
+      "group": "Armadura"
+    },
+    {
+      "name": "diametro",
+      "label": "Diâmetro das barras (compartilhado)",
+      "type": "comprimento",
+      "default": 0.0125,
+      "min": 0.008,
+      "max": 0.04,
+      "group": "Armadura"
+    },
+    {
+      "name": "barrasX",
+      "label": "Barras na largura",
+      "type": "inteiro",
+      "default": 2,
+      "min": 2,
+      "max": 8,
+      "group": "Armadura"
+    },
+    {
+      "name": "barrasY",
+      "label": "Barras na profundidade",
+      "type": "inteiro",
+      "default": 3,
+      "min": 2,
+      "max": 10,
+      "group": "Armadura"
+    },
+    {
+      "name": "diametroEstribo",
+      "label": "Diâmetro do estribo",
+      "type": "comprimento",
+      "default": 0.005,
+      "min": 0.004,
+      "max": 0.016,
+      "group": "Armadura"
+    },
+    {
+      "name": "espacamento",
+      "label": "Espaçamento dos estribos",
+      "type": "comprimento",
+      "default": 0.15,
+      "min": 0.05,
+      "max": 0.3,
+      "group": "Armadura"
+    },
+    {
+      "name": "verArmadura",
+      "label": "Concreto translúcido (ver armadura)",
+      "type": "booleano",
+      "default": true,
+      "group": "Exibição"
+    },
+    {
+      "name": "concreto",
+      "label": "Concreto",
+      "type": "material",
+      "default": "Concreto",
+      "group": "Materiais"
+    },
+    {
+      "name": "aco",
+      "label": "Aço (compartilhado)",
+      "type": "material",
+      "default": "Aço",
+      "group": "Materiais"
+    }
+  ],
+  "script": "// Pilar de concreto armado: concreto + barras (objeto \"Barra de aço\") + estribos (objeto \"Estribo\").\n// \"diametro\" e \"aco\" têm o mesmo nome na Barra de aço: são compartilhados e passam sozinhos.\nconst L = p.largura, P = p.profundidade, H = p.altura, c = p.cobrimento;\ng.box(L, P, H, { material: p.concreto, opacity: p.verArmadura ? 0.3 : 1, name: 'Concreto' });\n\n// barras longitudinais no contorno, afastadas pelo cobrimento + estribo\nconst e = c + p.diametroEstribo + p.diametro / 2;\nconst xs = Array.from({ length: p.barrasX }, (_, i) => -L / 2 + e + i * (L - 2 * e) / (p.barrasX - 1));\nconst ys = Array.from({ length: p.barrasY }, (_, j) => -P / 2 + e + j * (P - 2 * e) / (p.barrasY - 1));\nlet barras = 0;\nxs.forEach((x, i) => ys.forEach((y, j) => {\n  if (i > 0 && i < xs.length - 1 && j > 0 && j < ys.length - 1) return; // só o contorno\n  g.object('Barra de aço', { comprimento: H - 2 * c }, { x, y, z: c });\n  barras++;\n}));\n\n// estribos ao longo da altura (aqui o diâmetro é informado: vale o do estribo, não o compartilhado)\nconst n = Math.floor((H - 2 * c) / p.espacamento) + 1;\nfor (let k = 0; k < n; k++) {\n  g.object('Estribo', {\n    largura: L - 2 * c - p.diametroEstribo, profundidade: P - 2 * c - p.diametroEstribo, diametro: p.diametroEstribo,\n  }, { z: c + k * p.espacamento });\n}\n\nconst area = barras * Math.PI * (p.diametro / 2) ** 2;\ng.log(barras, 'barras Ø', (p.diametro * 1000).toFixed(1), 'mm ·', n, 'estribos · taxa de armadura', (100 * area / (L * P)).toFixed(2), '%');\n"
+}

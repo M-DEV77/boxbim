@@ -1,0 +1,66 @@
+{
+  "format": "boxbim-objeto",
+  "version": 1,
+  "revision": 1,
+  "author": "BoxBim",
+  "created": "2026-10-21",
+  "id": "escada-reta",
+  "name": "Escada reta",
+  "category": "IfcStair",
+  "description": "Escada reta maciça: calcula o número de degraus pela altura a vencer e o espelho máximo, e confere a fórmula de Blondel. Sobe no sentido +Y.",
+  "parameters": [
+    {
+      "name": "largura",
+      "label": "Largura",
+      "type": "comprimento",
+      "default": 1.2,
+      "min": 0.6,
+      "max": 3,
+      "group": "Dimensões"
+    },
+    {
+      "name": "alturaTotal",
+      "label": "Altura a vencer",
+      "type": "comprimento",
+      "default": 3,
+      "min": 0.3,
+      "max": 6,
+      "group": "Dimensões"
+    },
+    {
+      "name": "espelhoMax",
+      "label": "Espelho máximo",
+      "type": "comprimento",
+      "default": 0.18,
+      "min": 0.15,
+      "max": 0.19,
+      "group": "Degraus"
+    },
+    {
+      "name": "piso",
+      "label": "Piso (pisada)",
+      "type": "comprimento",
+      "default": 0.28,
+      "min": 0.25,
+      "max": 0.32,
+      "group": "Degraus"
+    },
+    {
+      "name": "laje",
+      "label": "Espessura da laje",
+      "type": "comprimento",
+      "default": 0.12,
+      "min": 0.08,
+      "max": 0.25,
+      "group": "Construção"
+    },
+    {
+      "name": "material",
+      "label": "Material",
+      "type": "material",
+      "default": "Concreto",
+      "group": "Materiais"
+    }
+  ],
+  "script": "// Escada reta: perfil dos degraus no plano YZ, extrudado na largura (eixo X)\nconst n = Math.ceil(p.alturaTotal / p.espelhoMax);\nconst e = p.alturaTotal / n, s = p.piso, H = p.alturaTotal, Lh = n * s;\nconst pts = [[0, 0]];\nfor (let i = 0; i < n; i++) pts.push([i * s, (i + 1) * e], [(i + 1) * s, (i + 1) * e]);\npts.push([Lh, H - p.laje], [Lh * p.laje / H, 0]);   // fundo inclinado paralelo à linha dos degraus\ng.extrude(pts, p.largura, { plane: 'yz', x: -p.largura / 2, material: p.material, name: 'Escada' });\nconst blondel = 2 * e + s;\ng.log(n, 'degraus · espelho', e.toFixed(3), 'm · piso', s.toFixed(2), 'm · projeção', Lh.toFixed(2), 'm');\ng.log('Blondel 2e + p =', blondel.toFixed(3), 'm', blondel >= 0.63 && blondel <= 0.64 ? '(ok)' : '(fora de 0,63–0,64)');\n"
+}

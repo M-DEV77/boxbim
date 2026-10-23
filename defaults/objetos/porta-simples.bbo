@@ -1,0 +1,89 @@
+{
+  "format": "boxbim-objeto",
+  "version": 1,
+  "revision": 2,
+  "author": "BoxBim",
+  "created": "2026-10-21",
+  "id": "porta-simples",
+  "name": "Porta simples",
+  "category": "IfcDoor",
+  "description": "Porta de giro com marco, folha e ângulo de abertura. Hospedada em parede: abre o vão e o marco acompanha a espessura da parede.",
+  "parameters": [
+    {
+      "name": "largura",
+      "label": "Largura do vão",
+      "type": "comprimento",
+      "default": 0.8,
+      "min": 0.6,
+      "max": 1.2,
+      "group": "Dimensões"
+    },
+    {
+      "name": "altura",
+      "label": "Altura do vão",
+      "type": "comprimento",
+      "default": 2.1,
+      "min": 1.9,
+      "max": 2.6,
+      "group": "Dimensões"
+    },
+    {
+      "name": "espessuraParede",
+      "label": "Espessura do marco (parede)",
+      "type": "comprimento",
+      "default": 0.15,
+      "min": 0.07,
+      "max": 0.4,
+      "group": "Dimensões"
+    },
+    {
+      "name": "marco",
+      "label": "Largura do marco",
+      "type": "comprimento",
+      "default": 0.05,
+      "min": 0.03,
+      "max": 0.12,
+      "group": "Construção"
+    },
+    {
+      "name": "folha",
+      "label": "Espessura da folha",
+      "type": "comprimento",
+      "default": 0.035,
+      "min": 0.025,
+      "max": 0.06,
+      "group": "Construção"
+    },
+    {
+      "name": "abertura",
+      "label": "Ângulo de abertura",
+      "type": "angulo",
+      "default": 0,
+      "min": 0,
+      "max": 90,
+      "group": "Construção"
+    },
+    {
+      "name": "macaneta",
+      "label": "Maçaneta",
+      "type": "booleano",
+      "default": true,
+      "group": "Construção"
+    },
+    {
+      "name": "matFolha",
+      "label": "Material da folha",
+      "type": "material",
+      "default": "Madeira",
+      "group": "Materiais"
+    },
+    {
+      "name": "matMarco",
+      "label": "Material do marco",
+      "type": "material",
+      "default": "Madeira",
+      "group": "Materiais"
+    }
+  ],
+  "script": "// Porta: marco (batentes + travessa) e folha girando na dobradiça esquerda\nconst L = p.largura, H = p.altura, m = p.marco, w = p.espessuraParede;\ng.box(m, w, H + m, { x: -(L / 2 + m / 2), material: p.matMarco, name: 'Batente' });\ng.box(m, w, H + m, { x: L / 2 + m / 2, material: p.matMarco, name: 'Batente' });\ng.box(L, w, m, { z: H, material: p.matMarco, name: 'Travessa' });\ng.opening(L + 2 * m, H + m);   // vão aberto na parede hospedeira (vão luz + marco)\ng.at({ x: -L / 2, y: -w / 2 + p.folha / 2 + 0.01, rotZ: p.abertura }, () => {\n  g.box(L, p.folha, H - 0.01, { x: L / 2, material: p.matFolha, name: 'Folha' });\n  if (p.macaneta) {\n    for (const lado of [-1, 1]) g.sphere(0.025, { x: L - 0.07, y: lado * (p.folha / 2 + 0.03), z: 1.0, color: '#c8c8c8', name: 'Maçaneta' });\n  }\n});\ng.log('Vão luz:', L.toFixed(2), 'x', H.toFixed(2), 'm');\n"
+}

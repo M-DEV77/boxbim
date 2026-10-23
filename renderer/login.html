@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrar — BoxBim</title>
+  <link rel="icon" href="/assets/icon.svg">
+  <link rel="stylesheet" href="/pages.css">
+</head>
+<body class="auth">
+  <main class="auth-card">
+    <div class="auth-brand"><img src="/assets/icon.svg" alt=""><h1>BoxBim</h1></div>
+    <p class="muted">Modelagem BIM no navegador, em equipe.</p>
+    <div class="auth-tabs">
+      <button type="button" data-tab="login" class="active">Entrar</button>
+      <button type="button" data-tab="cadastro">Criar conta</button>
+    </div>
+    <form id="form-login">
+      <label>E-mail <input name="email" type="email" autocomplete="username" required></label>
+      <label>Senha <input name="senha" type="password" autocomplete="current-password" required></label>
+      <button class="primary" type="submit">Entrar</button>
+    </form>
+    <form id="form-cadastro" hidden>
+      <label>Nome <input name="nome" autocomplete="name" required></label>
+      <label>E-mail <input name="email" type="email" autocomplete="username" required></label>
+      <label>Senha <input name="senha" type="password" autocomplete="new-password" minlength="8" required></label>
+      <label>Confirmar senha <input name="senha2" type="password" autocomplete="new-password" minlength="8" required></label>
+      <button class="primary" type="submit">Criar conta</button>
+      <p class="small muted">A primeira conta criada neste servidor vira administradora (chaves de IA e ferramentas).</p>
+    </form>
+    <p id="msg" class="msg" hidden></p>
+  </main>
+  <script src="/dist/login.js"></script>
+</body>
+</html>

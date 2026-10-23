@@ -1,0 +1,24 @@
+{
+  "format": "boxbim-objeto",
+  "version": 1,
+  "revision": 1,
+  "author": "BoxBim",
+  "created": "2026-10-23",
+  "category": "IfcAnnotation",
+  "id": "linha",
+  "name": "Linha",
+  "sistema": "linha",
+  "description": "Linha / polilinha 2D no plano do nível (atalho L). Pontas, comprimento digitado, ORTO; base para extrudar e varrer.",
+  "parameters": [
+    {
+      "name": "comprimento",
+      "label": "Comprimento (prévia)",
+      "type": "comprimento",
+      "default": 3,
+      "group": "Prévia",
+      "min": 0.1,
+      "max": 100
+    }
+  ],
+  "script": "// Objeto de SISTEMA do desenho 2D: inserir abre a ferramenta de desenho (no plano do nível).\n// O script só desenha a miniatura/prévia da biblioteca; as linhas do projeto são elementos de desenho 2D.\ng.box(p.comprimento, 0.04, 0.02, { x: p.comprimento / 2, color: '#2fd18a', name: 'Linha' });\n"
+}

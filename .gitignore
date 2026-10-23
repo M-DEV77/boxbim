@@ -1,0 +1,11 @@
+# dependências e saídas de build (refeitas por npm install / npm run build)
+node_modules/
+renderer/dist/
+revit-addin/bin/
+revit-addin/obj/
+
+# dados e segredos locais (nunca no repositório)
+.env
+*.sqlite
+*.log
+.servidor/

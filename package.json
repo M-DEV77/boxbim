@@ -1,0 +1,35 @@
+{
+  "name": "boxbim",
+  "version": "2.14.0",
+  "description": "BoxBim — modelagem BIM no navegador, em equipe, com IA e ponte com o Revit",
+  "main": "server/index.js",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "watch": "node scripts/build.js --watch",
+    "start": "node scripts/build.js && node server/index.js",
+    "servidor": "node server/index.js",
+    "addin:build": "dotnet build revit-addin/BoxBimBridge.csproj -c Release",
+    "addin:install": "powershell -ExecutionPolicy Bypass -File revit-addin/install-addin.ps1",
+    "zerar-contas": "node server/tools/zerar-contas.js"
+  },
+  "type": "commonjs",
+  "dependencies": {
+    "dxf-parser": "^1.1.2",
+    "express": "5.2.1",
+    "sequelize": "6.37.8",
+    "three": "^0.186.1",
+    "three-bvh-csg": "0.0.18",
+    "three-gpu-pathtracer": "0.0.26",
+    "three-mesh-bvh": "0.9.15",
+    "web-ifc": "^0.0.78",
+    "ws": "8.22.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  }
+}

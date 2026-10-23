@@ -1,0 +1,24 @@
+{
+  "format": "boxbim-objeto",
+  "version": 1,
+  "revision": 1,
+  "author": "BoxBim",
+  "created": "2026-10-23",
+  "category": "IfcAnnotation",
+  "id": "circulo",
+  "name": "Círculo",
+  "sistema": "circulo",
+  "description": "Círculo 2D por centro e raio (o raio pode ser digitado).",
+  "parameters": [
+    {
+      "name": "raio",
+      "label": "Raio (prévia)",
+      "type": "comprimento",
+      "default": 1.5,
+      "group": "Prévia",
+      "min": 0.05,
+      "max": 100
+    }
+  ],
+  "script": "// Objeto de SISTEMA do desenho 2D: inserir abre a ferramenta de desenho (no plano do nível).\n// O script só desenha a miniatura/prévia da biblioteca; as linhas do projeto são elementos de desenho 2D.\ng.revolve([[p.raio - 0.02, 0], [p.raio + 0.02, 0], [p.raio + 0.02, 0.02], [p.raio - 0.02, 0.02]], { segments: 64, color: '#2fd18a', name: 'Círculo' });\n"
+}

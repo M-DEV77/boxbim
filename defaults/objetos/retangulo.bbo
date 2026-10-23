@@ -1,0 +1,33 @@
+{
+  "format": "boxbim-objeto",
+  "version": 1,
+  "revision": 1,
+  "author": "BoxBim",
+  "created": "2026-10-23",
+  "category": "IfcAnnotation",
+  "id": "retangulo",
+  "name": "Retângulo",
+  "sistema": "retangulo",
+  "description": "Retângulo 2D (quatro linhas) por dois cantos.",
+  "parameters": [
+    {
+      "name": "largura",
+      "label": "Largura (prévia)",
+      "type": "comprimento",
+      "default": 3,
+      "group": "Prévia",
+      "min": 0.1,
+      "max": 100
+    },
+    {
+      "name": "profundidade",
+      "label": "Profundidade (prévia)",
+      "type": "comprimento",
+      "default": 2,
+      "group": "Prévia",
+      "min": 0.1,
+      "max": 100
+    }
+  ],
+  "script": "// Objeto de SISTEMA do desenho 2D: inserir abre a ferramenta de desenho (no plano do nível).\n// O script só desenha a miniatura/prévia da biblioteca; as linhas do projeto são elementos de desenho 2D.\nconst L = p.largura, P = p.profundidade, t = 0.04, c = '#2fd18a';\ng.box(L, t, 0.02, { x: L / 2, color: c }); g.box(L, t, 0.02, { x: L / 2, y: P, color: c });\ng.box(t, P, 0.02, { y: P / 2, color: c }); g.box(t, P, 0.02, { x: L, y: P / 2, color: c });\n"
+}
