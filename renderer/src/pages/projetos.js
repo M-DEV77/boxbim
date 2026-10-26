@@ -18,14 +18,22 @@ function card(p) {
   actions.push(h('button', { class: 'mini', title: 'Duplicar (você vira dono da cópia)', onclick: async e => { e.stopPropagation(); await api('POST', `/api/projetos/${p.id}/duplicar`); toast('Projeto duplicado.'); load(); } }, 'Duplicar'));
   if (p.papel === 'dono') actions.push(h('button', { class: 'mini danger', onclick: e => { e.stopPropagation(); remove(p); } }, 'Excluir'));
   else actions.push(h('button', { class: 'mini', onclick: async e => { e.stopPropagation(); await leave(p); } }, 'Sair'));
-  return h('article', { class: 'card', onclick: open, title: 'Abrir' },
-    h('div', { class: 'thumb' }, p.miniatura ? h('img', { src: p.miniatura, alt: '' }) : h('span', { class: 'thumb-empty' }, '⬡')),
-    h('div', { class: 'card-body' },
-      h('div', { class: 'card-title' }, p.nome, h('span', { class: `tag role-${p.papel}` }, p.papel)),
-      p.descricao ? h('div', { class: 'small muted clamp' }, p.descricao) : null,
-      h('div', { class: 'small muted' }, `${p.elementos ?? 0} elemento(s) · ${fmtDate(p.atualizadoEm)}${p.dono && p.papel !== 'dono' ? ` · dono: ${p.dono.nome}` : ''}`),
-      h('div', { class: 'card-actions' }, actions)));
+  // moldura dupla: casca (card) com o núcleo dentro (card-core)
+  return h('article', { class: 'card reveal', onclick: open, title: 'Abrir' },
+    h('div', { class: 'card-core' },
+      h('div', { class: 'thumb' }, p.miniatura ? h('img', { src: p.miniatura, alt: '' }) : h('span', { class: 'thumb-empty' }, '⬡')),
+      h('div', { class: 'card-body' },
+        h('div', { class: 'card-title' }, p.nome, h('span', { class: `tag role-${p.papel}` }, p.papel)),
+        p.descricao ? h('div', { class: 'small muted clamp' }, p.descricao) : null,
+        h('div', { class: 'small muted' }, `${p.elementos ?? 0} elemento(s) · ${fmtDate(p.atualizadoEm)}${p.dono && p.papel !== 'dono' ? ` · dono: ${p.dono.nome}` : ''}`),
+        h('div', { class: 'card-actions' }, actions))));
 }
+
+/** Entrada suave dos cartões quando aparecem na tela (IntersectionObserver; escalonada). */
+const seen = new IntersectionObserver(entries => {
+  entries.filter(e => e.isIntersecting).forEach((e, i) => { e.target.style.transitionDelay = `${Math.min(i, 8) * 60}ms`; e.target.classList.add('in'); seen.unobserve(e.target); });
+}, { rootMargin: '0px 0px -40px 0px' });
+const reveal = root => root.querySelectorAll('.reveal:not(.in)').forEach(el => seen.observe(el));
 
 function render() {
   const q = $('#filtro').value.trim().toLowerCase();
@@ -33,6 +41,7 @@ function render() {
   const mine = show.filter(p => p.papel === 'dono'), shared = show.filter(p => p.papel !== 'dono');
   $('#meus').replaceChildren(...(mine.length ? mine.map(card) : [h('p', { class: 'muted' }, q ? 'Nada encontrado.' : 'Nenhum projeto ainda. Crie o primeiro em "+ Novo projeto".')]));
   $('#compartilhados').replaceChildren(...(shared.length ? shared.map(card) : [h('p', { class: 'muted' }, 'Ninguém compartilhou um projeto com você ainda.')]));
+  reveal(document);
 }
 
 async function create() {

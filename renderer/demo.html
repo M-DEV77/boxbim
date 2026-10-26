@@ -10,15 +10,15 @@
 <body class="demo">
   <canvas id="demo-canvas"></canvas>
 
-  <header class="demo-top">
+  <header class="demo-top island">
     <div class="demo-brand"><img src="/assets/icon.svg" alt=""><div><strong>BoxBim</strong><span>Modelagem BIM no navegador, em equipe</span></div></div>
     <div class="spacer"></div>
     <span id="demo-timer" class="demo-timer" title="Tempo da demonstração"></span>
-    <button id="demo-entrar" class="primary" type="button">Entrar</button>
+    <button id="demo-entrar" class="primary cta" type="button">Entrar<span class="cta-ico" aria-hidden="true">↗</span></button>
   </header>
 
-  <section class="demo-card" id="demo-card">
-    <div class="demo-kicker">Projeto de demonstração</div>
+  <section class="demo-card bezel-soft" id="demo-card">
+    <div class="eyebrow">Projeto de demonstração</div>
     <h2>Casa Horizonte</h2>
     <p class="muted">Arraste para girar, role para aproximar. Tudo é gerado no navegador: geometria, materiais procedurais
       (reboco, concreto, madeira, pedra, porcelanato, pastilha, água), céu e sol em tempo real.</p>
@@ -28,7 +28,7 @@
   <div id="demo-loading" class="demo-loading"><div class="demo-spin"></div><span>Gerando a casa e os materiais…</span></div>
 
   <div id="demo-login" class="demo-login" hidden>
-    <main class="auth-card">
+    <div class="bezel"><main class="auth-card">
       <button type="button" id="demo-fechar" class="ghost demo-fechar" title="Voltar à demonstração">✕</button>
       <div class="auth-brand"><img src="/assets/icon.svg" alt=""><h1>BoxBim</h1></div>
       <p class="muted" id="demo-login-msg">Modelagem BIM no navegador, em equipe.</p>
@@ -50,7 +50,7 @@
         <button class="primary" type="submit">Criar conta</button>
       </form>
       <p id="msg" class="msg" hidden></p>
-    </main>
+    </main></div>
   </div>
 
   <footer class="demo-credits"><a href="https://marceloolimpio.com.br/" target="_blank" rel="noopener">BoxHoney By Marcelo Olimpio – Eng. de software <span id="demo-versao"></span></a></footer>

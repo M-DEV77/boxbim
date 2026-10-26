@@ -767,3 +767,60 @@ table.budget tr.muted td { color: var(--muted); }
 .undo-redo .icon-btn svg path:first-child { stroke: var(--green-2); }
 .undo-redo .icon-btn:hover:not(:disabled) { background: var(--panel-2); border-color: var(--line); }
 .undo-redo .icon-btn:disabled { opacity: .35; cursor: default; }
+
+/* ======================================================================================================
+   ACABAMENTO VISUAL DO EDITOR (skill "high-end-visual-design", adaptada a uma tela de ferramentas: a densidade
+   fica; mudam profundidade, linhas e movimento): janelas em moldura dupla com entrada de mola, menus e barras
+   flutuantes de vidro com linha de cabelo, botões principais em pílula, ícones mais leves, transições com
+   cubic-bezier(.32,.72,0,1) só em transform/opacity/cores.
+   ====================================================================================================== */
+:root {
+  --spring: cubic-bezier(.32, .72, 0, 1);
+  --hair: rgba(255, 255, 255, .07);
+  --hair-2: rgba(255, 255, 255, .12);
+  --glass: rgba(18, 23, 29, .86);
+}
+
+/* botões */
+button { transition: transform .45s var(--spring), background-color .45s var(--spring), border-color .45s var(--spring), color .45s var(--spring), box-shadow .45s var(--spring); }
+button:active:not(:disabled) { transform: scale(.97); }
+button.primary { border-radius: 999px; border: none; padding-inline: 14px; background: linear-gradient(180deg, #22c043, #169e2e); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 8px 22px -12px rgba(22, 158, 46, .6); }
+button.primary:hover { background: linear-gradient(180deg, #2bd04d, #18aa31); }
+
+/* faixa: ícones de traço mais leve, botões com resposta de mola */
+.rbtn { border-radius: 10px; }
+.rbtn svg, .dd-ico svg, svg.ico24 { stroke-width: 1.45; }
+.rbtn:hover { background: rgba(255, 255, 255, .05); border-color: var(--hair); }
+.rbtn:active { background: rgba(47, 127, 209, .35); }
+.rbtn svg { transition: transform .5s var(--spring); }
+.rbtn:hover svg { transform: translateY(-1px); }
+
+/* janelas: moldura dupla (casca de 6 px + núcleo), sombra ampla e suave, entrada de mola */
+.modal-back { backdrop-filter: blur(8px); background: rgba(3, 5, 8, .55); animation: ed-fade .45s var(--spring) both; }
+.modal { border: none; border-radius: 20px; box-shadow: inset 0 0 0 1px var(--hair), inset 0 1px 0 rgba(255, 255, 255, .05), 0 0 0 6px rgba(255, 255, 255, .035), 0 40px 90px -40px rgba(0, 0, 0, .95); animation: ed-rise .6s var(--spring) both; }
+.modal header { border-bottom-color: var(--hair); letter-spacing: -.01em; }
+.modal footer { border-top-color: var(--hair); }
+@keyframes ed-rise { from { opacity: 0; transform: translateY(14px) scale(.985); } }
+@keyframes ed-fade { from { opacity: 0; } }
+
+/* menus suspensos de vidro */
+.dropdown { border: none; border-radius: 14px; padding: 5px; background: var(--glass); backdrop-filter: blur(16px) saturate(1.3); box-shadow: inset 0 0 0 1px var(--hair-2), 0 24px 50px -24px rgba(0, 0, 0, .9); animation: ed-pop .35s var(--spring) both; transform-origin: top left; }
+.dropdown button { border-radius: 9px; }
+.dropdown button:hover { background: rgba(47, 127, 209, .55); }
+.dropdown hr { border-top-color: var(--hair); }
+@keyframes ed-pop { from { opacity: 0; transform: translateY(-4px) scale(.98); } }
+
+/* barras e avisos flutuantes sobre a vista */
+.draw-bar, .reveal-bar { border-radius: 16px; background: var(--glass); backdrop-filter: blur(14px) saturate(1.3); box-shadow: inset 0 0 0 1px var(--hair-2), 0 20px 44px -26px rgba(0, 0, 0, .9); animation: ed-fade .4s var(--spring) both; }
+.toast { border: none; border-left: none; border-radius: 14px; background: var(--glass); backdrop-filter: blur(14px); box-shadow: inset 0 0 0 1px var(--hair-2), inset 3px 0 0 #1fbf3b, 0 20px 40px -24px rgba(0, 0, 0, .9); animation: ed-rise .5s var(--spring) both; }
+.view-chip, .nav-help-btn { transition: border-color .45s var(--spring), color .45s var(--spring), transform .45s var(--spring); }
+.view-chip { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04); }
+.nav-help-pop { border-radius: 16px; background: var(--glass); backdrop-filter: blur(14px); box-shadow: inset 0 0 0 1px var(--hair-2), 0 24px 50px -24px rgba(0, 0, 0, .9); animation: ed-pop .35s var(--spring) both; transform-origin: bottom left; }
+
+/* campos: linha fina e foco verde suave */
+input, select, textarea { transition: border-color .4s var(--spring), box-shadow .4s var(--spring); }
+input:focus, select:focus, textarea:focus { outline: none; border-color: rgba(31, 191, 59, .55); box-shadow: 0 0 0 3px rgba(31, 191, 59, .14); }
+
+@media (prefers-reduced-motion: reduce) {
+  .modal, .modal-back, .dropdown, .draw-bar, .reveal-bar, .toast, .nav-help-pop { animation: none; }
+}

@@ -6,12 +6,28 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.26.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.27.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.27.0] — 2026-10-26 · Acabamento visual (skill high-end-visual-design)
+
+### Mudado
+- **Páginas de entrada, login, projetos e biblioteca** no estilo "Ethereal Glass" nas cores do BoxBim: fundo preto
+  profundo com brilhos suaves verde e azul-petróleo, barra superior em "ilha" de vidro flutuante, etiqueta acima
+  do título e título grande, cartões em **moldura dupla** (casca + núcleo, raios concêntricos), botões principais
+  em pílula com o ícone num círculo ("Novo projeto +", "Entrar ↗"), linhas finíssimas no lugar das bordas cinza e
+  sombras amplas e suaves. Os cartões entram com um fade suave e escalonado ao aparecer na tela.
+- **Editor**: janelas com moldura dupla, fundo desfocado e entrada de mola; menus suspensos, barras e avisos de
+  vidro; botões principais em pílula; ícones da faixa com traço mais leve; transições com curva de mola
+  (`cubic-bezier(.32,.72,0,1)`), só em transform/opacidade/cores. A densidade de ferramentas não mudou.
+- Respeita "reduzir movimento" do sistema (sem animações de entrada).
+
+### Corrigido
+- Cabeçalho da tabela de Elevações saía embolado numa célula só.
 
 ## [2.26.0] — 2026-10-26 · Desfazer e refazer
 

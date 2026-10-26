@@ -216,7 +216,7 @@ export class Display {
       body.innerHTML = '';
       body.append(h('div', { class: 'muted small', style: 'margin-bottom:8px' },
         `Linha da elevação em X, Y (${unitLabel()}): sem linha, a elevação fica na borda do modelo e enxerga tudo. Profundidade: até onde enxerga a partir da linha; Largura: quanto enxerga para os lados, centrada no ponto da linha (vazios = tudo). Visível: aparece no navegador, nos menus e com o marcador nas plantas.`));
-      const head = h('div', { class: 'elev-row head' }, 'Nome', 'Olhando de', 'Linha X', 'Linha Y', 'Profund.', 'Largura', 'Visível', '');
+      const head = h('div', { class: 'elev-row head' }, ['Nome', 'Olhando de', 'Linha X', 'Linha Y', 'Profund.', 'Largura', 'Visível', ''].map(t => h('span', {}, t)));
       body.append(head);
       list.forEach((e, i) => {
         const dk = dirKey(e.dir);

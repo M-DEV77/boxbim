@@ -114,3 +114,111 @@ body.demo-blur .demo-card, body.demo-blur .demo-top { filter: blur(2px); opacity
 .demo-credits { position: fixed; right: 16px; bottom: 12px; font-size: 11px; z-index: 2; }
 .demo-credits a { color: #c9d1db; text-decoration: none; }
 @media (max-width: 600px) { .demo-brand span, .demo-card p { display: none; } }
+
+/* ======================================================================================================
+   ACABAMENTO VISUAL (skill "high-end-visual-design", vibe Ethereal Glass nas cores do BoxBim):
+   preto profundo com brilhos suaves verde/azul-petróleo, vidro fosco só em camadas fixas, linhas de cabelo
+   (branco a 6–12%), moldura dupla (casca + núcleo) nos cartões, botões em pílula com ícone num círculo,
+   etiquetas "eyebrow" e movimento de mola (cubic-bezier .32,.72,0,1) — só transform e opacity.
+   ====================================================================================================== */
+:root {
+  --spring: cubic-bezier(.32, .72, 0, 1);
+  --hair: rgba(255, 255, 255, .07);
+  --hair-2: rgba(255, 255, 255, .12);
+  --ink: #050607;
+  --core: #0c1014;
+  --font-ui: "Segoe UI Variable Text", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Segoe UI Variable Display", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+}
+body { font-family: var(--font-ui); -webkit-font-smoothing: antialiased; }
+button, input, select, textarea { font-family: inherit; }
+button { transition: transform .5s var(--spring), background-color .5s var(--spring), border-color .5s var(--spring), color .5s var(--spring); }
+button:active:not(:disabled) { transform: scale(.98); }
+input, select, textarea { border-color: var(--hair-2); background: rgba(255, 255, 255, .035); border-radius: 10px; transition: border-color .5s var(--spring), box-shadow .5s var(--spring); }
+input:focus, select:focus, textarea:focus { outline: none; border-color: rgba(31, 191, 59, .55); box-shadow: 0 0 0 4px rgba(31, 191, 59, .12); }
+
+/* fundo: preto profundo com brilhos difusos (camada fixa, não rola) */
+body.glass-page, body.auth { background: var(--ink); }
+body.glass-page::before, body.auth::before {
+  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(42rem 30rem at 12% -6%, rgba(22, 158, 46, .16), transparent 70%),
+    radial-gradient(38rem 32rem at 96% 8%, rgba(38, 83, 110, .30), transparent 70%),
+    radial-gradient(30rem 24rem at 60% 110%, rgba(22, 158, 46, .07), transparent 70%);
+}
+body.glass-page > *, body.auth > * { position: relative; z-index: 1; }
+body.glass-page > .page-top { position: sticky; z-index: 5; }
+
+/* etiqueta acima dos títulos */
+.eyebrow { display: inline-flex; align-items: center; gap: 6px; width: max-content; padding: 4px 11px; border-radius: 999px; font-size: 10px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: #8fe0a0; background: rgba(31, 191, 59, .08); box-shadow: inset 0 0 0 1px rgba(31, 191, 59, .22); }
+.eyebrow::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--green-2, #1fbf3b); box-shadow: 0 0 8px #1fbf3b; }
+
+/* botão principal em pílula com o ícone dentro de um círculo ("botão no botão") */
+button.primary { border-radius: 999px; padding: 8px 18px; background: linear-gradient(180deg, #22c043, #169e2e); border: none; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), 0 10px 30px -12px rgba(22, 158, 46, .55); }
+button.primary:hover { background: linear-gradient(180deg, #2bd04d, #18aa31); }
+button.cta { display: inline-flex; align-items: center; gap: 10px; padding: 6px 6px 6px 18px; }
+.cta-ico { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: rgba(0, 0, 0, .18); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18); font-size: 15px; line-height: 1; transition: transform .6s var(--spring); }
+button.cta:hover .cta-ico { transform: translate(2px, -1px) scale(1.06); }
+button.ghost, button.mini { border-color: var(--hair-2); background: rgba(255, 255, 255, .04); border-radius: 999px; }
+button.mini { padding: 3px 10px; }
+button.ghost:hover, button.mini:hover { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .2); }
+
+/* barra superior: "ilha" de vidro flutuante, solta do topo */
+.page-top.island { width: min(1180px, calc(100% - 32px)); margin: 16px auto 0; padding: 8px 10px 8px 16px; border: none; border-radius: 999px; background: rgba(14, 18, 23, .62); backdrop-filter: blur(18px) saturate(1.3); box-shadow: inset 0 0 0 1px var(--hair), inset 0 1px 0 rgba(255, 255, 255, .06), 0 20px 50px -30px rgba(0, 0, 0, .9); top: calc(env(safe-area-inset-top, 0px) + 12px); }
+.page-top.island nav a { border-radius: 999px; padding: 6px 14px; transition: background-color .5s var(--spring), color .5s var(--spring); }
+.page-top.island nav a.active { background: rgba(255, 255, 255, .08); color: var(--text); }
+
+/* página: mais respiro, título grande */
+.page { padding: 56px 16px 96px; }
+.page-head { align-items: flex-end; gap: 14px; margin-bottom: 8px; }
+.head-titles { display: flex; flex-direction: column; gap: 12px; }
+.page-head h2 { font-family: var(--font-display); font-size: clamp(30px, 4.4vw, 52px); font-weight: 700; letter-spacing: -.035em; line-height: 1; }
+.page-head input { border-radius: 999px; padding: 9px 16px; }
+section h3 { margin: 48px 0 16px; font-size: 11px; letter-spacing: .2em; color: #7e8a9b; }
+
+/* cartões em moldura dupla: casca (card) + núcleo (card-core), raios concêntricos */
+.cards { gap: 20px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.card { padding: 6px; border: none; border-radius: 26px; background: rgba(255, 255, 255, .03); box-shadow: inset 0 0 0 1px var(--hair); transition: transform .7s var(--spring), box-shadow .7s var(--spring), opacity .9s var(--spring); overflow: visible; }
+.card:hover { transform: translateY(-4px); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14), 0 30px 60px -36px rgba(22, 158, 46, .45); border-color: transparent; }
+.card-core { flex: 1; display: flex; flex-direction: column; border-radius: 20px; overflow: hidden; background: var(--core); box-shadow: inset 0 1px 1px rgba(255, 255, 255, .08); }
+.thumb { background: radial-gradient(circle at 50% 30%, #1b2530, #0b0f13); }
+.thumb img { transition: transform 1.2s var(--spring); }
+.card:hover .thumb img { transform: scale(1.04); }
+.card-body { padding: 14px 16px 16px; gap: 6px; }
+.card-title { font-size: 15px; letter-spacing: -.01em; }
+.tag { border: none; box-shadow: inset 0 0 0 1px var(--hair-2); background: rgba(255, 255, 255, .05); }
+
+/* entrada suave (IntersectionObserver em projetos.js) */
+.reveal { opacity: 0; transform: translateY(26px); }
+.reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } }
+
+/* moldura dupla do login (casca .bezel + núcleo .auth-card) */
+.bezel { padding: 7px; border-radius: 30px; background: rgba(255, 255, 255, .04); box-shadow: inset 0 0 0 1px var(--hair), 0 40px 90px -40px rgba(0, 0, 0, .9); animation: rise .9s var(--spring) both; width: min(400px, 100%); }
+.bezel .auth-card { width: 100%; border: none; border-radius: 23px; background: var(--core); box-shadow: inset 0 1px 1px rgba(255, 255, 255, .08); padding: 30px; }
+.auth-brand h1 { font-family: var(--font-display); letter-spacing: -.03em; }
+.auth-tabs { border-radius: 999px; background: rgba(255, 255, 255, .04); box-shadow: inset 0 0 0 1px var(--hair); padding: 4px; }
+.auth-tabs button { border-radius: 999px; }
+.auth-tabs button.active { background: rgba(255, 255, 255, .09); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08); }
+.auth-card button.primary { padding: 11px; }
+@keyframes rise { from { opacity: 0; transform: translateY(18px) scale(.985); } }
+
+/* diálogos e avisos */
+.dlg-back { backdrop-filter: blur(10px); background: rgba(3, 5, 8, .6); }
+.dlg { border: none; border-radius: 24px; background: var(--core); box-shadow: inset 0 0 0 1px var(--hair), 0 0 0 7px rgba(255, 255, 255, .03), 0 40px 90px -40px rgba(0, 0, 0, .9); padding: 22px; animation: rise .7s var(--spring) both; }
+.toast { border: none; border-radius: 999px; padding: 10px 18px; background: rgba(20, 26, 33, .85); backdrop-filter: blur(14px); box-shadow: inset 0 0 0 1px var(--hair-2), 0 20px 40px -24px rgba(0, 0, 0, .9); }
+
+/* demonstração: ilha no topo, cartão em moldura, CTA em pílula */
+.demo-top.island { top: 14px; left: 50%; right: auto; transform: translateX(-50%); width: min(1100px, calc(100% - 28px)); padding: 7px 8px 7px 14px; border-radius: 999px; background: rgba(8, 11, 14, .55); backdrop-filter: blur(16px) saturate(1.3); box-shadow: inset 0 0 0 1px var(--hair-2), 0 24px 50px -30px rgba(0, 0, 0, .9); text-shadow: none; }
+.demo-top.island .demo-brand img { width: 28px; height: 28px; }
+.demo-timer { border-radius: 999px; background: rgba(255, 255, 255, .06); box-shadow: inset 0 0 0 1px var(--hair); }
+.demo-card.bezel-soft { left: 24px; bottom: 48px; padding: 22px 24px; border: none; border-radius: 26px; background: rgba(8, 11, 14, .6); box-shadow: inset 0 0 0 1px var(--hair-2), 0 0 0 7px rgba(255, 255, 255, .035), 0 40px 80px -40px rgba(0, 0, 0, .95); animation: rise 1s var(--spring) .2s both; }
+.demo-card h2 { font-family: var(--font-display); font-size: clamp(26px, 3vw, 38px); letter-spacing: -.035em; line-height: 1.05; margin: 12px 0 8px; }
+.demo-chips span { border: none; border-radius: 999px; padding: 4px 11px; background: rgba(255, 255, 255, .05); box-shadow: inset 0 0 0 1px var(--hair); }
+.demo-login { background: rgba(3, 5, 8, .55); backdrop-filter: blur(10px); }
+.demo-login .bezel { position: relative; }
+.demo-fechar { z-index: 2; }
+@media (max-width: 768px) {
+  .page-top.island { border-radius: 22px; }
+  .demo-card.bezel-soft { left: 12px; right: 12px; width: auto; }
+}
