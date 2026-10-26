@@ -12,6 +12,7 @@ import { SmartDims } from './smart-dims.js';
 import { icon } from './icons.js';
 import { Display } from './display.js';
 import { OriginGizmo } from './origin-gizmo.js';
+import { Drawing } from './drawing.js';
 import { createOnLevel, syncLevelNames } from './modeling.js';
 import { Chat } from './chat.js';
 import { runTool, syncLevels } from './tools.js';
@@ -118,6 +119,7 @@ class App {
     this.viewStyles = new ViewStyles(this);
     this.views.projectionOf = v => this.viewStyles.projectionOf(v);
     this.origin = new OriginGizmo(this); // gizmo da origem 0,0 (tamanho fixo na tela)
+    this.drawing = new Drawing(this);    // escala das vistas e peso das linhas (corte / projeção)
     this.display = new Display(this); // chips de exibição, 👁 revelar ocultos, H/Shift+H, ajuda do mouse, elevações
     this.wallTool = new WallDrawTool(this);
     this.slabTool = new SlabTool(this);

@@ -155,6 +155,10 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
 - **Paredes levam as portas e janelas**: mover a parede por qualquer caminho (Mover, cota, pontas, aparar,
   espelhar…) leva junto o que ela hospeda, na mesma posição ao longo da parede.
 - **?** no canto da vista: ajuda do mouse e dos atalhos (aparece sozinha na primeira vez).
+- **Escala da vista** (barra de baixo, nas plantas, forros e elevações: 1:1 … 1:1000) e **peso das linhas** em mm de
+  papel: linha de **corte** grossa (contorno onde o plano de corte atravessa as peças), divisas entre camadas e
+  arestas de **projeção** mais finas; aproximar engrossa, como no Revit. "Pesos de linha…" no seletor de escala; **LF**
+  põe todas as linhas com 1 px.
 
 ## Mover, girar e orbitar
 
@@ -395,4 +399,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.29.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.30.0</a>

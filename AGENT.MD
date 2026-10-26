@@ -15,6 +15,8 @@ flowchart LR
     APP --> VIEWER["viewer.js<br/>cena three.js, seleção, cortes"]
     APP --> DISPLAY["display.js<br/>chips de exibição, 👁 revelar ocultos,<br/>H/Shift+H, ajuda, gerenciador de elevações"]
     APP --> ORIGIN["origin-gizmo.js<br/>gizmo da origem 0,0"]
+    APP --> DRAW2D["drawing.js<br/>escala das vistas, pesos de linha,<br/>linhas de corte"]
+    DRAW2D --> VIEWER
     APP --> SDIMS["smart-dims.js<br/>cotas até peças paralelas"]
     DISPLAY --> VIEWER
     SDIMS --> VIEWER
@@ -123,7 +125,8 @@ flowchart LR
 | 2026-10-26 | 2.26.0 | `7aee41c` | Desfazer/refazer geral (`project.js`: passos do envio ao servidor) e botões ↶ ↷ no topo; troca de parede não apaga mais as portas hospedadas |
 | 2026-10-26 | 2.27.0 | `5bbf141` | Acabamento visual pela skill high-end-visual-design: páginas (`pages.css`: vidro, moldura dupla, ilha, pílulas, entrada animada) e editor (`styles.css`: janelas, menus, barras, movimento de mola) |
 | 2026-10-26 | 2.28.0 | `2fbf1f8` | Ícones genéricos da Tabler Icons (MIT) embutidos (`icons-tabler.js`, gerado por `scripts/gen-tabler-icons.py`); ícones de CAD próprios mantidos; `THIRD-PARTY-NOTICES.md` |
-| 2026-10-26 | 2.29.0 | este commit | Gizmo da origem 0,0 (`origin-gizmo.js`, SVG de tamanho fixo; seta na borda quando fora da tela) |
+| 2026-10-26 | 2.29.0 | `44b4d48` | Gizmo da origem 0,0 (`origin-gizmo.js`, SVG de tamanho fixo; seta na borda quando fora da tela) |
+| 2026-10-26 | 2.30.0 | este commit | Escala por vista e pesos de linha (`drawing.js`); arestas e linhas de corte com espessura real (LineSegments2/LineMaterial; `viewer.updateSectionLines`) |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.29.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.30.0</a>

@@ -6,12 +6,25 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.29.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.30.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.30.0] — 2026-10-26 · Escala das vistas e peso das linhas
+
+### Adicionado
+- **Escala por vista** (1:1 … 1:1000; padrão 1:100) no seletor da barra de baixo, nas plantas, forros e elevações;
+  gravada no projeto.
+- **Peso das linhas** nas vistas de desenho, em mm de papel: **corte** (contorno onde o plano de corte atravessa as
+  peças, calculado na hora — padrão 0,50 mm) e **projeção** (arestas vistas e divisas entre camadas de uma parede —
+  0,25 mm). Na tela, a espessura segue a escala e o zoom (aproximar engrossa), como no Revit. "Pesos de linha…" no
+  seletor de escala muda os valores do projeto. Botão **LF** (linhas finas) põe tudo com 1 px.
+
+### Mudado
+- As arestas das peças passam a ser linhas com espessura real (antes, sempre 1 px).
 
 ## [2.29.0] — 2026-10-26 · Gizmo da origem 0,0
 

@@ -222,7 +222,7 @@ export async function runTool(name, args, ctx) {
           o.rotateZ(THREE.MathUtils.degToRad(args.rotate_z_deg));
         }
         if (args.scale) o.scale.multiplyScalar(args.scale);
-        if (args.color) o.traverse(m => { if (m.isMesh) { const mat = materialFor(new THREE.Color(args.color).getHex()); if (m.userData._origMat) m.userData._origMat = mat; else m.material = mat; } });
+        if (args.color) o.traverse(m => { if (m.isMesh && !m.userData.isEdge) { const mat = materialFor(new THREE.Color(args.color).getHex()); if (m.userData._origMat) m.userData._origMat = mat; else m.material = mat; } });
         if (args.name) { o.name = args.name; o.userData.bim.name = args.name; }
         if (typeof args.visible === 'boolean') o.visible = args.visible;
         if (args.props) Object.assign(o.userData.bim.props ||= {}, args.props);

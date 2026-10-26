@@ -2,6 +2,9 @@
 // Duas câmeras: perspectiva (vista 3D, órbita livre) e ortográfica (plantas e elevações: só pan e zoom).
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
+import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
 
@@ -25,7 +28,14 @@ const CAP_MAT = new THREE.MeshBasicMaterial({
 const LINE_LAYER = 1; // linhas ficam fora da contagem do stencil
 const DEFAULT_CAP = 0x262626; // preenchimento de corte de elementos sem material de biblioteca
 
-const EDGE_MAT = new THREE.LineBasicMaterial({ color: 0x1d1d1d });
+// Linhas com espessura de verdade (LineMaterial, em px): arestas de PROJEÇÃO das peças e linhas de CORTE (contorno onde
+// o plano de corte atravessa as peças). A espessura vem do peso em mm de papel × escala da vista × zoom (drawing.js).
+export const EDGE_MAT = new LineMaterial({ color: 0x1d1d1d, linewidth: 1 });
+export const CUT_MAT = new LineMaterial({ color: 0x111111, linewidth: 2.5, depthTest: false });
+CUT_MAT.clipping = false; // fica exatamente no plano de corte
+// divisas internas do corte (entre camadas de uma parede, entre peças encostadas): peso de projeção
+export const CUT_INNER_MAT = new LineMaterial({ color: 0x3a3a3a, linewidth: 1, depthTest: false });
+CUT_INNER_MAT.clipping = false;
 const MAX_EDGE_TRIS = 1_500_000;
 
 export class Viewer extends EventTarget {
@@ -131,6 +141,9 @@ export class Viewer extends EventTarget {
 
   resize() {
     const w = this.container.clientWidth || 1, h = this.container.clientHeight || 1;
+    EDGE_MAT.resolution.set(w, h);
+    CUT_MAT.resolution.set(w, h);
+    CUT_INNER_MAT.resolution.set(w, h);
     this.perspCam.aspect = w / h;
     this.perspCam.updateProjectionMatrix();
     this._applyOrthoFrustum();
@@ -490,13 +503,71 @@ export class Viewer extends EventTarget {
       tris += (g.index ? g.index.count : g.attributes.position?.count || 0) / 3;
       if (tris > MAX_EDGE_TRIS) return;
       // peça cortada por vazio: o booleano deixa arestas soltas (junções em T) — só as quinas de verdade
-      const edges = new THREE.LineSegments(o.userData._csgOrig ? creaseEdges(g, 25) : new THREE.EdgesGeometry(g, 25), EDGE_MAT);
-      edges.userData.isEdge = true;
+      const src = o.userData._csgOrig ? creaseEdges(g, 25) : new THREE.EdgesGeometry(g, 25);
+      const geo = new LineSegmentsGeometry().setPositions(src.attributes.position.array);
+      src.dispose();
+      const edges = new LineSegments2(geo, EDGE_MAT);
+      Object.assign(edges.userData, { isEdge: true, noHighlight: true, noCap: true });
       edges.layers.set(LINE_LAYER);
       edges.raycast = () => {};
       o.add(edges);
       o.userData.edges = edges;
     });
+  }
+
+  /**
+   * Linhas de CORTE das plantas: o contorno onde o plano horizontal z atravessa as peças visíveis (triângulo a
+   * triângulo, em coordenadas de mundo). z = null tira as linhas.
+   */
+  updateSectionLines(z) {
+    for (const k of ['sectionLines', 'sectionInner']) {
+      if (this[k]) { this.scene.remove(this[k]); this[k].geometry.dispose(); this[k] = null; }
+    }
+    if (z === null || z === undefined) return;
+    const out = [];
+    const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+    const cut = (p, q) => { const t = (z - p.z) / (q.z - p.z); return [p.x + (q.x - p.x) * t, p.y + (q.y - p.y) * t, z]; };
+    this.model.traverseVisible(o => {
+      if (!o.isMesh || o.userData.isEdge || o.userData.noCap || !o.geometry?.attributes?.position) return;
+      const g = o.geometry, pos = g.attributes.position, idx = g.index, m = o.matrixWorld;
+      g.boundingBox || g.computeBoundingBox();
+      const bb = g.boundingBox.clone().applyMatrix4(m);
+      if (bb.min.z > z || bb.max.z < z) return;
+      const n = idx ? idx.count : pos.count;
+      for (let i = 0; i < n; i += 3) {
+        const i0 = idx ? idx.getX(i) : i, i1 = idx ? idx.getX(i + 1) : i + 1, i2 = idx ? idx.getX(i + 2) : i + 2;
+        a.fromBufferAttribute(pos, i0).applyMatrix4(m);
+        b.fromBufferAttribute(pos, i1).applyMatrix4(m);
+        c.fromBufferAttribute(pos, i2).applyMatrix4(m);
+        const da = a.z - z, db = b.z - z, dc = c.z - z;
+        if ((da > 0 && db > 0 && dc > 0) || (da < 0 && db < 0 && dc < 0)) continue;
+        const pts = [];
+        if (da * db < 0) pts.push(cut(a, b));
+        if (db * dc < 0) pts.push(cut(b, c));
+        if (dc * da < 0) pts.push(cut(c, a));
+        if (pts.length === 2) out.push(...pts[0], ...pts[1]);
+      }
+    });
+    if (!out.length) return;
+    // divisa: o mesmo segmento vindo de duas malhas (camadas encostadas) → linha fina; o resto é contorno → grossa
+    const q = v => Math.round(v * 2000);
+    const key = i => { const a = `${q(out[i])},${q(out[i + 1])}`, b = `${q(out[i + 3])},${q(out[i + 4])}`; return a < b ? `${a}|${b}` : `${b}|${a}`; };
+    const count = new Map();
+    for (let i = 0; i < out.length; i += 6) { const k = key(i); count.set(k, (count.get(k) || 0) + 1); }
+    const outer = [], inner = [];
+    for (let i = 0; i < out.length; i += 6) (count.get(key(i)) > 1 ? inner : outer).push(...out.slice(i, i + 6));
+    const make = (arr, mat, order) => {
+      if (!arr.length) return null;
+      const l = new LineSegments2(new LineSegmentsGeometry().setPositions(arr), mat);
+      l.layers.set(LINE_LAYER);
+      l.renderOrder = order;
+      l.raycast = () => {};
+      l.frustumCulled = false;
+      this.scene.add(l);
+      return l;
+    };
+    this.sectionInner = make(inner, CUT_INNER_MAT, 6);
+    this.sectionLines = make(outer, CUT_MAT, 7);
   }
 
   // ---------------------------------------------------------------- anotações
