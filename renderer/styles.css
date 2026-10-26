@@ -691,3 +691,15 @@ table.budget tr.muted td { color: var(--muted); }
 .me-val { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted, #999); }
 .me-check { display: flex; align-items: center; gap: 6px; font-size: 12px; margin: 2px 0 6px 126px; }
 @media (max-width: 900px) { .mat-editor { grid-template-columns: 1fr; } .me-list { border-right: 0; max-height: 160px; } }
+/* Editor de texturas */
+.te-editor { grid-template-columns: 200px 276px 1fr; }
+.te-swatch { width: 256px; height: 256px; border-radius: 8px; border: 1px solid var(--line); display: block; }
+.te-preview { display: flex; flex-direction: column; gap: 6px; }
+.te-head { display: flex; gap: 4px; align-items: center; margin-bottom: 4px; }
+.te-head input { flex: 1; min-width: 0; }
+.te-num { width: 100%; min-width: 0; }
+.te-chans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px 8px; font-size: 11px; margin: 6px 0; }
+.te-chans label, .te-mini { display: flex; align-items: center; gap: 4px; font-size: 11px; }
+.te-blend { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 6px; align-items: center; margin: 4px 0; }
+.te-mini input[type=number] { width: 52px; }
+.te-editor .me-row { grid-template-columns: 110px 1fr 64px; }

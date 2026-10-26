@@ -8,6 +8,7 @@
 //   pilar/viga: a 1ª camada é o NÚCLEO (dimensões da instância); as seguintes revestem em volta
 import * as THREE from 'three';
 import { setMaterialResolver, totalThickness } from './elements.js';
+import { setCustomTextures } from './materials.js';
 
 const B = window.boxbim;
 
@@ -86,6 +87,7 @@ export class TypeLibrary extends EventTarget {
     this.materials = structuredClone(DEFAULT_MATERIALS);
     this.types = structuredClone(DEFAULT_TYPES);
     this.active = { ...DEFAULT_ACTIVE };
+    this.textures = {}; // texturas procedurais próprias: id → { nome, camadas } (materials.js)
     this._mats = new Map();
     setMaterialResolver(name => this.material(name));
   }
@@ -97,17 +99,18 @@ export class TypeLibrary extends EventTarget {
       this.types = {};
       for (const cat of Object.keys(CATEGORIES)) this.types[cat] = d.types?.[cat]?.length ? d.types[cat] : structuredClone(DEFAULT_TYPES[cat]);
       this.active = { ...DEFAULT_ACTIVE, ...(d.active || {}) };
+      this.textures = d.textures || {};
     }
     this._mats.clear();
     this.changed();
   }
 
   async save() {
-    await B.types.save({ format: 'boxbim-tipos', version: 1, materials: this.materials, types: this.types, active: this.active });
+    await B.types.save({ format: 'boxbim-tipos', version: 1, materials: this.materials, types: this.types, active: this.active, textures: this.textures });
     this.changed();
   }
 
-  changed() { this.dispatchEvent(new Event('change')); }
+  changed() { setCustomTextures(this.textures); this.dispatchEvent(new Event('change')); }
 
   list(cat) { return this.types[cat] || []; }
 

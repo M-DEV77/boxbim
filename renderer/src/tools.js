@@ -4,6 +4,7 @@ import { materialFor } from './elements.js';
 import { createOnLevel, setElementType, categoryOf } from './modeling.js';
 import { isHostable } from './objects/objects.js';
 import { CATEGORIES } from './types.js';
+import { PATTERNS, GENERATORS, CHANNELS, BLEND, normalizeTexture, materialProps, patternList } from './materials.js';
 import { importFile, exportFile, importFromRevit, sendToRevit, EXPORT_FORMATS } from './io/formats.js';
 
 const B = window.boxbim;
@@ -48,6 +49,32 @@ export const TOOLS = [
   // ---------------- tipos com camadas
   { group: 'scene', name: 'list_types', description: 'Lista os tipos com camadas (paredes, pisos/lajes, pilares, vigas): camadas, materiais, espessuras e o tipo padrão.',
     parameters: { type: 'object', properties: { category: { type: 'string', enum: ['wall', 'slab', 'column', 'beam'] } } } },
+  // ---------------- materiais e texturas procedurais
+  { group: 'scene', name: 'list_materials', description: 'Lista os materiais da biblioteca (cor e propriedades de render: padrão/textura, escala, rugosidade, metal, mapas…), os padrões de fábrica e as texturas procedurais próprias com as camadas.',
+    parameters: { type: 'object', properties: {} } },
+  { group: 'scene', name: 'create_texture', description: `Cria (ou atualiza, se "id" ou o mesmo nome já existir) uma TEXTURA PROCEDURAL própria do projeto, feita de camadas aplicadas de cima para baixo. Valores iniciais de cada ponto: tom 1, altura 1, rugosidade 1, metal 0, opacidade 1, detalhe 0,5. Cada camada gera um valor 0–1 (gerador), aplica "inverter", remapeia para de→ate e escreve nos "canais" pelo "modo" (multiplicar; misturar = substituir; somar = soma valor−0,5; minimo; maximo) com "forca" 0–1.
+Canais: tom (multiplica a cor do material; >1 clareia), altura (1 = face, 0 = fundo da junta; gera normal, AO e deslocamento), rugosidade (multiplica a rugosidade do material), metal, opacidade (0 = furo; usar com mapaOpacidade), detalhe (bump fino).
+Geradores e parâmetros: constante; ruido {escala, oitavas, semente}; escovado {escala, oitavas, direcao u|v, semente}; celulas = pedras/Voronoi {escala, junta, bisel, semente, saida}; ladrilhos = tijolos/pisos {colunas, linhas, junta, bisel, desencontro 0–1, saida}; listras = tábuas {escala, largura (fração cheia), suavidade, direcao, saida}; pontos = furos/bolinhas {escala, raio, suavidade, desencontro, saida}; veios = madeira {escala, distorcao, direcao, semente}; ondas {escala, distorcao, direcao, semente}. junta/bisel/raio são frações do quadro ou da célula; saida "peca" dá um tom aleatório por peça (tijolo, pedra, tábua) em vez da forma. O quadro inteiro cobre "escala" metros do material (ajustada em set_material).
+Exemplo (tijolo): [{gerador:"ladrilhos",colunas:2,linhas:3,junta:0.02,bisel:0.012,desencontro:0.5,canais:["altura"],de:0.15,ate:1},{gerador:"ladrilhos",colunas:2,linhas:3,junta:0.02,desencontro:0.5,canais:["tom"],modo:"misturar",de:1.15,ate:0.85},{gerador:"ladrilhos",colunas:2,linhas:3,desencontro:0.5,saida:"peca",canais:["tom"],de:0.8,ate:1.05},{gerador:"ruido",escala:32,canais:["tom","detalhe"],de:0.88,ate:1}]`,
+    parameters: { type: 'object', properties: {
+      nome: { type: 'string' },
+      id: { type: 'string', description: 'Id de uma textura existente para substituir (opcional)' },
+      camadas: { type: 'array', items: { type: 'object', properties: {
+        nome: { type: 'string' },
+        gerador: { type: 'string', enum: Object.keys(GENERATORS) },
+        escala: { type: 'number' }, oitavas: { type: 'number' }, semente: { type: 'number' }, colunas: { type: 'number' }, linhas: { type: 'number' },
+        junta: { type: 'number' }, bisel: { type: 'number' }, desencontro: { type: 'number' }, largura: { type: 'number' }, suavidade: { type: 'number' },
+        raio: { type: 'number' }, distorcao: { type: 'number' }, direcao: { type: 'string', enum: ['u', 'v'] }, saida: { type: 'string', enum: ['valor', 'peca'] },
+        canais: { type: 'array', items: { type: 'string', enum: Object.keys(CHANNELS) } },
+        modo: { type: 'string', enum: Object.keys(BLEND) }, forca: { type: 'number' }, de: { type: 'number' }, ate: { type: 'number' }, inverter: { type: 'boolean' },
+      }, required: ['gerador', 'canais'] } },
+      material: { type: 'string', description: 'Material da biblioteca que passa a usar a textura (opcional)' },
+    }, required: ['nome', 'camadas'] } },
+  { group: 'scene', name: 'set_material', description: 'Muda (ou cria, com create=true) um material da biblioteca: cor e propriedades de render. "textura" aceita um padrão de fábrica (veja list_materials), "tx:<id>" ou o nome de uma textura própria. Mapas: relevo (bump 0–3), normal (0–3), ao (0–2), deslocamento (cm 0–5), mapaRugosidade, mapaMetal, mapaEspecular, mapaOpacidade, mapaEmissao (true/false); escalares: escala (m), rugosidade 0–1 (brilho = 1 − rugosidade), metal 0–1, especular 0–1, corEspecular, opacidade 0–1, transmissao 0–1 (vidro), emissao (cor) e intensidadeEmissao (0–20).',
+    parameters: { type: 'object', properties: {
+      material: { type: 'string' }, create: { type: 'boolean' }, color: { type: 'string', description: '#rrggbb' },
+      render: { type: 'object', description: 'Propriedades de render a mudar (as outras ficam)' },
+    }, required: ['material'] } },
   { group: 'scene', name: 'set_element_type', description: 'Troca o tipo (camadas) de paredes, lajes, pilares ou vigas existentes. type vazio = genérico.',
     parameters: { type: 'object', properties: { ids: { type: 'array', items: { type: 'string' } }, type: { type: 'string' } }, required: ['ids'] } },
   { group: 'scene', name: 'save_type', description: 'Cria ou atualiza um tipo com camadas e o salva na biblioteca. Parede: externa→interna; piso: topo→fundo; pilar/viga: 1ª camada = núcleo (thickness 0).',
@@ -218,6 +245,55 @@ export async function runTool(name, args, ctx) {
     case 'set_view': args.view === 'fit' ? viewer.fit() : viewer.setView(args.view); return 'ok';
     case 'clear_scene': viewer.clear(); ctx.refresh?.(); return 'Projeto limpo.';
 
+    case 'list_materials': {
+      const lib = ctx.app.types;
+      return JSON.stringify({
+        materiais: Object.fromEntries(Object.entries(lib.materials).map(([n, m]) => [n, { cor: m.color, render: materialProps(n, m) }])),
+        padroes_de_fabrica: Object.keys(PATTERNS),
+        texturas_proprias: Object.fromEntries(Object.entries(lib.textures || {}).map(([id, t]) => [`tx:${id}`, t])),
+      });
+    }
+    case 'create_texture': {
+      const lib = ctx.app.types;
+      lib.textures ||= {};
+      const def = normalizeTexture({ nome: args.nome, camadas: args.camadas });
+      if (!def.camadas.length) throw new Error('A textura precisa de pelo menos uma camada.');
+      const given = args.id ? String(args.id).replace(/^tx:/, '') : null;
+      let id = given && lib.textures[given] ? given : null;
+      id ||= Object.entries(lib.textures).find(([, t]) => t.nome.toLowerCase() === def.nome.toLowerCase())?.[0];
+      id ||= `t${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+      lib.textures[id] = def;
+      if (args.material) {
+        const m = lib.materials[args.material];
+        if (!m) throw new Error(`Material "${args.material}" não existe (veja list_materials).`);
+        m.render = { ...(m.render || {}), textura: `tx:${id}` };
+      }
+      await lib.save();
+      ctx.app.renderProps();
+      return JSON.stringify({ id: `tx:${id}`, nome: def.nome, camadas: def.camadas.length, material: args.material || null,
+        dica: 'Veja no estilo de vista Textura ou Render; ajuste escala, normal, deslocamento e mapas com set_material.' });
+    }
+    case 'set_material': {
+      const lib = ctx.app.types;
+      let m = lib.materials[args.material];
+      if (!m) {
+        if (!args.create) throw new Error(`Material "${args.material}" não existe (use create=true para criar).`);
+        m = lib.materials[args.material] = { color: args.color || '#bbbbbb' };
+      }
+      if (args.color) m.color = args.color;
+      const r = { ...(args.render || {}) };
+      if (r.textura && !patternList()[r.textura]) {
+        const found = Object.entries(lib.textures || {}).find(([id, t]) => t.nome.toLowerCase() === String(r.textura).toLowerCase() || id === r.textura);
+        if (!found) throw new Error(`Padrão/textura "${r.textura}" não existe (veja list_materials).`);
+        r.textura = `tx:${found[0]}`;
+      }
+      m.render = { ...(m.render || {}), ...r };
+      lib._mats.clear();
+      await lib.save();
+      ctx.app.viewer.changed();
+      ctx.app.renderProps();
+      return JSON.stringify({ material: args.material, cor: m.color, render: materialProps(args.material, m) });
+    }
     case 'list_types': {
       const lib = ctx.app.types;
       const cats = args.category ? [args.category] : Object.keys(CATEGORIES);

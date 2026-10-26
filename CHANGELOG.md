@@ -6,12 +6,28 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.20.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.21.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.21.0] — 2026-10-26 · Texturas procedurais próprias (manual e pelo Chat IA)
+
+### Adicionado
+- **Editor de texturas** (Vistas › Texturas, ou ★… ao lado do Padrão no Editor de materiais): crie texturas
+  procedurais próprias como pilhas de camadas. Cada camada tem um gerador — ruído, escovado, células (pedras),
+  ladrilhos/tijolos, listras/tábuas, pontos/furos, veios de madeira, ondas ou constante —, os seus parâmetros, um
+  remapeamento (de → até, inverter) e escreve nos canais tom, altura, rugosidade, metal, opacidade e detalhe
+  (multiplicar, misturar, somar, mínimo, máximo; força). Daí saem todos os mapas: cor, bump, normal, AO,
+  deslocamento, rugosidade/brilho, metal, especular, opacidade e emissão.
+- Modelos para começar (tijolo aparente, pedra rústica, deck de madeira, chapa perfurada), amostra colorida com
+  relevo e os mapas atualizados ao vivo; "Usar no material" aplica ao salvar.
+- As texturas ficam gravadas na biblioteca de tipos do projeto (a equipe recebe em tempo real) e aparecem com ★
+  no Padrão de qualquer material. São só dados (sem código), seguras num projeto compartilhado.
+- **Chat IA**: ferramentas `list_materials`, `create_texture` (a IA monta as camadas a partir de uma descrição e
+  aplica a um material) e `set_material` (cor, padrão, escala e todos os mapas de um material).
 
 ## [2.20.0] — 2026-10-26 · Estilo de vista Textura
 

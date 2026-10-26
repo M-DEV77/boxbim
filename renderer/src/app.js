@@ -30,8 +30,10 @@ import { openLibrary, importObjects, PlaceTool } from './objects/library-ui.js';
 import { openObjectEditor } from './objects/editor.js';
 import { SystemObjects, SYSTEM } from './objects/system.js';
 import { setScriptedBuilder } from './elements.js';
-import { RenderMode, renderProps, TEXTURES } from './render.js';
+import { RenderMode, renderProps } from './render.js';
 import { openMaterialEditor } from './material-editor.js';
+import { openTextureEditor } from './texture-editor.js';
+import { patternList } from './materials.js';
 import { Hosting } from './hosting.js';
 import { TransformTool } from './transform.js';
 import { AxisWidget } from './nav.js';
@@ -941,6 +943,9 @@ class App {
   /** Editor de materiais (mapas procedurais), aberto no material indicado. */
   openMaterials(name) { return openMaterialEditor(this, name); }
 
+  /** Editor de texturas procedurais próprias. */
+  openTextures(id) { return openTextureEditor(this, id); }
+
   /** Vista Render: materiais do elemento com cor, rugosidade, metal, textura, escala e vidro — ao vivo. */
   renderMaterialProps(root, o) {
     const rm = this.renderMode;
@@ -968,7 +973,7 @@ class App {
           slider('normal', 'Normal', 0, 3, 0.05),
           slider('deslocamento', 'Deslocamento (cm)', 0, 5, 0.1),
           h('tr', {}, h('td', {}, 'Padrão'), h('td', {}, h('select', { style: 'width:100%', onchange: e => set('textura', e.target.value) },
-            Object.entries(TEXTURES).map(([k, l]) => h('option', { value: k, selected: k === p.textura }, l))))),
+            Object.entries(patternList()).map(([k, l]) => h('option', { value: k, selected: k === p.textura }, l))))),
           h('tr', {}, h('td', {}, 'Escala (m)'), h('td', {}, h('input', { type: 'number', step: 0.05, min: 0.05, value: p.escala, style: 'width:100%',
             onchange: e => set('escala', Math.max(0.05, Number(e.target.value) || 1)) }))))));
     }

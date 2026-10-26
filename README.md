@@ -294,6 +294,8 @@ Vistas 3D têm **Perspectiva/Ortogonal**. Grade e ponto base (0,0,0) aparecem em
 
 | Onde | O quê |
 |---|---|
+| Vistas › **Texturas** (editor) | **texturas procedurais próprias**: pilhas de camadas com geradores (ruído, escovado, células/pedras, ladrilhos/tijolos, listras/tábuas, pontos/furos, veios, ondas, constante) escrevendo em tom, altura, rugosidade, metal, opacidade e detalhe, com modo de mistura e força; modelos para começar (tijolo, pedra, deck, chapa perfurada), amostra e mapas ao vivo. Aparecem com ★ no padrão de qualquer material e ficam gravadas no projeto |
+| **Chat IA** | `list_materials`, `create_texture` (cria uma textura própria a partir de uma descrição e a aplica a um material) e `set_material` (cor, padrão, escala e todos os mapas) |
 | Estilo **Textura** (qualquer vista) | os materiais com cor, relevo e todos os mapas na luz normal da vista, com linhas e grade — leve, para modelar e conferir os materiais antes do Render (Propriedades › Materiais funciona aqui também) |
 | Estilo **Render** (qualquer vista) | céu, sol (azimute/altura), sombras, oclusão ambiente, tonemapping; materiais PBR com texturas procedurais |
 | Propriedades › **Materiais (render)** | cor, rugosidade, metal, vidro, normal, deslocamento, padrão e escala do material, ao vivo (grava nos tipos do projeto); **Mapas…** abre o editor |
@@ -354,4 +356,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.20.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.21.0</a>

@@ -5,7 +5,8 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { h, modal, toast } from './ui.js';
-import { PATTERNS, MAPS, materialProps, createMaterial, applyMaterial, boxUv, mapThumbnail } from './materials.js';
+import { openTextureEditor } from './texture-editor.js';
+import { patternList, patternLabel, MAPS, materialProps, createMaterial, applyMaterial, boxUv, mapThumbnail } from './materials.js';
 
 export function openMaterialEditor(app, startName) {
   const lib = app.types;
@@ -82,7 +83,7 @@ export function openMaterialEditor(app, startName) {
       const p = materialProps(n, d);
       listBox.append(h('div', { class: `me-item${n === name ? ' active' : ''}`, onclick: () => select(n) },
         h('span', { class: 'swatch', style: `background:${d.color || '#ccc'}` }), h('span', {}, n),
-        p.textura !== 'nenhuma' ? h('span', { class: 'muted' }, PATTERNS[p.textura] || '') : null));
+        p.textura !== 'nenhuma' ? h('span', { class: 'muted' }, patternLabel(p.textura)) : null));
     }
     const nn = h('input', { placeholder: 'Novo material' });
     listBox.append(h('div', { class: 'me-new' }, nn, h('button', { class: 'mini', onclick: () => {
@@ -139,7 +140,10 @@ export function openMaterialEditor(app, startName) {
       section('Base',
         color('color', 'Cor', d.color || '#cccccc'),
         h('label', { class: 'me-row' }, h('span', {}, 'Padrão'), h('select', { onchange: e => set('textura', e.target.value) },
-          Object.entries(PATTERNS).map(([k, l]) => h('option', { value: k, selected: k === p.textura }, l))), h('span')),
+          Object.entries(patternList()).map(([k, l]) => h('option', { value: k, selected: k === p.textura }, l))),
+          h('button', { class: 'mini', title: 'Criar ou editar texturas procedurais próprias (★)', onclick: () => openTextureEditor(app, String(p.textura).slice(3), {
+            onSaved: tid => { if (tid) set('textura', `tx:${tid}`, { rebuild: true }); else renderControls(); renderList(); },
+          }) }, '★…')),
         h('label', { class: 'me-row', title: 'Quantos metros o padrão cobre antes de repetir' }, h('span', {}, 'Escala (m)'),
           h('input', { type: 'number', min: 0.05, step: 0.05, value: p.escala, onchange: e => set('escala', Math.max(0.05, Number(e.target.value) || 1)) }), h('span'))),
       section('Superfície',

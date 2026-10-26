@@ -5,6 +5,7 @@
 //
 // As texturas usam UVs em metros projetadas em caixa (boxUv): a mesma escala real em qualquer face, e o path
 // tracing enxerga os mesmos mapas (ele ignora AO, bump e paralaxe, que ele mesmo calcula ou não precisa).
+// Além dos padrões de fábrica, o projeto pode ter TEXTURAS PRÓPRIAS ('tx:<id>'), feitas de camadas de geradores.
 import * as THREE from 'three';
 
 export const PATTERNS = {
@@ -94,6 +95,7 @@ const sstep = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t 
  * m = máscara de metal, a = opacidade (0 = furo), f = detalhe fino (bump).
  */
 function texelFn(kind) {
+  if (String(kind).startsWith('tx:')) return customTexel(kind);
   const n = makeNoise(kind.length * 7 + 3), n2 = makeNoise(91), nf = makeNoise(517);
   return (u, v, o) => {
     o.m = 0; o.a = 1; o.f = nf(u, v, 96, 3);
@@ -170,6 +172,229 @@ function texelFn(kind) {
     }
   };
 }
+
+// ---------------------------------------------------------------- texturas procedurais próprias (camadas)
+//
+// Uma textura própria é uma pilha de camadas, de cima para baixo. Cada camada tem um GERADOR (um valor 0–1 por
+// ponto do quadro), um remapeamento (de → ate, inverter), os CANAIS em que escreve e como (modo, força):
+//   canais: tom (multiplica a cor), altura (relevo/normal/AO/deslocamento; 1 = face, 0 = fundo), rugosidade,
+//           metal, opacidade (0 = furo), detalhe (bump fino)
+//   valores iniciais: tom 1, altura 1, rugosidade 1, metal 0, opacidade 1, detalhe 0,5
+// Só dados (nada de código): seguro num projeto compartilhado, editável à mão e pela IA.
+
+export const GENERATORS = {
+  constante: { label: 'Constante', params: [] },
+  ruido: { label: 'Ruído', params: ['escala', 'oitavas', 'semente'] },
+  escovado: { label: 'Escovado (riscos)', params: ['escala', 'oitavas', 'direcao', 'semente'] },
+  celulas: { label: 'Células (pedras)', params: ['escala', 'junta', 'bisel', 'semente', 'saida'] },
+  ladrilhos: { label: 'Ladrilhos / tijolos', params: ['colunas', 'linhas', 'junta', 'bisel', 'desencontro', 'saida'] },
+  listras: { label: 'Listras / tábuas', params: ['escala', 'largura', 'suavidade', 'direcao', 'saida'] },
+  pontos: { label: 'Pontos / furos', params: ['escala', 'raio', 'suavidade', 'desencontro', 'saida'] },
+  veios: { label: 'Veios (madeira)', params: ['escala', 'distorcao', 'direcao', 'semente'] },
+  ondas: { label: 'Ondas', params: ['escala', 'distorcao', 'direcao', 'semente'] },
+};
+
+export const LAYER_PARAMS = {
+  escala: { label: 'Escala (repetições)', min: 1, max: 256, step: 1, def: 8 },
+  oitavas: { label: 'Oitavas', min: 1, max: 6, step: 1, def: 4 },
+  semente: { label: 'Semente', min: 0, max: 999, step: 1, def: 1 },
+  colunas: { label: 'Colunas', min: 1, max: 64, step: 1, def: 2 },
+  linhas: { label: 'Linhas', min: 1, max: 64, step: 1, def: 3 },
+  junta: { label: 'Junta (fração)', min: 0, max: 0.3, step: 0.002, def: 0.02 },
+  bisel: { label: 'Bisel (fração)', min: 0, max: 0.2, step: 0.002, def: 0.01 },
+  desencontro: { label: 'Desencontro', min: 0, max: 1, step: 0.05, def: 0.5 },
+  largura: { label: 'Largura cheia', min: 0.02, max: 1, step: 0.01, def: 0.8 },
+  suavidade: { label: 'Suavidade', min: 0, max: 0.5, step: 0.01, def: 0.02 },
+  raio: { label: 'Raio (fração)', min: 0.02, max: 0.5, step: 0.01, def: 0.3 },
+  distorcao: { label: 'Distorção', min: 0, max: 20, step: 0.1, def: 4 },
+  direcao: { label: 'Direção', options: { u: 'Horizontal (U)', v: 'Vertical (V)' }, def: 'u' },
+  saida: { label: 'Saída', options: { valor: 'Forma (juntas, furos…)', peca: 'Tom aleatório por peça' }, def: 'valor' },
+};
+
+export const CHANNELS = { tom: 'Tom (cor)', altura: 'Altura (relevo)', rugosidade: 'Rugosidade', metal: 'Metal', opacidade: 'Opacidade', detalhe: 'Detalhe (bump)' };
+export const BLEND = { multiplicar: 'Multiplicar', misturar: 'Misturar', somar: 'Somar', minimo: 'Mínimo', maximo: 'Máximo' };
+
+const fract = x => x - Math.floor(x);
+const num = (v, p) => { const d = LAYER_PARAMS[p]; const n = Number(v); return Number.isFinite(n) ? Math.min(d.max, Math.max(d.min, n)) : d.def; };
+
+/** Textura própria limpa e completa (o que vier da tela ou da IA é conferido aqui). */
+export function normalizeTexture(t = {}) {
+  const camadas = (Array.isArray(t.camadas) ? t.camadas : []).slice(0, 16).map(c => {
+    const gerador = GENERATORS[c?.gerador] ? c.gerador : 'ruido';
+    const out = { gerador };
+    for (const p of GENERATORS[gerador].params) {
+      const d = LAYER_PARAMS[p];
+      out[p] = d.options ? (d.options[c[p]] ? c[p] : d.def) : num(c[p], p);
+    }
+    const canais = (Array.isArray(c?.canais) ? c.canais : [c?.canais]).filter(k => CHANNELS[k]);
+    out.canais = canais.length ? [...new Set(canais)] : ['tom'];
+    out.modo = BLEND[c?.modo] ? c.modo : 'multiplicar';
+    out.forca = Number.isFinite(Number(c?.forca)) ? Math.min(1, Math.max(0, Number(c.forca))) : 1;
+    out.de = Number.isFinite(Number(c?.de)) ? Number(c.de) : 0;
+    out.ate = Number.isFinite(Number(c?.ate)) ? Number(c.ate) : 1;
+    out.inverter = !!c?.inverter;
+    if (c?.nome) out.nome = String(c.nome).slice(0, 60);
+    return out;
+  });
+  return { nome: String(t.nome || 'Textura').slice(0, 60), camadas };
+}
+
+/** Ruído periódico com períodos próprios em U e V (riscos esticados sem emenda). */
+function makeNoiseXY(seed) {
+  const hash = (x, y) => {
+    let h = (x * 374761393 + y * 668265263 + seed * 2147483647) | 0;
+    h = (h ^ (h >>> 13)) * 1274126177 | 0;
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
+  };
+  const sm = t => t * t * (3 - 2 * t);
+  const value = (u, v, px, py) => {
+    const x = u * px, y = v * py, xi = Math.floor(x), yi = Math.floor(y), xf = sm(x - xi), yf = sm(y - yi);
+    const mx = i => ((i % px) + px) % px, my = i => ((i % py) + py) % py;
+    const a = hash(mx(xi), my(yi)), b = hash(mx(xi + 1), my(yi)), c = hash(mx(xi), my(yi + 1)), d = hash(mx(xi + 1), my(yi + 1));
+    return a + (b - a) * xf + (c - a) * yf + (a - b - c + d) * xf * yf;
+  };
+  return (u, v, px, py, oct = 4) => {
+    let s = 0, amp = 0.5, norm = 0;
+    for (let o = 0; o < oct; o++) { s += amp * value(u, v, px << o, py << o); norm += amp; amp *= 0.5; }
+    return s / norm;
+  };
+}
+
+/** Função (u, v) → valor 0–1 de uma camada. */
+function generator(c) {
+  const seed = (c.semente ?? 1) + 7, n = makeNoiseXY(seed), E = Math.max(1, Math.round(c.escala ?? 8));
+  const along = (u, v) => (c.direcao === 'v' ? [v, u] : [u, v]); // [ao longo, através]
+  const peca = c.saida === 'peca';
+  switch (c.gerador) {
+    case 'constante': return () => 1;
+    case 'ruido': return (u, v) => n(u, v, E, E, c.oitavas);
+    case 'escovado': return (u, v) => { const [a, b] = along(u, v); return n(a, b, 1, E * 8, c.oitavas); };
+    case 'celulas': {
+      // Voronoi periódico: distância à borda da célula (F2 − F1)
+      const H = (x, y, k) => tone(((x % E) + E) % E + k * 1013, ((y % E) + E) % E + seed * 7919);
+      return (u, v) => {
+        const x = u * E, y = v * E, xi = Math.floor(x), yi = Math.floor(y);
+        let d1 = 9, d2 = 9, id = 0;
+        for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) {
+          const cx = xi + i, cy = yi + j, px = cx + H(cx, cy, 1), py = cy + H(cx, cy, 2);
+          const d = Math.hypot(px - x, py - y);
+          if (d < d1) { d2 = d1; d1 = d; id = H(cx, cy, 3); } else if (d < d2) d2 = d;
+        }
+        if (peca) return id;
+        const edge = (d2 - d1) / 2 / E; // em frações do quadro
+        return sstep(c.junta / 2, c.junta / 2 + c.bisel + 1e-4, edge);
+      };
+    }
+    case 'ladrilhos': {
+      const C = Math.round(c.colunas), R = Math.round(c.linhas);
+      return (u, v) => {
+        const r = Math.floor(v * R), fy = v * R - r;
+        const x = u * C + (r % 2) * c.desencontro, col = Math.floor(x), fx = x - col;
+        if (peca) return tone(r, ((col % C) + C) % C);
+        const dj = Math.min(fy / R, (1 - fy) / R, fx / C, (1 - fx) / C);
+        return sstep(c.junta / 2, c.junta / 2 + c.bisel + 1e-4, dj);
+      };
+    }
+    case 'listras': return (u, v) => {
+      const [, b] = along(u, v), k = Math.floor(b * E), t = fract(b * E);
+      if (peca) return tone(k, 11);
+      const s = c.suavidade + 1e-4;
+      return sstep(0, s, t) * (1 - sstep(c.largura - s, c.largura, t));
+    };
+    case 'pontos': return (u, v) => {
+      const row = Math.floor(v * E), x = u * E + (row % 2) * c.desencontro, col = Math.floor(x);
+      if (peca) return tone(row, ((col % E) + E) % E);
+      const d = Math.hypot(fract(x) - 0.5, v * E - row - 0.5);
+      return 1 - sstep(c.raio - c.suavidade - 1e-4, c.raio, d);
+    };
+    case 'veios': return (u, v) => { const [, b] = along(u, v); return 0.5 + 0.5 * Math.sin((b * E + n(u, v, 3, 3, 3) * c.distorcao) * Math.PI * 2); };
+    case 'ondas': return (u, v) => { const [a] = along(u, v); return 0.5 + 0.5 * Math.sin((a * E + n(u, v, 2, 2, 2) * c.distorcao / 4) * Math.PI * 2); };
+    default: return () => 1;
+  }
+}
+
+const customTextures = new Map(); // 'tx:<id>' → { def, json }
+
+/** Atualiza o registro de texturas próprias (da biblioteca de tipos); refaz só as que mudaram. */
+export function setCustomTextures(textures = {}) {
+  const keep = new Set();
+  for (const [id, t] of Object.entries(textures || {})) {
+    const kind = `tx:${id}`, def = normalizeTexture(t), json = JSON.stringify(def);
+    keep.add(kind);
+    if (customTextures.get(kind)?.json === json) continue;
+    customTextures.set(kind, { def, json });
+    forget(kind);
+  }
+  for (const kind of [...customTextures.keys()]) if (!keep.has(kind)) { customTextures.delete(kind); forget(kind); }
+}
+
+function forget(kind) {
+  fieldCache.delete(kind);
+  for (const k of [...texCache.keys()]) if (k.startsWith(`${kind}|`)) texCache.delete(k);
+}
+
+/** Padrões para escolher: os de fábrica e as texturas próprias ('tx:<id>'). */
+export function patternList() {
+  const out = { ...PATTERNS };
+  for (const [kind, { def }] of customTextures) out[kind] = `★ ${def.nome}`;
+  return out;
+}
+
+export function patternLabel(kind) { return patternList()[kind] || (String(kind).startsWith('tx:') ? '(textura apagada)' : kind); }
+
+/** Texel de uma textura própria: aplica as camadas em ordem sobre os valores iniciais. */
+function customTexel(kind) {
+  const def = customTextures.get(kind)?.def || { camadas: [] };
+  const layers = def.camadas.map(c => ({ c, g: generator(c) }));
+  const KEY = { tom: 't', altura: 'h', rugosidade: 'r', metal: 'm', opacidade: 'a', detalhe: 'f' };
+  return (u, v, o) => {
+    o.t = 1; o.h = 1; o.r = 1; o.m = 0; o.a = 1; o.f = 0.5;
+    for (const { c, g } of layers) {
+      let x = g(u, v);
+      if (c.inverter) x = 1 - x;
+      x = c.de + (c.ate - c.de) * x;
+      for (const ch of c.canais) {
+        const k = KEY[ch], cur = o[k];
+        let nv;
+        switch (c.modo) {
+          case 'misturar': nv = x; break;
+          case 'somar': nv = cur + (x - 0.5); break;
+          case 'minimo': nv = Math.min(cur, x); break;
+          case 'maximo': nv = Math.max(cur, x); break;
+          default: nv = cur * x;
+        }
+        o[k] = cur + (nv - cur) * c.forca;
+      }
+    }
+  };
+}
+
+/** Modelos para começar uma textura nova. */
+export const TEXTURE_TEMPLATES = {
+  vazia: { nome: 'Nova textura', camadas: [{ gerador: 'ruido', escala: 8, canais: ['tom', 'altura'], de: 0.85, ate: 1 }] },
+  tijolo: { nome: 'Tijolo aparente', camadas: [
+    { nome: 'Juntas', gerador: 'ladrilhos', colunas: 2, linhas: 3, junta: 0.02, bisel: 0.012, desencontro: 0.5, canais: ['altura'], de: 0.15, ate: 1 },
+    { nome: 'Argamassa clara', gerador: 'ladrilhos', colunas: 2, linhas: 3, junta: 0.02, bisel: 0.002, desencontro: 0.5, canais: ['tom'], modo: 'misturar', de: 1.15, ate: 0.85 },
+    { nome: 'Tom por tijolo', gerador: 'ladrilhos', colunas: 2, linhas: 3, desencontro: 0.5, saida: 'peca', canais: ['tom'], de: 0.8, ate: 1.05 },
+    { nome: 'Grão', gerador: 'ruido', escala: 32, canais: ['tom', 'detalhe'], de: 0.88, ate: 1 },
+  ] },
+  pedra: { nome: 'Pedra rústica', camadas: [
+    { nome: 'Pedras', gerador: 'celulas', escala: 5, junta: 0.012, bisel: 0.03, canais: ['altura'], de: 0.1, ate: 1 },
+    { nome: 'Tom por pedra', gerador: 'celulas', escala: 5, saida: 'peca', canais: ['tom'], de: 0.7, ate: 1.05 },
+    { nome: 'Superfície', gerador: 'ruido', escala: 12, oitavas: 5, canais: ['altura', 'tom', 'detalhe'], de: 0.75, ate: 1 },
+    { nome: 'Rugosa', gerador: 'constante', canais: ['rugosidade'], modo: 'misturar', de: 0, ate: 0.9 },
+  ] },
+  deck: { nome: 'Deck de madeira', camadas: [
+    { nome: 'Tábuas', gerador: 'listras', escala: 6, largura: 0.93, suavidade: 0.01, direcao: 'u', canais: ['altura', 'opacidade'], de: 0.05, ate: 1 },
+    { nome: 'Veios', gerador: 'veios', escala: 14, distorcao: 5, direcao: 'u', canais: ['tom', 'detalhe'], de: 0.8, ate: 1 },
+    { nome: 'Tom por tábua', gerador: 'listras', escala: 6, direcao: 'u', saida: 'peca', canais: ['tom'], de: 0.8, ate: 1 },
+  ] },
+  chapa: { nome: 'Chapa perfurada fina', camadas: [
+    { nome: 'Furos', gerador: 'pontos', escala: 16, raio: 0.28, suavidade: 0.02, desencontro: 0.5, canais: ['opacidade', 'altura'], inverter: true },
+    { nome: 'Escovado', gerador: 'escovado', escala: 32, canais: ['tom', 'rugosidade', 'detalhe'], de: 0.75, ate: 1 },
+    { nome: 'Metal', gerador: 'constante', canais: ['metal'], modo: 'misturar' },
+  ] },
+};
 
 const fieldCache = new Map();
 
