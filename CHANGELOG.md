@@ -6,12 +6,20 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.28.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.29.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.29.0] — 2026-10-26 · Gizmo da origem 0,0
+
+### Adicionado
+- **Gizmo da origem (0,0)** em todas as vistas: setas X (vermelha), Y (verde) e Z (azul, no 3D e nas elevações)
+  saindo do ponto 0,0 do projeto, com o rótulo "0,0", sempre do mesmo tamanho na tela; nas plantas fica na cota do
+  nível. Quando a origem está fora da tela, uma seta na borda aponta para ela — clicar leva a vista até a origem.
+  Chip **Origem 0,0** na vista liga/desliga (fica neste navegador).
 
 ## [2.28.0] — 2026-10-26 · Ícones da Tabler
 

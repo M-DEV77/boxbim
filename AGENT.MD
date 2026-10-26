@@ -14,6 +14,7 @@ flowchart LR
     MAIN["web/main.js<br/>inicia o App"] --> APP["app.js<br/>App: faixa, painéis, atalhos"]
     APP --> VIEWER["viewer.js<br/>cena three.js, seleção, cortes"]
     APP --> DISPLAY["display.js<br/>chips de exibição, 👁 revelar ocultos,<br/>H/Shift+H, ajuda, gerenciador de elevações"]
+    APP --> ORIGIN["origin-gizmo.js<br/>gizmo da origem 0,0"]
     APP --> SDIMS["smart-dims.js<br/>cotas até peças paralelas"]
     DISPLAY --> VIEWER
     SDIMS --> VIEWER
@@ -121,7 +122,8 @@ flowchart LR
 | 2026-10-26 | 2.25.1 | `a7229b4` | `hosting.repair` conserta projetos antigos: porta deixada para trás volta para o vão (mesma medida e deslocamento); vão sem porta fecha |
 | 2026-10-26 | 2.26.0 | `7aee41c` | Desfazer/refazer geral (`project.js`: passos do envio ao servidor) e botões ↶ ↷ no topo; troca de parede não apaga mais as portas hospedadas |
 | 2026-10-26 | 2.27.0 | `5bbf141` | Acabamento visual pela skill high-end-visual-design: páginas (`pages.css`: vidro, moldura dupla, ilha, pílulas, entrada animada) e editor (`styles.css`: janelas, menus, barras, movimento de mola) |
-| 2026-10-26 | 2.28.0 | este commit | Ícones genéricos da Tabler Icons (MIT) embutidos (`icons-tabler.js`, gerado por `scripts/gen-tabler-icons.py`); ícones de CAD próprios mantidos; `THIRD-PARTY-NOTICES.md` |
+| 2026-10-26 | 2.28.0 | `2fbf1f8` | Ícones genéricos da Tabler Icons (MIT) embutidos (`icons-tabler.js`, gerado por `scripts/gen-tabler-icons.py`); ícones de CAD próprios mantidos; `THIRD-PARTY-NOTICES.md` |
+| 2026-10-26 | 2.29.0 | este commit | Gizmo da origem 0,0 (`origin-gizmo.js`, SVG de tamanho fixo; seta na borda quando fora da tela) |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.28.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.29.0</a>

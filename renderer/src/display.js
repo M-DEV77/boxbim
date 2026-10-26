@@ -120,6 +120,7 @@ export class Display {
       return b;
     };
     this.chips = h('div', { class: 'view-chips' },
+      chip('origem', 'Origem 0,0', 'Gizmo da origem (0,0) com os eixos X, Y e Z', () => { app.origin.setVisible(!app.origin.on); }),
       chip('niveis', 'Níveis', 'Linhas e rótulos dos níveis no 3D e nas elevações', () => { app.views.levels3d = !app.views.levels3d; }),
       chip('eixos', 'Eixos de trabalho', 'Planos de desenho (eixos de trabalho) na tela', () => {
         const hide = !app.viewer.hiddenCats.has('eixos');
@@ -196,6 +197,7 @@ export class Display {
       b.classList.toggle('on', on);
       b.hidden = !show;
     };
+    set('origem', !!app.origin?.on);
     set('niveis', app.views.levels3d, kind === '3d' || kind === 'elevation');
     set('eixos', !v.hiddenCats.has('eixos'), app.workPlanes?.list().length > 0);
     set('elev', app.views.elevMarkers, kind === 'plan');

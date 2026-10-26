@@ -140,7 +140,9 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
 | **H** · **Shift+H** | oculta a seleção · mostra tudo |
 | **Ctrl+Z** · **Ctrl+Y** (ou ↶ ↷ no topo) | desfaz · refaz qualquer alteração do projeto |
 
-- **Chips na vista** (canto direito): Níveis, Eixos de trabalho e marcadores de Elevação — ligar/desligar na tela.
+- **Chips na vista** (canto direito): Origem 0,0, Níveis, Eixos de trabalho e marcadores de Elevação — ligar/desligar na tela.
+- **Gizmo da origem 0,0**: eixos X/Y/Z (Z no 3D e nas elevações) no ponto 0,0, sempre do mesmo tamanho na tela; fora da
+  tela, uma seta na borda aponta para ele (clique para ir até a origem).
 - **👁 na barra de baixo** (com o número de ocultos): "Revelar ocultos" — os ocultos aparecem com contorno magenta;
   clique num para mostrá-lo de volta; "Mostrar todos" e "Concluir" na barra que aparece.
 - **Cotas automáticas**: com uma peça selecionada, a distância até a peça paralela mais próxima de cada lado
@@ -393,4 +395,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.28.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.29.0</a>

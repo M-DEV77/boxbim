@@ -11,6 +11,7 @@ import { Grips } from './grips.js';
 import { SmartDims } from './smart-dims.js';
 import { icon } from './icons.js';
 import { Display } from './display.js';
+import { OriginGizmo } from './origin-gizmo.js';
 import { createOnLevel, syncLevelNames } from './modeling.js';
 import { Chat } from './chat.js';
 import { runTool, syncLevels } from './tools.js';
@@ -116,6 +117,7 @@ class App {
     this.guides = new Guides(this.viewer);
     this.viewStyles = new ViewStyles(this);
     this.views.projectionOf = v => this.viewStyles.projectionOf(v);
+    this.origin = new OriginGizmo(this); // gizmo da origem 0,0 (tamanho fixo na tela)
     this.display = new Display(this); // chips de exibição, 👁 revelar ocultos, H/Shift+H, ajuda do mouse, elevações
     this.wallTool = new WallDrawTool(this);
     this.slabTool = new SlabTool(this);
