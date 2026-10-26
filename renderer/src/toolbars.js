@@ -13,6 +13,8 @@ export const HOME = 'Início'; // nome da aba que os presets antigos tinham fixa
 // grupos de sempre que a migração e o preset padrão colocam na aba Início (os outros ficam para o usuário)
 const START_GROUPS = ['Arquivo', 'Modelar', 'Desenho', 'Modificar', 'Vistas'];
 const SKETCH_OBJECTS = ['linha', 'retangulo', 'circulo'];
+// comandos que chegaram depois que os presets passaram a lembrar os comandos vistos (entram nos presets antigos)
+const NEW_COMMANDS = ['ambientes', 'materiais', 'texturas'];
 
 // comandos que viraram Objetos (presets antigos são convertidos)
 const AS_OBJECT = { laje: 'laje', pilar: 'pilar', viga: 'viga', caixa: 'caixa', 'parede-coord': 'parede', 'desenhar-parede': 'parede', linha: 'linha', retangulo: 'retangulo', circulo: 'circulo' };
@@ -47,6 +49,7 @@ export class Toolbars extends EventTarget {
       // versão 2: não há mais aba fixa — a aba Início vira comum, com os grupos que ela mostrava fixos
       if (p.dados.versao !== 2) { this.upgrade(p); changed = true; }
       for (const a of p.dados.abas) for (const g of a.grupos) changed = this.migrate(g) || changed;
+      changed = this.addNewCommands(p) || changed;
     }
     if (changed) this.save().catch(() => {});
     this.dispatchEvent(new Event('change'));
@@ -65,6 +68,39 @@ export class Toolbars extends EventTarget {
       home.grupos.push(g);
     }
     p.dados.versao = 2;
+  }
+
+  /**
+   * Comandos novos do BoxBim entram nos presets já gravados: no grupo de mesmo nome (logo depois do vizinho que
+   * eles têm no padrão), ou no fim da primeira aba. O preset lembra os comandos que já viu — um comando que o
+   * usuário tirou não volta.
+   */
+  addNewCommands(p) {
+    const all = Object.keys(this.commands);
+    const seen = new Set(p.dados.comandosVistos || all.filter(id => !NEW_COMMANDS.includes(id)));
+    const fresh = all.filter(id => !seen.has(id));
+    const present = new Set(p.dados.abas.flatMap(a => a.grupos.flatMap(g => g.itens.filter(i => i.tipo === 'comando').map(i => i.id))));
+    let changed = !p.dados.comandosVistos;
+    for (const id of fresh) {
+      changed = true;
+      if (present.has(id)) continue;
+      const def = (this.defaultGroups || []).find(g => g.itens.some(i => i.id === id));
+      const group = def && p.dados.abas.flatMap(a => a.grupos).find(g => g.nome === def.nome);
+      const item = { tipo: 'comando', id };
+      if (group) {
+        const di = def.itens.findIndex(i => i.id === id);
+        const prev = def.itens.slice(0, di).reverse().find(i => group.itens.some(x => x.id === i.id));
+        const at = prev ? group.itens.findIndex(x => x.id === prev.id) + 1 : group.itens.length;
+        group.itens.splice(at, 0, item);
+      } else if (p.dados.abas[0]) {
+        const tab = p.dados.abas[0];
+        let g = tab.grupos.find(x => x.nome === (def?.nome || 'Novos'));
+        if (!g) { g = { nome: def?.nome || 'Novos', itens: [] }; tab.grupos.push(g); }
+        g.itens.push(item);
+      }
+    }
+    p.dados.comandosVistos = all;
+    return changed;
   }
 
   /** Comandos que saíram da faixa viram os objetos correspondentes; os que não existem mais saem. */

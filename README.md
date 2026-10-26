@@ -353,4 +353,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.19.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.19.1</a>

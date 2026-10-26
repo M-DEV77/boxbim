@@ -6,12 +6,20 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.19.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.19.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.19.1] — 2026-10-26 · Comandos novos aparecem na faixa
+
+### Corrigido
+- **Ambientes** (e **Materiais**) não apareciam na faixa: os presets de menus guardam uma cópia dos botões, e
+  comandos novos do BoxBim nunca entravam neles. Agora cada preset lembra os comandos que já viu e os novos
+  entram sozinhos no grupo de mesmo nome (Modelar › Ambientes, Vistas › Materiais). Um comando que você tirou
+  do preset não volta.
 
 ## [2.19.0] — 2026-10-26 · Sistema de materiais com mapas procedurais
 
