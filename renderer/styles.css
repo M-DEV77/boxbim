@@ -712,3 +712,50 @@ table.budget tr.muted td { color: var(--muted); }
 .te-blend { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 6px; align-items: center; margin: 4px 0; }
 .te-mini input[type=number] { width: 52px; }
 .te-editor .me-row { grid-template-columns: 110px 1fr 64px; }
+
+/* ---------------- navegação e exibição (display.js, smart-dims.js, viewer) */
+/* janela de seleção do botão direito: → janela (azul, contínua) · ← cruzamento (verde, tracejada) */
+.select-band { position: absolute; z-index: 6; pointer-events: none; border: 1.5px solid #2f9bff; background: #2f9bff1f; border-radius: 2px; }
+.select-band.crossing { border: 1.5px dashed var(--green-2); background: #1fbf3b1a; }
+/* revelando os ocultos: borda magenta na vista (como no Revit) */
+#viewport.revealing { box-shadow: inset 0 0 0 3px #ff2fd6; }
+.reveal-bar { position: absolute; left: 50%; top: 40px; transform: translateX(-50%); z-index: 7; display: flex; align-items: center; gap: 10px; padding: 6px 10px; background: rgba(24, 29, 36, .96); border: 1px solid #ff2fd6; border-radius: 8px; box-shadow: 0 6px 20px #0007; font-size: 12px; white-space: nowrap; }
+.reveal-bar strong { color: #ff7ae6; }
+/* chips de exibição no canto da vista */
+.view-chips { position: absolute; top: 72px; right: 10px; z-index: 4; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+.view-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; font-size: 11.5px; border-radius: 999px; background: rgba(24, 29, 36, .82); border: 1px solid var(--line); color: var(--muted); backdrop-filter: blur(4px); }
+.view-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: #4a5668; box-shadow: inset 0 0 0 1px #0005; }
+.view-chip.on { color: var(--text); border-color: #2f4d3a; }
+.view-chip.on .dot { background: var(--green-2); box-shadow: 0 0 6px var(--green-2); }
+.view-chip:hover { border-color: var(--green); color: var(--text); }
+.view-chip.ghost { color: #8fb8d6; }
+/* 👁 revelar ocultos (barra inferior) */
+.eye-btn { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; }
+.eye-btn .eye-ico svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; display: block; }
+.eye-btn.on { background: #ff2fd6; border-color: #ff2fd6; color: #fff; }
+.eye-btn .eye-count { font-size: 11px; font-variant-numeric: tabular-nums; }
+.eye-btn .eye-count:empty { display: none; }
+/* ajuda do mouse */
+.nav-help { position: absolute; left: 10px; bottom: 40px; z-index: 4; }
+.nav-help-btn { width: 26px; height: 26px; border-radius: 50%; padding: 0; font-weight: 700; background: rgba(24, 29, 36, .85); border: 1px solid var(--line); color: var(--muted); }
+.nav-help-btn:hover { color: var(--text); border-color: var(--green); }
+.nav-help-pop { position: absolute; left: 0; bottom: 34px; width: 360px; max-width: calc(100vw - 40px); padding: 10px 12px; background: rgba(24, 29, 36, .97); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 30px #0009; font-size: 12px; }
+.nav-help-pop table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+.nav-help-pop td { padding: 3px 4px; vertical-align: top; color: var(--muted); }
+.nav-help-pop td:first-child { white-space: nowrap; }
+.nav-help-pop kbd { font: 600 11px system-ui, sans-serif; color: var(--text); background: var(--panel-2); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 1px 5px; }
+/* cotas automáticas até as peças paralelas */
+.smart-dims { position: absolute; inset: 0; z-index: 5; pointer-events: none; overflow: hidden; }
+.smart-dims-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.smart-dim { stroke: #ffb23e; stroke-width: 1.3; fill: none; filter: drop-shadow(0 0 1px #000c); }
+.smart-dim-label { position: absolute; pointer-events: auto; padding: 0 6px; font: 600 11.5px system-ui, sans-serif; line-height: 17px; color: #1b1406; background: #ffb23e; border: none; border-radius: 4px; white-space: nowrap; box-shadow: 0 1px 4px #0008; cursor: text; }
+.smart-dim-label:hover { background: #ffc766; }
+.smart-dim-input { position: absolute; transform: translate(-50%, -50%); width: 86px; pointer-events: auto; z-index: 2; text-align: center; border: 2px solid #ffb23e; }
+/* gerenciador de elevações */
+.elev-row { display: grid; grid-template-columns: 1.4fr 1.6fr .75fr .75fr .75fr .75fr 52px 104px; gap: 6px; align-items: center; margin: 3px 0; }
+.elev-row.head { font-size: 11px; color: var(--muted); }
+.elev-row input:not([type=checkbox]), .elev-row select { width: 100%; min-width: 0; }
+.elev-dir { display: flex; gap: 4px; }
+.elev-dir input { width: 64px !important; flex: none; }
+.elev-act { display: flex; gap: 4px; justify-content: flex-end; }
+.center .nav-help { bottom: calc(var(--dock-h) + 36px); }

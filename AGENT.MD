@@ -13,6 +13,10 @@ flowchart LR
   subgraph NAV["Navegador (renderer/src)"]
     MAIN["web/main.js<br/>inicia o App"] --> APP["app.js<br/>App: faixa, painéis, atalhos"]
     APP --> VIEWER["viewer.js<br/>cena three.js, seleção, cortes"]
+    APP --> DISPLAY["display.js<br/>chips de exibição, 👁 revelar ocultos,<br/>H/Shift+H, ajuda, gerenciador de elevações"]
+    APP --> SDIMS["smart-dims.js<br/>cotas até peças paralelas"]
+    DISPLAY --> VIEWER
+    SDIMS --> VIEWER
     APP --> VIEWS["views.js / levels.js / levels-edit.js<br/>vistas, níveis, corte por nível"]
     APP --> RIB["ribbon.js / toolbars.js<br/>comandos, famílias ▾ e presets"]
     RIB --> ICONS["icons.js<br/>ícones nas cores da marca"]
@@ -110,7 +114,8 @@ flowchart LR
 | 2026-10-26 | 2.20.0 | `1783e1e` | Estilo de vista Textura (`viewstyle.js` + `RenderMode.enableTextures`): materiais com mapas sem céu/sol/sombras |
 | 2026-10-26 | 2.21.0 | `b751611` | Texturas procedurais próprias em camadas (`materials.js`, `texture-editor.js`), gravadas nos tipos do projeto; ferramentas do Chat IA `list_materials`, `create_texture`, `set_material` |
 | 2026-10-26 | 2.22.0 | `f9450ed` | Entrada com demonstração (`demo.html` + `pages/demo.js`): Casa Horizonte com materiais procedurais, céu e sol; login por cima depois de `BOXBIM_DEMO_MIN` min |
-| 2026-10-26 | 2.23.0 | este commit | Ferramentas parecidas em botões de família com ▾ (`ribbon.js`, presets convertidos em `toolbars.js`); ícones novos nas cores da marca (`icons.js`) |
+| 2026-10-26 | 2.23.0 | `5304bfb` | Ferramentas parecidas em botões de família com ▾ (`ribbon.js`, presets convertidos em `toolbars.js`); ícones novos nas cores da marca (`icons.js`) |
+| 2026-10-26 | 2.24.0 | este commit | Mouse (direito seleciona/janela, Alt+direito gira), visibilidade central e 👁 revelar ocultos (`viewer.js`, `display.js`), cotas até peças paralelas (`smart-dims.js`), elevações próprias com profundidade e largura (`views.js`) |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.23.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.24.0</a>

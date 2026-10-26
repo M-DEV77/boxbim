@@ -1,5 +1,10 @@
 // Vistas do projeto, no modelo do Revit: Vista 3D, Plantas de piso e Plantas de forro (uma por nível)
-// e Elevações (Norte, Sul, Leste, Oeste). Cada vista abre numa aba e guarda a própria câmera.
+// e Elevações. Cada vista abre numa aba e guarda a própria câmera.
+// ELEVAÇÕES do projeto (dados.elevacoes): as quatro de fábrica (Norte, Sul, Leste, Oeste) e as que o usuário criar,
+//   { id, nome, dir: [x, y] (lado de onde se olha), origem: [x, y] | null (linha da elevação; null = borda do modelo),
+//     profundidade: m | null (até onde enxerga a partir da linha; null = tudo), largura: m | null (centrada na
+//     origem, ao longo da linha; null = toda a extensão), visivel (no navegador, nos menus e
+//     com o marcador nas plantas) }
 import * as THREE from 'three';
 import { textSprite } from './viewer.js';
 import { fmtElev, cutOf } from './levels.js';
@@ -13,6 +18,29 @@ export const ELEVATIONS = {
 };
 
 const DEFAULT_RANGE = { cutHeight: 1.2, viewDepth: -0.3 };
+const ELEV_COLOR = 0x2f6fb0;
+
+/** Elevações de fábrica (as quatro direções, olhando o modelo inteiro). */
+export const defaultElevations = () => Object.entries(ELEVATIONS).map(([id, e]) => ({ id, nome: e.name, dir: e.dir.slice(0, 2), origem: null, profundidade: null, largura: null, visivel: true }));
+
+/** Confere e completa uma lista de elevações (vinda da tela, do projeto ou da IA). */
+export function normalizeElevations(list) {
+  const out = [];
+  for (const e of Array.isArray(list) ? list : []) {
+    const d = Array.isArray(e?.dir) ? e.dir.map(Number) : [0, -1];
+    const L = Math.hypot(d[0], d[1]) || 1;
+    out.push({
+      id: String(e?.id || `e${Date.now().toString(36)}${out.length}`),
+      nome: String(e?.nome || 'Elevação').slice(0, 60),
+      dir: [d[0] / L, d[1] / L],
+      origem: Array.isArray(e?.origem) && e.origem.every(Number.isFinite) ? e.origem.slice(0, 2).map(Number) : null,
+      profundidade: Number(e?.profundidade) > 0 ? Number(e.profundidade) : null,
+      largura: Number(e?.largura) > 0 ? Number(e.largura) : null,
+      visivel: e?.visivel !== false,
+    });
+  }
+  return out.length ? out : defaultElevations();
+}
 const LEVEL_COLOR = 0x1f6f2e;
 const LEVEL_COLOR_3D = 0x35b860; // mais claro: o fundo do 3D costuma ser escuro
 
@@ -44,6 +72,7 @@ export class ViewManager extends EventTarget {
     this.activeId = '3d';
     this.cams = new Map();     // câmera salva por vista
     this.ranges = new Map();   // faixa de vista por planta (cutHeight, viewDepth)
+    this.elevs = defaultElevations();
     levels.addEventListener('change', () => this._onLevelsChanged());
     viewer.addEventListener('change', () => this._refreshAnnotations());
     this.renderTabs();
@@ -55,8 +84,18 @@ export class ViewManager extends EventTarget {
     const views = [{ id: '3d', kind: '3d', name: '{3D}' }];
     for (const l of this.levels.list) views.push({ id: `plan:${l.id}`, kind: 'plan', levelId: l.id, name: l.name });
     for (const l of this.levels.list) views.push({ id: `ceiling:${l.id}`, kind: 'ceiling', levelId: l.id, name: l.name });
-    for (const [k, e] of Object.entries(ELEVATIONS)) views.push({ id: `elev:${k}`, kind: 'elevation', dir: e.dir, name: e.name });
+    for (const e of this.elevs) views.push({ id: `elev:${e.id}`, kind: 'elevation', dir: [e.dir[0], e.dir[1], 0], name: e.nome, elev: e, hidden: !e.visivel });
     return views;
+  }
+
+  /** Elevações (visíveis, ou todas). */
+  elevations({ all = false } = {}) { return all ? this.elevs : this.elevs.filter(e => e.visivel); }
+
+  /** Troca a lista de elevações (gravada no projeto por quem chamou); fecha abas de elevações apagadas. */
+  setElevations(list) {
+    this.elevs = normalizeElevations(list);
+    this._onLevelsChanged();
+    this.dispatchEvent(new Event('elevations'));
   }
 
   get(id) { return this.list().find(v => v.id === id) || null; }
@@ -101,8 +140,8 @@ export class ViewManager extends EventTarget {
     if (kind === '3d' || !kind) return this.get('3d');
     if (kind === 'elevation') {
       const d = String(direction || 'S').toLowerCase();
-      const key = Object.entries(ELEVATIONS).find(([k, e]) => k.toLowerCase() === d || e.name.toLowerCase() === d)?.[0];
-      return key ? this.get(`elev:${key}`) : null;
+      const e = this.elevs.find(x => x.id.toLowerCase() === d || x.nome.toLowerCase() === d);
+      return e ? this.get(`elev:${e.id}`) : null;
     }
     const lvl = this.levels.get(level) || this.levels.list[0];
     return lvl ? this.get(`${kind}:${lvl.id}`) : null;
@@ -165,23 +204,134 @@ export class ViewManager extends EventTarget {
       // A planta de forro olha de baixo para cima e é espelhada, como no Revit, para manter a orientação da planta.
       const ceiling = v.kind === 'ceiling';
       viewer.applyView({ camera: 'ortho', clip, paper: true, grid: false, mirror: ceiling, capZ: cut });
-      viewer.setAnnotations([]);
+      viewer.setAnnotations(ceiling ? [] : this._elevMarkers(lvl.elevation + Math.min(0.5, r.cutHeight * 0.5)));
       if (saved) viewer.restoreCamera(saved); else viewer.frameOrtho(ceiling ? [0, -0.0001, -1] : [0, -0.0001, 1]);
       return;
     }
 
-    // elevação
-    viewer.applyView({ camera: 'ortho', paper: true, grid: false });
+    // elevação: com linha (origem) e profundidade, só o que está à frente da linha e até a profundidade
+    const e = v.elev, clip = [];
+    if (e?.origem) {
+      const [dx, dy] = e.dir, k = dx * e.origem[0] + dy * e.origem[1];
+      clip.push({ normal: [-dx, -dy, 0], constant: k + 0.001 });
+      if (e.profundidade) clip.push({ normal: [dx, dy, 0], constant: -k + e.profundidade });
+      if (e.largura) {
+        // eixo da linha (da esquerda para a direita de quem olha): r = Z × dir
+        const rx = -dy, ry = dx, kr = rx * e.origem[0] + ry * e.origem[1], w = e.largura / 2;
+        clip.push({ normal: [rx, ry, 0], constant: -kr + w }, { normal: [-rx, -ry, 0], constant: kr + w });
+      }
+    }
+    viewer.applyView({ camera: 'ortho', paper: true, grid: false, clip });
     this._refreshAnnotations();
     // enquadra modelo + linhas de nível, com folga para os rótulos à direita
-    if (saved) viewer.restoreCamera(saved); else viewer.frameOrtho(v.dir, [viewer.model, viewer.annotations], 1.45);
+    // com linha: enquadra só o que está na faixa da elevação (entre a linha e a profundidade)
+    let targets = [viewer.model, viewer.annotations];
+    if (e?.origem) {
+      const [dx, dy] = e.dir, k = dx * e.origem[0] + dy * e.origem[1], far = k - (e.profundidade || 1e6);
+      const inRange = viewer.elements().filter(o => {
+        if (!o.visible) return false;
+        const b = new THREE.Box3().setFromObject(o);
+        if (b.isEmpty()) return false;
+        const pts = [b.min.x, b.max.x].flatMap(x => [b.min.y, b.max.y].map(y => [x, y]));
+        const vals = pts.map(([x, y]) => dx * x + dy * y);
+        if (Math.max(...vals) < far || Math.min(...vals) > k) return false;
+        if (!e.largura) return true;
+        const kr = -dy * e.origem[0] + dx * e.origem[1], lat = pts.map(([x, y]) => -dy * x + dx * y - kr);
+        return Math.max(...lat) >= -e.largura / 2 && Math.min(...lat) <= e.largura / 2;
+      });
+      if (inRange.length) targets = inRange;
+    }
+    if (saved) viewer.restoreCamera(saved); else viewer.frameOrtho(v.dir, targets, e?.origem ? 1.25 : 1.45);
   }
 
-  /** Mostra (ou esconde) as linhas de nível na Vista 3D; fica guardado neste navegador. */
+  /** Mostra (ou esconde) as linhas de nível na Vista 3D e nas elevações; fica guardado neste navegador. */
   get levels3d() { try { return localStorage.getItem('boxbim.niveis3d') !== '0'; } catch { return true; } }
   set levels3d(on) {
     try { localStorage.setItem('boxbim.niveis3d', on ? '1' : '0'); } catch { /* sem armazenamento */ }
-    if (this.active.kind === '3d') this._refreshAnnotations();
+    this.refresh();
+    this.dispatchEvent(new Event('display'));
+  }
+
+  /** Mostra (ou esconde) os marcadores das elevações nas plantas; fica guardado neste navegador. */
+  get elevMarkers() { try { return localStorage.getItem('boxbim.marcadoresElev') !== '0'; } catch { return true; } }
+  set elevMarkers(on) {
+    try { localStorage.setItem('boxbim.marcadoresElev', on ? '1' : '0'); } catch { /* sem armazenamento */ }
+    this.refresh();
+    this.dispatchEvent(new Event('display'));
+  }
+
+  /** Linha de uma elevação no modelo: a dada, ou na borda do modelo do lado de onde se olha. */
+  elevationLine(e) {
+    const box = this.viewer.modelBox();
+    if (box.isEmpty()) box.set(new THREE.Vector3(-10, -10, 0), new THREE.Vector3(10, 10, 3));
+    const c = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3());
+    const d = new THREE.Vector3(e.dir[0], e.dir[1], 0);
+    const right = new THREE.Vector3(0, 0, 1).cross(d).normalize();
+    const half = e.largura ? e.largura / 2 : Math.abs(right.x) * size.x / 2 + Math.abs(right.y) * size.y / 2 + 1;
+    const o = e.origem ? new THREE.Vector3(e.origem[0], e.origem[1], 0)
+      : c.clone().setZ(0).addScaledVector(d, Math.abs(d.x) * size.x / 2 + Math.abs(d.y) * size.y / 2 + 2.5);
+    return { o, d, right, half };
+  }
+
+  /** Marcadores das elevações visíveis numa planta (cota z): círculo com a seta para onde se olha e o nome. */
+  _elevMarkers(z) {
+    if (!this.elevMarkers) return [];
+    const objs = [];
+    for (const e of this.elevations()) {
+      const { o, d, right, half } = this.elevationLine(e);
+      const p = o.clone().setZ(z);
+      const mat = new THREE.MeshBasicMaterial({ color: ELEV_COLOR, depthTest: false, side: THREE.DoubleSide });
+      const ring = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.5, 32), mat);
+      ring.position.copy(p);
+      // seta (triângulo) apontando para o modelo (para onde a câmera olha: −dir)
+      const look = d.clone().negate();
+      const tip = p.clone().addScaledVector(look, 0.95), b1 = p.clone().addScaledVector(right, 0.45), b2 = p.clone().addScaledVector(right, -0.45);
+      const tri = new THREE.Mesh(new THREE.BufferGeometry().setFromPoints([b1, b2, tip]), mat);
+      // linha da elevação (tracejada) quando tem origem, mostrando a largura
+      const objsE = [ring, tri];
+      if (e.origem) {
+        const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([p.clone().addScaledVector(right, -half), p.clone().addScaledVector(right, half)]),
+          new THREE.LineDashedMaterial({ color: ELEV_COLOR, dashSize: 0.4, gapSize: 0.25, depthTest: false }));
+        line.computeLineDistances();
+        objsE.push(line);
+        if (e.profundidade) {
+          const q = p.clone().addScaledVector(look, e.profundidade);
+          const far = new THREE.Line(new THREE.BufferGeometry().setFromPoints([q.clone().addScaledVector(right, -half), q.clone().addScaledVector(right, half)]),
+            new THREE.LineDashedMaterial({ color: ELEV_COLOR, dashSize: 0.15, gapSize: 0.3, depthTest: false, transparent: true, opacity: 0.6 }));
+          far.computeLineDistances();
+          objsE.push(far);
+        }
+      }
+      const label = textSprite(e.nome, { size: 20, color: '#2f6fb0' });
+      label.position.copy(p).addScaledVector(d, 0.75);
+      label.center.set(0.5, 0.5);
+      objsE.push(label);
+      for (const x of objsE) { x.renderOrder = 9; x.userData.elevId = e.id; }
+      objs.push(...objsE);
+    }
+    return objs;
+  }
+
+  /** Marcador de elevação perto do ponto da tela (clique duplo abre a elevação). */
+  elevationAt(clientX, clientY) {
+    const c = this.viewer.renderer.domElement.getBoundingClientRect();
+    let best = null, bd = 22;
+    for (const o of this.viewer.annotations.children) {
+      if (!o.userData.elevId || !o.isSprite) continue;
+      const v = o.position.clone().project(this.viewer.camera);
+      const d = Math.hypot((v.x + 1) / 2 * c.width + c.left - clientX, (1 - v.y) / 2 * c.height + c.top - clientY);
+      if (d < bd) { bd = d; best = o.userData.elevId; }
+    }
+    if (!best) {
+      // o círculo do marcador também vale
+      for (const o of this.viewer.annotations.children) {
+        if (!o.userData.elevId || !o.isMesh) continue;
+        const v = o.position.clone().project(this.viewer.camera);
+        const d = Math.hypot((v.x + 1) / 2 * c.width + c.left - clientX, (1 - v.y) / 2 * c.height + c.top - clientY);
+        if (d < bd) { bd = d; best = o.userData.elevId; }
+      }
+    }
+    return best;
   }
 
   /**
@@ -192,6 +342,7 @@ export class ViewManager extends EventTarget {
     const v = this.active;
     if (v.kind === '3d') return this._levels3d();
     if (v.kind !== 'elevation') return;
+    if (!this.levels3d) return this.viewer.setAnnotations([]);
     const box = this.viewer.modelBox();
     if (box.isEmpty()) box.set(new THREE.Vector3(-10, -10, 0), new THREE.Vector3(10, 10, 3));
     const d = new THREE.Vector3(...v.dir);

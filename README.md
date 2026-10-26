@@ -128,6 +128,28 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
 - **Revit › Trazer níveis do Revit** lê os níveis do projeto ativo; **Enviar níveis ao Revit** cria os que
   faltam (com planta de piso) e atualiza a cota dos de mesmo nome (rota `/levels` do add-in).
 
+## Mouse, exibição e elevações
+
+| Ação | O quê |
+|---|---|
+| Botão esquerdo (arrastar) | gira a vista 3D (nas plantas e elevações, arrasta) |
+| Clique esquerdo ou **direito** | seleciona (Ctrl/Shift soma) |
+| **Direito arrastando** | janela de seleção: → só o que está inteiro dentro · ← o que tocar |
+| **Alt + direito** | gira a vista (nas plantas, arrasta) |
+| Meio · roda | arrasta · aproxima |
+| **H** · **Shift+H** | oculta a seleção · mostra tudo |
+
+- **Chips na vista** (canto direito): Níveis, Eixos de trabalho e marcadores de Elevação — ligar/desligar na tela.
+- **👁 na barra de baixo** (com o número de ocultos): "Revelar ocultos" — os ocultos aparecem com contorno magenta;
+  clique num para mostrá-lo de volta; "Mostrar todos" e "Concluir" na barra que aparece.
+- **Cotas automáticas**: com uma peça selecionada, a distância até a peça paralela mais próxima de cada lado
+  (paredes, vigas, linhas: face a face; outras peças: em ±X/±Y). Clique no número para digitar outra distância —
+  a peça anda (Ctrl+Z desfaz).
+- **Elevações** (Vistas › Gerenciar elevações, ⚙ no navegador ou o chip "Elevações…"): crie e nomeie elevações,
+  com direção, linha (X, Y), **profundidade** e **largura**, e marque se ficam **visíveis** (no navegador, nos menus
+  e com o marcador nas plantas — clique duplo no marcador abre a elevação). Ficam gravadas no projeto.
+- **?** no canto da vista: ajuda do mouse e dos atalhos (aparece sozinha na primeira vez).
+
 ## Mover, girar e orbitar
 
 | Onde | Como |
@@ -366,4 +388,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.23.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.24.0</a>

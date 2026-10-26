@@ -97,7 +97,7 @@ export class Environments extends EventTarget {
   applyTo(el) {
     const id = el.userData.bim?.camadaId ?? null;
     el.userData.envHidden = !!id && this.hidden.has(id);
-    el.visible = !el.userData.envHidden && !el.userData.userHidden;
+    this.app.viewer.updateVisibility(el); // junta camada, oculto por você e categorias (viewer)
     el.userData.locked = !this.canEdit(el);
   }
 

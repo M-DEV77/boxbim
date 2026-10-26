@@ -3,7 +3,6 @@
 // a seta ▾ abre a lista com as outras. Os comandos continuam existindo um a um (presets e Personalizar menus).
 import { $, h, dropdown } from './ui.js';
 import { importFromRevit, sendToRevit } from './io/formats.js';
-import { ELEVATIONS } from './views.js';
 import { fmtElev } from './levels.js';
 
 import { icon } from './icons.js';
@@ -73,7 +72,10 @@ export function buildRibbon(app) {
   const levelMenu = (b, kind) => dropdown(b, [...L().list].reverse().map(l => ({
     label: l.name, hint: fmtElev(l.elevation), action: () => app.views.openView(`${kind}:${l.id}`),
   })));
-  const elevMenu = b => dropdown(b, Object.entries(ELEVATIONS).map(([k, e]) => ({ label: e.name, action: () => app.views.openView(`elev:${k}`) })));
+  const elevMenu = b => dropdown(b, [
+    ...app.views.elevations().map(e => ({ label: e.nome, action: () => app.views.openView(`elev:${e.id}`) })),
+    '-', { label: 'Elevações…', hint: 'criar, nomear, profundidade', action: () => app.display.elevationsDialog() },
+  ]);
   const revit = (label, fn) => app.task(label, fn);
 
   // ORTO: botão que fica aceso enquanto o modo está ligado
@@ -131,6 +133,7 @@ export function buildRibbon(app) {
     plantaPiso: cmd('Planta\nde piso', 'plan', b => levelMenu(b, 'plan'), { drop: true, menu: 'Planta de piso…' }),
     plantaForro: cmd('Planta\nde forro', 'ceiling', b => levelMenu(b, 'ceiling'), { drop: true, menu: 'Planta de forro…' }),
     elevacao: cmd('Elevação', 'elev', b => elevMenu(b), { drop: true, menu: 'Elevação…' }),
+    elevacoes: cmd('Elevações', 'elev', () => app.display.elevationsDialog(), { id: 'gerenciar-elevacoes', title: 'Elevações do projeto: criar, nomear, linha, profundidade e visíveis ou não', menu: 'Gerenciar elevações…' }),
     enquadrar: cmd('Enquadrar', 'fit', () => app.viewer.fit(), { title: 'Enquadrar tudo (F)' }),
     render: cmd('Render', 'render', () => app.viewStyles.set('render'), { id: 'render', title: 'Estilo Render na vista ativa: materiais em tempo real, sol, céu, sombras, path tracing', menu: 'Render (estilo da vista)' }),
     textura: cmd('Estilo\nTextura', 'texture', () => app.viewStyles.set('textura'), { id: 'estilo-textura', title: 'Estilo Textura na vista ativa: materiais com mapas, sem céu/sol/sombras', menu: 'Textura (estilo da vista)' }),
@@ -180,7 +183,7 @@ export function buildRibbon(app) {
       fam('f-copiar', 'Copiar e espelhar', 'copy', [C.copiar, C.espelhar]),
       fam('f-ajustar', 'Ajustar paredes', 'joints', [C.juncoes, C.paredeTelhado])),
     group('Vistas',
-      fam('f-vistas', 'Vistas', 'views', [C.vista3d, C.plantaPiso, C.plantaForro, C.elevacao], { menuOnly: true, title: 'Abrir uma vista: 3D, planta de piso, planta de forro ou elevação' }),
+      fam('f-vistas', 'Vistas', 'views', [C.vista3d, C.plantaPiso, C.plantaForro, C.elevacao, C.elevacoes], { menuOnly: true, title: 'Abrir uma vista: 3D, planta de piso, planta de forro ou elevação' }),
       button(C.enquadrar),
       fam('f-aparencia', 'Aparência', 'look', [C.render, C.textura, C.materiais, C.texturas], { title: 'Render, estilo Textura, materiais e texturas' })),
     group('Objetos',

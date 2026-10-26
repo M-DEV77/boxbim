@@ -70,6 +70,7 @@ export class ProjectSession extends EventTarget {
     if (dados.grade) this.app.guides?.setOptions(dados.grade);
     if (dados.cores) this.app.viewStyles?.setColors(dados.cores);
     if (dados.unidade) setUnit(dados.unidade);
+    if (dados.elevacoes) this.app.views?.setElevations(dados.elevacoes);
   }
 
   loadLevels(niveis) {

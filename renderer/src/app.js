@@ -3,11 +3,13 @@ import { $, $$, h, toast, dropdown, formDialog, confirmDialog, modal, markdown }
 import { importFile, exportFile, importFromRevit, sendToRevit, IMPORT_FORMATS, EXPORT_FORMATS, extOf } from './io/formats.js';
 import { ifcPropertySets } from './io/ifc.js';
 import { Levels, fmtElev } from './levels.js';
-import { ViewManager, ELEVATIONS } from './views.js';
+import { ViewManager } from './views.js';
 import { LevelEditor } from './levels-edit.js';
 import { WorkPlanes } from './workplanes.js';
 import { Environments } from './environments.js';
 import { Grips } from './grips.js';
+import { SmartDims } from './smart-dims.js';
+import { Display } from './display.js';
 import { createOnLevel, syncLevelNames } from './modeling.js';
 import { Chat } from './chat.js';
 import { runTool, syncLevels } from './tools.js';
@@ -96,6 +98,7 @@ class App {
     this.viewer.onAdd = el => this.envs.onAdd(el);
     this.envs.addEventListener('change', () => { this.renderBrowser(); if (this.viewer.selected.size) this.renderProps(); });
     this.grips = new Grips(this);
+    this.smartDims = new SmartDims(this); // cotas até as peças paralelas da seleção
     // widget de eixos (orbitar em X/Y/Z) no canto da vista 3D
     const axes = new AxisWidget({ getCamera: () => this.viewer.camera, getControls: () => this.viewer.controls });
     $('.center').append(axes.el);
@@ -112,6 +115,7 @@ class App {
     this.guides = new Guides(this.viewer);
     this.viewStyles = new ViewStyles(this);
     this.views.projectionOf = v => this.viewStyles.projectionOf(v);
+    this.display = new Display(this); // chips de exibição, 👁 revelar ocultos, H/Shift+H, ajuda do mouse, elevações
     this.wallTool = new WallDrawTool(this);
     this.slabTool = new SlabTool(this);
     this.roofTool = new RoofTool(this);
@@ -390,7 +394,8 @@ class App {
       view: () => [
         { label: 'Vista 3D', action: () => this.views.openView('3d') },
         ...this.levels.list.map(l => ({ label: `Planta de piso: ${l.name}`, hint: fmtElev(l.elevation), action: () => this.views.openView(`plan:${l.id}`) })),
-        ...Object.entries(ELEVATIONS).map(([k, e]) => ({ label: `Elevação ${e.name}`, action: () => this.views.openView(`elev:${k}`) })),
+        ...this.views.elevations().map(e => ({ label: `Elevação ${e.nome}`, action: () => this.views.openView(`elev:${e.id}`) })),
+        { label: 'Elevações…', action: () => this.display.elevationsDialog() },
         '-',
         ...['iso', 'top', 'front', 'back', 'left', 'right'].map(v => ({ label: `3D: ${{ iso: 'isométrica', top: 'de cima', front: 'frontal', back: 'posterior', left: 'esquerda', right: 'direita' }[v]}`, disabled: this.views.active.kind !== '3d', action: () => this.viewer.setView(v) })),
         '-',
@@ -743,8 +748,10 @@ class App {
           group('3d', 'Vistas 3D', '⬡', [node('3d', '{3D}')]),
           group('plans', 'Plantas de piso', '▦', [...lv].reverse().map(l => node(`plan:${l.id}`, l.name))),
           group('ceilings', 'Plantas de forro', '▤', [...lv].reverse().map(l => node(`ceiling:${l.id}`, l.name))),
-          group('elevs', 'Elevações (Elevação da construção)', '⌂',
-            Object.entries(ELEVATIONS).sort((a, b) => a[1].name.localeCompare(b[1].name)).map(([k, e]) => node(`elev:${k}`, e.name)))),
+          h('details', { 'data-key': 'elevs', open: isOpen('elevs') },
+            h('summary', {}, h('span', { class: 'ico' }, '⌂'), 'Elevações',
+              h('span', { class: 'act', title: 'Elevações: criar, nomear, profundidade, visíveis', onclick: e => { e.preventDefault(); e.stopPropagation(); this.display.elevationsDialog(); } }, ' ⚙')),
+            [...this.views.elevations()].sort((a, b) => a.nome.localeCompare(b.nome)).map(e => node(`elev:${e.id}`, e.nome)))),
       ]),
       h('details', { 'data-key': 'ambientes', open: isOpen('ambientes') },
         h('summary', {}, h('span', { class: 'ico' }, '◧'), 'Ambientes e camadas',
@@ -830,7 +837,7 @@ class App {
             onclick: ev => this.viewer.select([e], ev.ctrlKey || ev.shiftKey),
             ondblclick: () => this.viewer.fit([e]) },
           e.userData.bim.name || '(sem nome)',
-          h('span', { class: 'eye', title: 'Mostrar/ocultar', onclick: ev => { ev.stopPropagation(); e.visible = !e.visible; ev.target.textContent = e.visible ? '👁' : '—'; } }, e.visible ? '👁' : '—'));
+          h('span', { class: 'eye', title: 'Mostrar/ocultar (H oculta a seleção; 👁 na barra de baixo revela)', onclick: ev => { ev.stopPropagation(); this.viewer.setHidden([e], !e.userData.userHidden); ev.target.textContent = e.userData.userHidden ? '—' : '👁'; } }, e.userData.userHidden ? '—' : '👁'));
           td.append(node);
         }
         if (items.length > 2000) td.append(h('div', { class: 'node muted' }, `… +${items.length - 2000}`));

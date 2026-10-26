@@ -65,10 +65,13 @@ export class Viewer extends EventTarget {
       return c;
     };
     this.perspControls = mkControls(this.perspCam);
+    // mouse: esquerdo gira (clique seleciona), meio arrasta, roda aproxima, DIREITO SELECIONA (clique ou janela);
+    // Alt + direito gira (nas plantas e elevações, arrasta) — ver _bindPicking
+    this.perspControls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.PAN, RIGHT: null };
     this.orthoControls = mkControls(this.orthoCam);
     this.orthoControls.enableRotate = false;
     this.orthoControls.zoomToCursor = true;
-    this.orthoControls.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.PAN };
+    this.orthoControls.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.PAN, RIGHT: null };
     this.orthoControls.enabled = false;
     this.controls = this.perspControls;
 
@@ -93,6 +96,14 @@ export class Viewer extends EventTarget {
     this.annotations = new THREE.Group();
     this.scene.add(this.annotations);
 
+    /** Contornos magenta dos ocultos enquanto "Revelar ocultos" está ligado (barra inferior, 👁). */
+    this.revealGroup = new THREE.Group();
+    this.scene.add(this.revealGroup);
+    this.revealHidden = false;
+    this.hiddenCats = new Set(); // categorias ocultas na tela (ex.: 'eixos' = eixos de trabalho)
+    /** Cotas temporárias e outros rótulos que acompanham o zoom (além das anotações da vista). */
+    this.labelGroups = [];
+
     this.clipPlanes = [];
     this.frameHooks = [];   // chamados a cada quadro (ex.: widget de eixos)
     // camada desenhada por cima de tudo e SEM os planos de corte das plantas (gizmo de mover/girar):
@@ -107,7 +118,7 @@ export class Viewer extends EventTarget {
     this.resize();
     const loop = () => {
       this.controls.update();
-      if (this.annotations.children.length) this._scaleLabels();
+      if (this.annotations.children.length || this.labelGroups.length) this._scaleLabels();
       for (const fn of this.frameHooks) fn();
       if (this.renderOverride) this.renderOverride(); // vista Render (pós-processamento / path tracing)
       else if (this.capPlane !== null && this.capsEnabled !== false) this._renderWithCaps();
@@ -211,6 +222,7 @@ export class Viewer extends EventTarget {
   add(obj, { fit = false } = {}) {
     this.model.add(obj);
     this.onAdd?.(obj); // ambientes: camada dos elementos novos, visibilidade e trava
+    if (obj.userData?.bim) this.updateVisibility(obj);
     if (this.clipPlanes.length || this.showEdges) this._prepare2D(obj);
     obj.traverse(o => { if (o.isLine) o.layers.set(LINE_LAYER); });
     if (fit) this.fit();
@@ -231,6 +243,62 @@ export class Viewer extends EventTarget {
     for (const c of [...this.model.children]) this.remove(c);
     this.selected.clear();
     this.dispatchEvent(new Event('select'));
+  }
+
+  // ---------------------------------------------------------------- visibilidade
+
+  /**
+   * Um elemento fica oculto por: userHidden (você ocultou — H, árvore; só nesta tela), envHidden (camada do ambiente
+   * oculta) ou catHidden (categoria oculta na tela, ex.: eixos de trabalho). Com "Revelar ocultos" eles aparecem com
+   * contorno magenta e podem ser clicados para voltar.
+   */
+  isHidden(el) { const u = el.userData; return !!(u.userHidden || u.envHidden || u.catHidden); }
+
+  updateVisibility(el) {
+    const u = el.userData;
+    u.catHidden = !!u.bim?.eixo && this.hiddenCats.has('eixos');
+    el.visible = !this.isHidden(el) || this.revealHidden;
+  }
+
+  updateAllVisibility() {
+    for (const el of this.elements()) this.updateVisibility(el);
+    this.refreshReveal();
+    this.dispatchEvent(new Event('visibility'));
+  }
+
+  setCategoryHidden(cat, hidden) {
+    if (hidden) this.hiddenCats.add(cat); else this.hiddenCats.delete(cat);
+    this.updateAllVisibility();
+  }
+
+  setHidden(els, hidden) {
+    for (const el of els) { el.userData.userHidden = !!hidden; this.updateVisibility(el); }
+    if (hidden) this.select([...this.selected].filter(o => !els.includes(o)));
+    this.refreshReveal();
+    this.dispatchEvent(new Event('visibility'));
+  }
+
+  hiddenCount() { return this.elements().filter(e => this.isHidden(e)).length; }
+
+  setReveal(on) {
+    this.revealHidden = !!on;
+    this.container.classList.toggle('revealing', this.revealHidden);
+    this.updateAllVisibility();
+  }
+
+  /** Contorno magenta (caixa) em cada elemento oculto enquanto revela. */
+  refreshReveal() {
+    for (const c of [...this.revealGroup.children]) { this.revealGroup.remove(c); c.geometry?.dispose?.(); }
+    if (!this.revealHidden) return;
+    for (const el of this.elements()) {
+      if (!this.isHidden(el)) continue;
+      const box = new THREE.Box3().setFromObject(el);
+      if (box.isEmpty()) continue;
+      const helper = new THREE.Box3Helper(box, 0xff2fd6);
+      helper.material.depthTest = false;
+      helper.renderOrder = 8;
+      this.revealGroup.add(helper);
+    }
   }
 
   /** Elementos BIM do modelo (cada arquivo importado é um grupo; cada elemento, um filho). */
@@ -272,8 +340,8 @@ export class Viewer extends EventTarget {
     this.orthoControls.enableRotate = !!state.rotate;
     // vista 3D ortogonal gira como a perspectiva; plantas e elevações só deslocam
     this.orthoControls.mouseButtons = state.rotate
-      ? { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN }
-      : { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.PAN };
+      ? { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.PAN, RIGHT: null }
+      : { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.PAN, RIGHT: null };
 
     this.clipPlanes = (state.clip || []).map(p => new THREE.Plane(new THREE.Vector3(...p.normal), p.constant));
     this.renderer.clippingPlanes = this.clipPlanes;
@@ -450,7 +518,7 @@ export class Viewer extends EventTarget {
     const k = ortho ? 0 : 2 * Math.tan(THREE.MathUtils.degToRad(cam.fov) / 2) / hPx;
     const fwd = ortho ? null : cam.getWorldDirection(new THREE.Vector3());
     const p = new THREE.Vector3();
-    for (const s of this.annotations.children) {
+    for (const s of [...this.annotations.children, ...this.labelGroups.flatMap(g => g.children)]) {
       if (!s.isSprite || !s.userData.px) continue;
       const worldPerPx = ortho || Math.max(0.01, p.copy(s.position).sub(cam.position).dot(fwd)) * k;
       s.scale.set(s.userData.px[0] * worldPerPx, s.userData.px[1] * worldPerPx, 1);
@@ -462,15 +530,89 @@ export class Viewer extends EventTarget {
   _bindPicking() {
     let down = null;
     const el = this.renderer.domElement;
-    el.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY }; });
-    el.addEventListener('pointerup', e => {
-      if (e.button !== 0) return; // botão direito posiciona o pivô (TransformTool)
-      if (this.tool) return; // uma ferramenta de desenho ativa trata os cliques
-      if (this._gizmoClick) { this._gizmoClick = false; return; } // clique no gizmo de mover/girar
-      if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 4) return;
-      const obj = this.pickAt(e.clientX, e.clientY);
-      this.select(obj ? [obj] : [], e.ctrlKey || e.shiftKey);
+    // Alt + botão direito = girar (3D) ou arrastar (plantas/elevações): decidido ANTES do OrbitControls (captura)
+    el.addEventListener('pointerdown', e => {
+      if (e.button !== 2) return;
+      const ortho2d = this.controls === this.orthoControls && !this.orthoControls.enableRotate;
+      this.controls.mouseButtons.RIGHT = e.altKey ? (ortho2d ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE) : null;
+    }, { capture: true });
+    el.addEventListener('contextmenu', e => e.preventDefault());
+    el.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, button: e.button, alt: e.altKey }; });
+
+    // janela de seleção do botão direito (→ janela: só o que está inteiro dentro; ← cruzamento: o que toca)
+    const band = document.createElement('div');
+    band.className = 'select-band';
+    band.hidden = true;
+    this.container.appendChild(band);
+    const rectOf = (a, b) => ({ x0: Math.min(a.x, b.x), y0: Math.min(a.y, b.y), x1: Math.max(a.x, b.x), y1: Math.max(a.y, b.y) });
+    el.addEventListener('pointermove', e => {
+      if (!down || down.button !== 2 || down.alt || this.tool) return;
+      if (Math.hypot(e.clientX - down.x, e.clientY - down.y) < 5) return;
+      const r = rectOf(down, { x: e.clientX, y: e.clientY }), c = this.container.getBoundingClientRect();
+      band.hidden = false;
+      band.classList.toggle('crossing', e.clientX < down.x);
+      Object.assign(band.style, { left: `${r.x0 - c.left}px`, top: `${r.y0 - c.top}px`, width: `${r.x1 - r.x0}px`, height: `${r.y1 - r.y0}px` });
     });
+
+    el.addEventListener('pointerup', e => {
+      const d = down;
+      down = null;
+      band.hidden = true;
+      if (!d || e.button !== d.button) return;
+      if (e.button === 2 && d.alt) return;                     // Alt + direito girou a vista
+      if (e.button !== 0 && e.button !== 2) return;
+      if (this.tool) return;                                    // uma ferramenta de desenho ativa trata os cliques
+      if (this._gizmoClick) { this._gizmoClick = false; return; } // clique no gizmo de mover/girar
+      const additive = e.ctrlKey || e.shiftKey;
+      const moved = Math.hypot(e.clientX - d.x, e.clientY - d.y);
+      if (e.button === 2 && moved >= 5) { this.select(this.pickRect(rectOf(d, { x: e.clientX, y: e.clientY }), e.clientX < d.x), additive); return; }
+      if (moved > 4) return;
+      if (e.button === 2 && this.rightClickTaken?.()) return;     // Mover/Girar ativo: o direito põe o pivô
+      const obj = this.pickAt(e.clientX, e.clientY);
+      // revelando os ocultos: clicar num oculto o mostra de volta
+      if (obj && this.revealHidden && this.isHidden(obj)) {
+        if (obj.userData.catHidden) this.setCategoryHidden('eixos', false);
+        this.setHidden([obj], false);
+        this.dispatchEvent(new CustomEvent('revealed', { detail: obj }));
+        return;
+      }
+      this.select(obj ? [obj] : [], additive);
+    });
+
+    // passar o mouse: avisa qual elemento está sob o cursor (barra de status)
+    let hoverT = 0;
+    el.addEventListener('pointermove', e => {
+      if (e.buttons || this.tool) return;
+      const now = performance.now();
+      if (now - hoverT < 90) return;
+      hoverT = now;
+      const obj = this.pickAt(e.clientX, e.clientY);
+      if (obj !== this.hovered) { this.hovered = obj; el.style.cursor = obj ? 'pointer' : ''; this.dispatchEvent(new Event('hover')); }
+    });
+  }
+
+  /** Elementos na janela da tela (crossing: os que tocam; senão, os inteiramente dentro). */
+  pickRect(r, crossing) {
+    const c = this.renderer.domElement.getBoundingClientRect();
+    const out = [];
+    const v = new THREE.Vector3();
+    for (const el of this.elements()) {
+      if (!el.visible) continue;
+      const box = new THREE.Box3().setFromObject(el);
+      if (box.isEmpty()) continue;
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, behind = false;
+      for (let i = 0; i < 8; i++) {
+        v.set(i & 1 ? box.max.x : box.min.x, i & 2 ? box.max.y : box.min.y, i & 4 ? box.max.z : box.min.z).project(this.camera);
+        if (v.z > 1) behind = true;
+        const sx = (v.x + 1) / 2 * c.width + c.left, sy = (1 - v.y) / 2 * c.height + c.top;
+        x0 = Math.min(x0, sx); y0 = Math.min(y0, sy); x1 = Math.max(x1, sx); y1 = Math.max(y1, sy);
+      }
+      if (behind) continue;
+      const inside = x0 >= r.x0 && x1 <= r.x1 && y0 >= r.y0 && y1 <= r.y1;
+      const touches = x1 >= r.x0 && x0 <= r.x1 && y1 >= r.y0 && y0 <= r.y1;
+      if (inside || (crossing && touches)) out.push(el);
+    }
+    return out;
   }
 
   /** Elemento BIM sob o ponto da tela (respeitando o recorte das plantas), ou null. */

@@ -6,12 +6,37 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.23.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.24.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.24.0] — 2026-10-26 · Mouse, revelar ocultos, cotas automáticas e elevações próprias
+
+### Adicionado
+- **Botão direito seleciona**: clique seleciona; arrastando abre a janela de seleção (→ só o que está inteiro
+  dentro, azul; ← o que tocar, verde tracejado). **Alt + botão direito gira** a vista (nas plantas, arrasta).
+  O pivô do Mover/Girar pelo botão direito vale com a ferramenta ativa.
+- **Chips na vista** (canto direito) para ligar/desligar **Níveis**, **Eixos de trabalho** e os marcadores de
+  **Elevação** na tela (só para quem está vendo).
+- **👁 Revelar ocultos** na barra de baixo, com o número de ocultos: os ocultos aparecem com contorno magenta e a
+  vista ganha borda magenta; clicar num deles o mostra de volta; "Mostrar todos". **H** oculta a seleção e
+  **Shift+H** mostra tudo; o olho da árvore de elementos usa o mesmo sistema.
+- **Cotas automáticas da seleção**: com uma peça selecionada, a distância até a peça paralela mais próxima de cada
+  lado — paredes, vigas e linhas face a face, no trecho comum; outras peças em ±X e ±Y, no mesmo andar. Clicar no
+  número digita outra distância e a peça anda até ela (Ctrl+Z desfaz).
+- **Elevações próprias** (Vistas › Gerenciar elevações, ⚙ no navegador, chip "Elevações…"): nome livre, direção
+  (N/S/L/O ou ângulo), linha (X, Y), **profundidade** e **largura** (o que fica fora é recortado) e **visível ou
+  não** (navegador, menus e marcador nas plantas). Marcadores nas plantas com a seta para onde se olha; clique
+  duplo abre a elevação. Gravadas no projeto (`dados.elevacoes`); as quatro de fábrica também são editáveis.
+- Navegação mais clara: o nome do elemento sob o cursor aparece na barra de status (cursor de mão), e o botão
+  **?** na vista mostra a ajuda do mouse e dos atalhos (sozinha na primeira vez).
+
+### Mudado
+- Botão do meio passa a arrastar a vista (antes o direito arrastava).
+- Linhas de nível: o chip/opção vale para a Vista 3D e para as elevações.
 
 ## [2.23.0] — 2026-10-26 · Ferramentas agrupadas e ícones novos
 

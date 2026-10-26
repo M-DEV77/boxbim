@@ -229,22 +229,21 @@ export class TransformTool extends EventTarget {
   }
 
   /**
-   * Botão direito (sem arrastar): põe o pivô no ponto. Com a seleção vazia, seleciona o elemento clicado; com
-   * algo selecionado, a seleção fica (o ponto pode ser de outro elemento, para alinhar).
+   * Com Mover/Girar ATIVO, o botão direito (sem arrastar) põe o pivô no ponto — a seleção fica (o ponto pode ser de
+   * outro elemento, para alinhar). Fora dele o botão direito seleciona (viewer).
    */
   _bindPivotPick() {
     const el = this.viewer.renderer.domElement;
     let down = null;
+    this.viewer.rightClickTaken = () => !!this.mode && this.viewer.selected.size > 0;
     el.addEventListener('pointerdown', e => { if (e.button === 2) down = { x: e.clientX, y: e.clientY }; });
     el.addEventListener('contextmenu', e => {
       e.preventDefault();
       const moved = down && Math.hypot(e.clientX - down.x, e.clientY - down.y) > 4; // arrastou: foi pan
       down = null;
-      if (moved || this.viewer.tool || this.app.wallTool?.active || this.app.placeTool?.active) return;
+      if (moved || e.altKey || !this.mode || this.viewer.tool || this.app.wallTool?.active || this.app.placeTool?.active) return;
       const hit = this.viewer.pickHit(e.clientX, e.clientY);
-      if (hit && !this.viewer.selected.size) this.viewer.select([hit.obj]);
       if (!this.viewer.selected.size) return;
-      if (!this.mode) this.start(this.lastMode, { auto: true });
       const p = this.nearestSnap(e.clientX, e.clientY) || hit?.point;
       if (p) this.setPivot(p);
     });
