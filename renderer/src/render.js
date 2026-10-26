@@ -1,167 +1,28 @@
 // VISTA RENDER: os materiais em tempo real (PBR) — céu procedural, sol com sombras, oclusão ambiente (GTAO),
-// tonemapping e texturas procedurais triplanares (concreto, tijolo, cerâmica, madeira, metal…). Modo
+// tonemapping e materiais com mapas procedurais (materials.js: cor, relevo, normal, AO, deslocamento, rugosidade,
+// metal, especular, opacidade, emissão). Modo
 // "Path tracing" acumula amostras de luz global (three-gpu-pathtracer) para a imagem final.
 //
 // Ativada pela vista {Render}; ao sair, o viewer volta exatamente ao estado BIM (materiais chapados, grade, linhas).
-// Os materiais da biblioteca (tipos.json) ganham propriedades de render: rugosidade, metal, textura, escala,
-// transmissão (vidro) — editáveis ao vivo no painel Propriedades enquanto a vista Render está aberta.
+// Os materiais da biblioteca (tipos.json) ganham propriedades de render — editáveis ao vivo no painel Propriedades
+// e no Editor de materiais. As malhas recebem UVs em metros (projeção em caixa) enquanto o Render está aberto.
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { WebGLPathTracer, ProceduralEquirectTexture } from 'three-gpu-pathtracer';
+import { PATTERNS, materialProps, applyMaterial, createMaterial, boxUv, restoreUv } from './materials.js';
 
 const DEG = Math.PI / 180;
 const LINE_LAYER = 1;
 const store = (k, v) => { try { localStorage.setItem(k, v); } catch { /* sem armazenamento */ } };
 const load = k => { try { return localStorage.getItem(k); } catch { return null; } };
 
-// ---------------------------------------------------------------- propriedades de render dos materiais
+// ---------------------------------------------------------------- materiais (materials.js)
 
-export const TEXTURES = { nenhuma: 'Nenhuma', concreto: 'Concreto', reboco: 'Reboco', tijolo: 'Tijolo', ceramica: 'Cerâmica', madeira: 'Madeira', metal: 'Metal escovado', pedra: 'Pedra', grama: 'Grama' };
-
-/** Padrões por nome de material (o que o usuário gravar no material tem prioridade). */
-const RENDER_DEFAULTS = {
-  'Concreto': { rugosidade: 0.9, textura: 'concreto', escala: 1.2 },
-  'Bloco cerâmico': { rugosidade: 0.85, textura: 'tijolo', escala: 0.6 },
-  'Bloco de concreto': { rugosidade: 0.9, textura: 'tijolo', escala: 0.8 },
-  'Reboco': { rugosidade: 0.95, textura: 'reboco', escala: 0.6 },
-  'Gesso acartonado': { rugosidade: 0.9, textura: 'reboco', escala: 1.5 },
-  'Lã mineral': { rugosidade: 1, textura: 'reboco', escala: 0.3 },
-  'Contrapiso': { rugosidade: 0.95, textura: 'concreto', escala: 0.8 },
-  'Piso cerâmico': { rugosidade: 0.35, textura: 'ceramica', escala: 0.9 },
-  'Porcelanato': { rugosidade: 0.2, textura: 'ceramica', escala: 1.2 },
-  'Madeira': { rugosidade: 0.55, textura: 'madeira', escala: 1.2 },
-  'Aço': { rugosidade: 0.35, metal: 0.9, textura: 'metal', escala: 0.5 },
-  'Vidro': { rugosidade: 0.03, transmissao: 1 },
-  'Impermeabilização': { rugosidade: 0.6 },
-  'Isolamento térmico': { rugosidade: 1, textura: 'reboco', escala: 0.4 },
-};
-
-/** Propriedades de render de um material da biblioteca (padrões + o que estiver gravado). */
-export function renderProps(name, def = {}) {
-  return { rugosidade: 0.8, metal: 0, textura: 'nenhuma', escala: 1, transmissao: 0, ...(RENDER_DEFAULTS[name] || {}), ...(def.render || {}) };
-}
-
-// ---------------------------------------------------------------- texturas procedurais (sem arquivos)
-
-const SIZE = 1024;
-
-/** Ruído de valor periódico (repete a cada "period" células): texturas sem emenda. */
-function makeNoise(seed = 1) {
-  const hash = (x, y) => {
-    let h = (x * 374761393 + y * 668265263 + seed * 2147483647) | 0;
-    h = (h ^ (h >>> 13)) * 1274126177 | 0;
-    return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
-  };
-  const smooth = t => t * t * (3 - 2 * t);
-  const value = (u, v, period) => {
-    const x = u * period, y = v * period;
-    const xi = Math.floor(x), yi = Math.floor(y), xf = smooth(x - xi), yf = smooth(y - yi);
-    const m = i => ((i % period) + period) % period;
-    const a = hash(m(xi), m(yi)), b = hash(m(xi + 1), m(yi)), c = hash(m(xi), m(yi + 1)), d = hash(m(xi + 1), m(yi + 1));
-    return a + (b - a) * xf + (c - a) * yf + (a - b - c + d) * xf * yf;
-  };
-  return (u, v, base = 4, octaves = 4) => {
-    let s = 0, amp = 0.5, norm = 0;
-    for (let o = 0; o < octaves; o++) { s += amp * value(u, v, base << o); norm += amp; amp *= 0.5; }
-    return s / norm;
-  };
-}
-
-const texCache = new Map();
-
-/** Textura de detalhe em tons de cinza (multiplica a cor do material); u, v em [0, 1) cobrem "escala" metros. */
-function proceduralTexture(kind) {
-  if (texCache.has(kind)) return texCache.get(kind);
-  const n = makeNoise(kind.length * 7 + 3), n2 = makeNoise(91);
-  const cv = document.createElement('canvas');
-  cv.width = cv.height = SIZE;
-  const ctx = cv.getContext('2d');
-  const img = ctx.createImageData(SIZE, SIZE);
-  const px = (u, v) => {
-    switch (kind) {
-      case 'concreto': {
-        const pores = n2(u, v, 64, 2) > 0.8 ? 0.82 : 1;
-        return (0.84 + 0.14 * n(u, v, 6, 5)) * pores;
-      }
-      case 'reboco': return 0.88 + 0.1 * n(u, v, 24, 4);
-      case 'pedra': return 0.7 + 0.3 * n(u, v, 5, 5) * (0.8 + 0.2 * n2(u, v, 40, 2));
-      case 'grama': return 0.55 + 0.45 * n(u, v, 48, 4) * (0.75 + 0.25 * n2(u, v, 4, 3));
-      case 'metal': return 0.86 + 0.1 * n(u * 0.02, v, 128, 3) + 0.04 * n(u, v, 8, 2);
-      case 'tijolo': {
-        // 3 fiadas de 20 cm, tijolos de 30 cm, juntas de 1 cm (em um quadro de 60 cm), fiadas desencontradas
-        const rows = 3, cols = 2, joint = 0.012;
-        const r = Math.floor(v * rows), fy = v * rows - r;
-        const x = u * cols + (r % 2) * 0.5, c = Math.floor(x), fx = x - c;
-        if (fy < joint * rows || fx < joint * cols / 2) return 1.05 + 0.03 * n(u, v, 32, 2);
-        const tone = 0.72 + 0.16 * makeTone(r, ((c % cols) + cols) % cols);
-        return tone * (0.9 + 0.1 * n(u, v, 16, 4));
-      }
-      case 'ceramica': {
-        // 2 × 2 peças por quadro, rejunte fino, leve variação de tom por peça
-        const t = 2, g = 0.004;
-        const cx = Math.floor(u * t), cy = Math.floor(v * t), fx = u * t - cx, fy = v * t - cy;
-        if (fx < g * t || fy < g * t) return 0.62;
-        return (0.9 + 0.08 * makeTone(cx, cy)) * (0.97 + 0.03 * n(u, v, 16, 3));
-      }
-      case 'madeira': {
-        // 4 tábuas ao longo de U, veios ondulados
-        const planks = 4, pl = Math.floor(v * planks), fv = v * planks - pl;
-        if (fv < 0.006) return 0.45;
-        const warp = n(u, v, 3, 3) * 6;
-        const grain = 0.5 + 0.5 * Math.sin((fv * 18 + warp + pl * 3.1) * Math.PI);
-        return (0.68 + 0.18 * makeTone(pl, 7)) * (0.82 + 0.18 * grain) * (0.94 + 0.06 * n(u, v, 64, 2));
-      }
-      default: return 1;
-    }
-  };
-  for (let y = 0; y < SIZE; y++) {
-    for (let x = 0; x < SIZE; x++) {
-      const val = Math.max(0, Math.min(1.2, px(x / SIZE, y / SIZE)));
-      const c = Math.round(Math.min(1, val) * 255), i = (y * SIZE + x) * 4;
-      img.data[i] = img.data[i + 1] = img.data[i + 2] = c;
-      img.data[i + 3] = 255;
-    }
-  }
-  ctx.putImageData(img, 0, 0);
-  const tex = new THREE.CanvasTexture(cv);
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 8;
-  texCache.set(kind, tex);
-  return tex;
-}
-
-function makeTone(a, b) {
-  let h = (a * 73856093) ^ (b * 19349663);
-  h = (h ^ (h >>> 13)) * 1274126177;
-  return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
-}
-
-/**
- * Projeção triplanar em coordenadas de mundo: a textura cobre "escala" metros em qualquer face, sem depender das
- * UVs da geometria (caixas, cilindros e extrusões ficam com a mesma escala real).
- */
-function triplanar(mat, scaleRef) {
-  mat.onBeforeCompile = sh => {
-    sh.uniforms.uTriScale = scaleRef;
-    sh.vertexShader = sh.vertexShader
-      .replace('#include <common>', '#include <common>\nvarying vec3 vTriPos;\nvarying vec3 vTriNrm;')
-      .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvTriPos = (modelMatrix * vec4(transformed, 1.0)).xyz;\nvTriNrm = normalize(mat3(modelMatrix) * objectNormal);');
-    sh.fragmentShader = sh.fragmentShader
-      .replace('#include <common>', '#include <common>\nvarying vec3 vTriPos;\nvarying vec3 vTriNrm;\nuniform float uTriScale;')
-      .replace('#include <map_fragment>', `#ifdef USE_MAP
-  vec3 tw = pow(abs(normalize(vTriNrm)), vec3(4.0));
-  tw /= (tw.x + tw.y + tw.z);
-  vec3 tp = vTriPos / uTriScale;
-  vec4 tcol = texture2D(map, tp.yz) * tw.x + texture2D(map, tp.xz) * tw.y + texture2D(map, tp.xy) * tw.z;
-  diffuseColor *= tcol;
-#endif`);
-  };
-  mat.customProgramCacheKey = () => 'boxbim-triplanar';
-}
+export const TEXTURES = PATTERNS;
+export const renderProps = materialProps;
 
 // ---------------------------------------------------------------- céu
 
@@ -223,7 +84,8 @@ export class RenderMode extends EventTarget {
     this.sun.shadow.radius = 2.5;
     v.scene.add(this.sun, this.sun.target);
 
-    this.ground = new THREE.Mesh(new THREE.CircleGeometry(400, 96), new THREE.MeshStandardMaterial({ color: 0x6f8f4e, roughness: 1 }));
+    this.ground = new THREE.Mesh(new THREE.CircleGeometry(400, 96), new THREE.MeshPhysicalMaterial({ color: 0x6f8f4e, roughness: 1 }));
+    boxUv(this.ground.geometry);
     this.ground.name = 'Chão (render)';
     this.ground.receiveShadow = true;
     v.scene.add(this.ground);
@@ -354,8 +216,8 @@ export class RenderMode extends EventTarget {
 
     const g = this.ground;
     g.visible = s.chao !== 'nenhum';
-    if (s.chao === 'grama') { g.material.color.set(0x6f8f4e); this.setTexture(g.material, 'grama', 2); }
-    else { g.material.color.set(0x9a958c); this.setTexture(g.material, 'concreto', 3); }
+    if (s.chao === 'grama') applyMaterial(g.material, 'Chão', { color: '#6f8f4e', render: { textura: 'grama', escala: 2, rugosidade: 1, normal: 0.6 } });
+    else applyMaterial(g.material, 'Chão', { color: '#9a958c', render: { textura: 'concreto', escala: 3, rugosidade: 0.9 } });
     this.pt?.updateEnvironment();
     this.pt?.updateLights();
     this.pt?.updateMaterials();
@@ -411,52 +273,20 @@ export class RenderMode extends EventTarget {
 
   // ------------------------------------------------------------ materiais
 
-  setTexture(mat, kind, scale) {
-    if (!kind || kind === 'nenhuma') {
-      if (mat.map) { mat.map = null; mat.needsUpdate = true; }
-      return;
-    }
-    if (!mat.userData.triScale) { mat.userData.triScale = { value: scale }; triplanar(mat, mat.userData.triScale); }
-    mat.userData.triScale.value = scale;
-    if (mat.map && mat.userData.texKind === kind) { mat.map.repeat.set(1 / scale, 1 / scale); return; }
-    const tex = proceduralTexture(kind).clone(); // mesma imagem; repetição própria
-    tex.needsUpdate = true;
-    tex.repeat.set(1 / scale, 1 / scale); // usado pelo path tracing e pelo glTF (UVs em metros nas extrusões)
-    const had = !!mat.map;
-    mat.map?.dispose();
-    mat.map = tex;
-    mat.userData.texKind = kind;
-    if (!had) mat.needsUpdate = true;
-  }
-
   /** Material de render de um material da biblioteca (atualizado no lugar quando as propriedades mudam). */
   libraryMaterial(name) {
     const def = this.app.types.materials[name];
     if (!def) return null;
     let m = this.mats.get(name);
     if (!m) {
-      m = new THREE.MeshPhysicalMaterial({ side: THREE.DoubleSide, ior: 1.5, thickness: 0.01 });
-      m.name = name;
+      m = createMaterial(name, def); // depois, só refreshMaterials/setMaterialProp atualizam
       this.mats.set(name, m);
       this.renderSet.add(m);
-      this.updateLibraryMaterial(m, def); // depois, só refreshMaterials/setMaterialProp atualizam
     }
     return m;
   }
 
-  updateLibraryMaterial(m, def) {
-    const p = renderProps(m.name, def);
-    m.color.set(def.color || '#cccccc');
-    m.roughness = p.rugosidade;
-    m.metalness = p.metal;
-    const glass = p.transmissao > 0;
-    m.transmission = p.transmissao;
-    const opacity = glass ? 1 : (def.opacity ?? 1);
-    if (m.transparent !== opacity < 1) { m.transparent = opacity < 1; m.needsUpdate = true; }
-    m.opacity = opacity;
-    m.depthWrite = opacity >= 1;
-    this.setTexture(m, p.textura, Math.max(0.05, p.escala));
-  }
+  updateLibraryMaterial(m, def) { applyMaterial(m, m.name, def); }
 
   colorMaterial(src) {
     const c = src.color ? src.color.getHexString() : 'cccccc';
@@ -482,6 +312,7 @@ export class RenderMode extends EventTarget {
       if (!o.isMesh || o.userData.isEdge) return;
       if (o.userData.noCap) { o.visible = false; o.userData._hiddenByRender = true; return; } // vazio
       o.castShadow = o.receiveShadow = true;
+      boxUv(o.geometry); // UVs em metros para os mapas (as originais voltam ao sair)
       const ud = o.userData;
       const selected = !!ud._origMat; // destaque de seleção ativo: o material "real" está em _origMat
       const cur = selected ? ud._origMat : o.material;
@@ -496,6 +327,7 @@ export class RenderMode extends EventTarget {
     this.viewer.model.traverse(o => {
       const ud = o.userData;
       if (ud._hiddenByRender) { o.visible = true; delete ud._hiddenByRender; }
+      if (o.isMesh) restoreUv(o.geometry);
       if (!o.isMesh || !ud._flatMat) return;
       if (ud._origMat) ud._origMat = ud._flatMat; else o.material = ud._flatMat;
       delete ud._flatMat;
@@ -528,7 +360,7 @@ export class RenderMode extends EventTarget {
     const def = this.app.types.materials[name];
     if (!def) return;
     if (key === 'color') def.color = value;
-    else def.render = { ...renderProps(name, def), [key]: value };
+    else def.render = { ...(def.render || {}), [key]: value };
     const m = this.mats.get(name);
     if (m) this.updateLibraryMaterial(m, def);
     this.pt?.updateMaterials();

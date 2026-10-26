@@ -6,12 +6,29 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.18.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.19.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.19.0] — 2026-10-26 · Sistema de materiais com mapas procedurais
+
+### Adicionado
+- **Editor de materiais** (Vistas › Materiais, ou **Mapas…** em Propriedades › Materiais (render)): biblioteca de
+  materiais com pré-visualização 3D (esfera e cubo, gire com o mouse) e os quadros de cada mapa gerado.
+- **Mapas procedurais** (sem arquivos de imagem) de cada padrão: **relevo (bump)**, **normal**, **oclusão
+  ambiente (AO)**, **deslocamento** (paralaxe: as juntas afundam sem malha densa), **rugosidade** e **brilho**
+  (glossiness, ligado à rugosidade), **metal**, **especular** (intensidade, cor e mapa), **opacidade** (recorte de
+  furos e vãos) e **emissão** (cor, intensidade e mapa). Cada mapa liga/desliga e tem a sua intensidade.
+- Padrões novos: **pastilha**, **ripado (vazado)** e **chapa perfurada**, além de concreto, reboco, tijolo,
+  cerâmica, madeira, metal escovado, pedra e grama.
+- O bump passa a valer junto com o mapa normal (o normal dá o relevo das peças, o bump o detalhe fino).
+
+### Mudado
+- As texturas do Render usam UVs em metros projetadas em caixa (no lugar da projeção triplanar só da cor):
+  todos os mapas ficam na escala real e o path tracing enxerga os mesmos mapas. As UVs originais voltam ao sair.
 
 ## [2.18.0] — 2026-10-26 · Ambientes e camadas com permissões
 

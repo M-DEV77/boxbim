@@ -31,6 +31,7 @@ import { openObjectEditor } from './objects/editor.js';
 import { SystemObjects, SYSTEM } from './objects/system.js';
 import { setScriptedBuilder } from './elements.js';
 import { RenderMode, renderProps, TEXTURES } from './render.js';
+import { openMaterialEditor } from './material-editor.js';
 import { Hosting } from './hosting.js';
 import { TransformTool } from './transform.js';
 import { AxisWidget } from './nav.js';
@@ -937,6 +938,9 @@ class App {
       h('button', { class: 'mini', style: 'margin-top:6px', onclick: () => openTypesEditor(this, cat) }, 'Editar tipos e camadas…'));
   }
 
+  /** Editor de materiais (mapas procedurais), aberto no material indicado. */
+  openMaterials(name) { return openMaterialEditor(this, name); }
+
   /** Vista Render: materiais do elemento com cor, rugosidade, metal, textura, escala e vidro — ao vivo. */
   renderMaterialProps(root, o) {
     const rm = this.renderMode;
@@ -955,12 +959,15 @@ class App {
       };
       root.append(h('div', { class: 'render-mat' },
         h('div', { class: 'rm-head' },
-          h('input', { type: 'color', value: def.color || '#cccccc', title: 'Cor', style: 'width:28px;padding:0', oninput: e => set('color', e.target.value) }), name),
+          h('input', { type: 'color', value: def.color || '#cccccc', title: 'Cor', style: 'width:28px;padding:0', oninput: e => set('color', e.target.value) }), name,
+          h('button', { class: 'mini', style: 'margin-left:auto', title: 'Todos os mapas: relevo, normal, AO, deslocamento, brilho, metal, especular, opacidade, emissão', onclick: () => this.openMaterials(name) }, 'Mapas…')),
         h('table', {},
           slider('rugosidade', 'Rugosidade', 0, 1, 0.01),
           slider('metal', 'Metal', 0, 1, 0.01),
           slider('transmissao', 'Vidro (transmissão)', 0, 1, 0.01),
-          h('tr', {}, h('td', {}, 'Textura'), h('td', {}, h('select', { style: 'width:100%', onchange: e => set('textura', e.target.value) },
+          slider('normal', 'Normal', 0, 3, 0.05),
+          slider('deslocamento', 'Deslocamento (cm)', 0, 5, 0.1),
+          h('tr', {}, h('td', {}, 'Padrão'), h('td', {}, h('select', { style: 'width:100%', onchange: e => set('textura', e.target.value) },
             Object.entries(TEXTURES).map(([k, l]) => h('option', { value: k, selected: k === p.textura }, l))))),
           h('tr', {}, h('td', {}, 'Escala (m)'), h('td', {}, h('input', { type: 'number', step: 0.05, min: 0.05, value: p.escala, style: 'width:100%',
             onchange: e => set('escala', Math.max(0.05, Number(e.target.value) || 1)) }))))));

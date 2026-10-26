@@ -37,6 +37,10 @@ flowchart LR
     OBJ --> WORKER["objects/worker.js<br/>executa o script do objeto (sandbox)"]
     OBJ --> EDITOR["objects/editor.js + sketch2d.js<br/>editor de objetos com 2D"]
     APP --> IO["io/*<br/>IFC, DXF, glTF, Collada…"]
+    APP --> RENDER["render.js<br/>vista Render, path tracing"]
+    RENDER --> MATS["materials.js<br/>padrões procedurais, mapas,<br/>UVs em metros, paralaxe"]
+    APP --> MATED["material-editor.js<br/>editor com pré-visualização"]
+    MATED --> MATS
     API["web/api.js<br/>window.boxbim (RPC)"] --> LOCALAI["web/local-ai.js<br/>IA e MCP locais pelo navegador"]
     CHAT --> API
     PROJ --> API
@@ -92,7 +96,8 @@ flowchart LR
 | 2026-10-26 | 2.16.0 | `9a6ecb0` | IA local pelo navegador na VPS (LM Studio/Ollama); BoxBim como servidor MCP; Chat IA usando MCP externos |
 | 2026-10-26 | 2.16.1 | `98b322e` | Regras do projeto (modelo de commit, AGENT.MD, créditos), créditos na lateral direita e na documentação, AGENT.MD |
 | 2026-10-26 | 2.17.0 | `2deab17` | Retirada a conexão com o Unreal Engine; na nuvem o app não consulta mais o Revit (403); CSP corrigido |
-| 2026-10-26 | 2.18.0 | este commit | Ambientes e camadas (`environments.js`); permissão por camada por participante, conferida no tempo real e no MCP |
+| 2026-10-26 | 2.18.0 | `32edf3b` | Ambientes e camadas (`environments.js`); permissão por camada por participante, conferida no tempo real e no MCP |
+| 2026-10-26 | 2.19.0 | este commit | Sistema de materiais com mapas procedurais (`materials.js`, `material-editor.js`): bump, normal, AO, deslocamento, rugosidade/brilho, metal, especular, opacidade, emissão |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.18.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.19.0</a>
