@@ -440,7 +440,8 @@ button.icon:hover, button.icon.on { color: var(--text); border-color: var(--line
 .share .row { display: flex; gap: 6px; margin-bottom: 8px; }
 .share .row input { flex: 1; }
 .members { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
-.member { display: grid; grid-template-columns: 1fr 1.4fr auto auto; gap: 8px; align-items: center; }
+.member { display: grid; grid-template-columns: 1fr 1.4fr auto auto auto; gap: 8px; align-items: center; }
+.member > :nth-child(3):last-child { grid-column: 3 / -1; justify-self: end; }
 
 /* estilos de vista (todas as vistas) e projeção 3D */
 .style-bar { position: absolute; top: 72px; left: 10px; display: flex; gap: 2px; z-index: 4; background: rgba(24, 29, 36, .85); border-radius: 7px; padding: 2px; flex-wrap: wrap; max-width: calc(100% - 20px); }
@@ -649,3 +650,19 @@ table.budget tr.muted td { color: var(--muted); }
 .right .credits a:hover { color: var(--green); text-decoration: underline; }
 /* a lateral direita fica por cima do que transborda da área central (ex.: barra de status em janela estreita) */
 .layout > .right { position: relative; z-index: 8; }
+
+/* ambientes e camadas */
+.env-dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+.env > summary { padding-left: 14px; font-weight: 600; cursor: pointer; }
+.node.env-layer { padding-left: 26px; }
+.node.env-layer.active { background: rgba(31, 191, 59, .15); }
+.node.env-layer.denied { opacity: .55; }
+.env-manager { display: flex; flex-direction: column; gap: 10px; max-height: 60vh; overflow: auto; margin-top: 8px; }
+.env-amb { border: 1px solid var(--line); border-radius: 6px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+.env-amb .env-name { font-weight: 700; }
+.env-cam { border-left: 3px solid var(--line); padding-left: 8px; display: flex; flex-direction: column; gap: 4px; }
+.env-types { display: flex; flex-wrap: wrap; gap: 4px; }
+.env-types .chip { font-size: 11px; border: 1px solid var(--line); border-radius: 10px; padding: 1px 8px; cursor: pointer; display: inline-flex; gap: 4px; align-items: center; }
+.env-types .chip input { display: none; }
+.env-types .chip.on { background: var(--green); border-color: var(--green); color: #fff; }
+.env-perms { display: flex; flex-direction: column; gap: 8px; }

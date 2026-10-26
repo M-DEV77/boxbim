@@ -12,14 +12,16 @@ async function access(projectId, user, need = 'leitor') {
   const p = await db.Projeto.findByPk(projectId);
   if (!p) throw err(404, 'Projeto não encontrado.');
   let papel = p.donoId === user.id ? 'dono' : null;
+  let camadas = null; // camadas que pode editar (null = todas)
   if (!papel) {
     const m = await db.Membro.findOne({ where: { ProjetoId: p.id, UsuarioId: user.id } });
     papel = m?.papel || null;
+    camadas = Array.isArray(m?.camadas) ? m.camadas : null;
   }
   if (!papel) throw err(403, 'Você não participa deste projeto.');
   const rank = { leitor: 0, editor: 1, dono: 2 };
   if (rank[papel] < rank[need]) throw err(403, need === 'dono' ? 'Só o dono pode fazer isso.' : 'Você só tem acesso de leitura a este projeto.');
-  return { projeto: p, papel };
+  return { projeto: p, papel, camadas };
 }
 
 /** Novo projeto: só o Nível 0 (os outros níveis o usuário cria depois). */
@@ -56,13 +58,13 @@ function routes(app, { requireUser, realtime }) {
   }));
 
   app.get('/api/projetos/:id', requireUser(), wrap(async (req, res) => {
-    const { projeto, papel } = await access(req.params.id, req.user);
+    const { projeto, papel, camadas } = await access(req.params.id, req.user);
     const dono = await db.Usuario.findByPk(projeto.donoId);
     const membros = await db.Membro.findAll({ where: { ProjetoId: projeto.id }, include: db.Usuario });
     const elementos = await db.Elemento.findAll({ where: { ProjetoId: projeto.id }, order: [['createdAt', 'ASC']] });
     res.json({
-      projeto: { ...resumo(projeto, papel), dados: projeto.dados, dono: publicUser(dono) },
-      membros: membros.map(m => ({ ...publicUser(m.Usuario), papel: m.papel })),
+      projeto: { ...resumo(projeto, papel), dados: projeto.dados, dono: publicUser(dono), minhasCamadas: camadas },
+      membros: membros.map(m => ({ ...publicUser(m.Usuario), papel: m.papel, camadas: Array.isArray(m.camadas) ? m.camadas : null })),
       elementos: elementos.map(e => ({ id: e.id, tipo: e.tipo, dados: e.dados, versao: e.versao })),
       online: realtime.online(projeto.id),
     });
@@ -70,7 +72,9 @@ function routes(app, { requireUser, realtime }) {
 
   app.patch('/api/projetos/:id', requireUser(), wrap(async (req, res) => {
     const b = req.body || {};
-    const { projeto } = await access(req.params.id, req.user, b.nome !== undefined || b.descricao !== undefined ? 'dono' : 'editor');
+    const { projeto, papel } = await access(req.params.id, req.user, b.nome !== undefined || b.descricao !== undefined ? 'dono' : 'editor');
+    // ambientes e camadas: só o dono (administrador do projeto) define
+    if (b.dados?.ambientes !== undefined && papel !== 'dono') delete b.dados.ambientes;
     if (b.nome !== undefined) projeto.nome = String(b.nome).trim() || projeto.nome;
     if (b.descricao !== undefined) projeto.descricao = String(b.descricao);
     if (b.miniatura !== undefined) projeto.miniatura = typeof b.miniatura === 'string' && b.miniatura.startsWith('data:image/') ? b.miniatura.slice(0, 600000) : null;
@@ -91,12 +95,17 @@ function routes(app, { requireUser, realtime }) {
     const { projeto } = await access(req.params.id, req.user, 'dono');
     const email = String(req.body?.email || '').trim().toLowerCase();
     const papel = req.body?.papel === 'leitor' ? 'leitor' : 'editor';
+    // camadas liberadas: lista de ids (1 ou mais) ou null = todas; ausente = mantém
+    const camadas = req.body?.camadas === undefined ? undefined : Array.isArray(req.body.camadas) ? req.body.camadas.filter(x => typeof x === 'string').slice(0, 500) : null;
     const u = await db.Usuario.findOne({ where: { email } });
     if (!u) throw err(404, 'Nenhuma conta com este e-mail. Peça para a pessoa se cadastrar primeiro.');
     if (u.id === projeto.donoId) throw err(400, 'O dono já tem acesso total.');
-    const [m] = await db.Membro.findOrCreate({ where: { ProjetoId: projeto.id, UsuarioId: u.id }, defaults: { papel } });
-    if (m.papel !== papel) { m.papel = papel; await m.save(); }
-    res.json({ membro: { ...publicUser(u), papel } });
+    const [m] = await db.Membro.findOrCreate({ where: { ProjetoId: projeto.id, UsuarioId: u.id }, defaults: { papel, camadas: camadas ?? null } });
+    if (m.papel !== papel || camadas !== undefined) { m.papel = papel; if (camadas !== undefined) m.camadas = camadas; await m.save(); }
+    const cs = Array.isArray(m.camadas) ? m.camadas : null;
+    // quem está com o projeto aberto recebe as permissões novas na hora
+    realtime.setPermissions?.(projeto.id, u.id, papel, cs);
+    res.json({ membro: { ...publicUser(u), papel, camadas: cs } });
   }));
 
   app.delete('/api/projetos/:id/membros/:uid', requireUser(), wrap(async (req, res) => {

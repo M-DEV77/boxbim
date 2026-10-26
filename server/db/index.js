@@ -47,6 +47,8 @@ const Projeto = sequelize.define('Projeto', {
 
 const Membro = sequelize.define('Membro', {
   papel: { type: DataTypes.ENUM('editor', 'leitor'), defaultValue: 'editor' },
+  // camadas que o membro pode editar (ids das camadas dos ambientes do projeto); null = todas
+  camadas: json('camadas', null),
 }, { tableName: 'membros' });
 
 const Elemento = sequelize.define('Elemento', {
@@ -126,6 +128,10 @@ Usuario.hasMany(Ferramentas, { onDelete: 'CASCADE' }); Ferramentas.belongsTo(Usu
 
 async function init() {
   await sequelize.sync();
+  // colunas novas em tabelas que já existiam (o sync não altera tabelas)
+  const qi = sequelize.getQueryInterface();
+  const cols = await qi.describeTable('membros');
+  if (!cols.camadas) await qi.addColumn('membros', 'camadas', { type: DataTypes.TEXT, allowNull: true });
   return sequelize;
 }
 

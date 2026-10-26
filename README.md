@@ -41,6 +41,10 @@ cópia do banco em `<dados>/.servidor/backup-<data>/`; a próxima conta cadastra
 - **Tempo real**: o que um faz aparece na hora para os outros (avatares no topo; a seleção de cada um aparece
   na cor dele). Tudo é gravado no banco a cada alteração — não existe "salvar".
 - Projeto novo começa só com o **Nível 0**.
+- **Ambientes e camadas** (Modelar › Ambientes): o dono cria ambientes (Arquitetura, Estrutura…) com camadas
+  (Arquitetura › Paredes…) e escolhe os desenhos de cada camada. Elementos novos caem na camada certa; cada
+  camada pode ser ocultada ou travada. No Compartilhar, o botão **Camadas** libera uma ou mais camadas para cada
+  participante: ele vê tudo, mas só edita as liberadas (o servidor confere, inclusive pelo MCP).
 
 ## Banco de dados
 
@@ -49,7 +53,7 @@ SQLite em `<dados>/.servidor/boxbim.sqlite`, pelo ORM **Sequelize** (`server/db/
 | Tabela | O quê |
 |---|---|
 | `usuarios`, `sessoes` | contas e sessões de login |
-| `projetos`, `membros` | projetos (níveis, grade, cores, tipos em `dados`) e participantes com papel |
+| `projetos`, `membros` | projetos (níveis, grade, cores, tipos e ambientes em `dados`) e participantes com papel e camadas liberadas |
 | `elementos` | um registro por elemento do projeto (GUID, tipo IFC, dados de modelagem) |
 | `objetos`, `objetos_projeto` | biblioteca geral (com preço, ícone, miniatura) e cópias por projeto |
 | `config`, `ferramentas` | tipos/materiais gerais e os conjuntos de ferramentas de cada usuário |
@@ -348,4 +352,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.17.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.18.0</a>

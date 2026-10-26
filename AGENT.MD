@@ -19,6 +19,9 @@ flowchart LR
     APP --> CHAT["chat.js<br/>Chat IA (agentes)"]
     CHAT --> TOOLS["tools.js<br/>ferramentas do BoxBim p/ a IA"]
     APP --> PROJ["project.js<br/>ProjectSession: carrega e sincroniza"]
+    APP --> ENVS["environments.js<br/>ambientes, camadas, permissões"]
+    ENVS --> VIEWER
+    PROJ --> ENVS
     APP --> MODEL["Ferramentas de modelagem"]
     MODEL --> DRAW["draw.js parede"]
     MODEL --> SLAB["slab-tool.js laje"]
@@ -88,7 +91,8 @@ flowchart LR
 | 2026-10-23 | 2.15.0 | `f359b44` | DEPLOY.md: branch `main` |
 | 2026-10-26 | 2.16.0 | `9a6ecb0` | IA local pelo navegador na VPS (LM Studio/Ollama); BoxBim como servidor MCP; Chat IA usando MCP externos |
 | 2026-10-26 | 2.16.1 | `98b322e` | Regras do projeto (modelo de commit, AGENT.MD, créditos), créditos na lateral direita e na documentação, AGENT.MD |
-| 2026-10-26 | 2.17.0 | este commit | Retirada a conexão com o Unreal Engine; na nuvem o app não consulta mais o Revit (403); CSP corrigido |
+| 2026-10-26 | 2.17.0 | `2deab17` | Retirada a conexão com o Unreal Engine; na nuvem o app não consulta mais o Revit (403); CSP corrigido |
+| 2026-10-26 | 2.18.0 | este commit | Ambientes e camadas (`environments.js`); permissão por camada por participante, conferida no tempo real e no MCP |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.17.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.18.0</a>

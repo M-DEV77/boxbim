@@ -47,6 +47,7 @@ export class ProjectSession extends EventTarget {
     try {
       this.loadLevels(r.projeto.dados?.niveis);
       this.loadOptions(r.projeto.dados);
+      this.app.envs?.load({ ambientes: r.projeto.dados?.ambientes || [], mine: r.projeto.minhasCamadas ?? null, papel: this.papel });
       // paredes primeiro (portas e janelas se hospedam nelas)
       const order = e => (e.dados?.bim?.wall ? 0 : e.dados?.bim?.host ? 2 : 1);
       for (const e of [...r.elementos].sort((a, b) => order(a) - order(b))) {
@@ -241,7 +242,18 @@ export class ProjectSession extends EventTarget {
       this.drawRemoteSelection();
       return;
     }
-    if (m.t === 'projeto') { this.applying = true; try { this.loadLevels(m.dados?.niveis); this.loadOptions(m.dados); } finally { this.applying = false; } return; }
+    if (m.t === 'projeto') {
+      this.applying = true;
+      try { this.loadLevels(m.dados?.niveis); this.loadOptions(m.dados); if (m.dados?.ambientes) this.app.envs?.load({ ambientes: m.dados.ambientes }); } finally { this.applying = false; }
+      return;
+    }
+    if (m.t === 'permissoes') {
+      this.papel = m.papel; this.readonly = m.papel === 'leitor';
+      this.app.envs?.load({ mine: m.camadas, papel: m.papel });
+      toast(m.camadas ? `Suas camadas mudaram: ${m.camadas.map(id => this.app.envs.label(id)).join(', ') || 'nenhuma'}.` : 'Agora você pode editar todas as camadas.');
+      return;
+    }
+    if (m.t === 'recusado') { toast(m.msg, 'error'); return; }
     if (m.t === 'objeto') { await this.app.objects.load(); await this.app.refreshObjectInstances(m.id); return; }
     if (m.t === 'tipos') { await this.app.types.load(); return; }
   }

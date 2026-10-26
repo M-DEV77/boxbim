@@ -98,6 +98,7 @@ function summary(e) {
   if (b.slab) Object.assign(out, { laje: { pontos: b.slab.points, topo: b.slab.elevation, espessura: b.slab.thickness, furos: b.slab.holes?.length || 0 } });
   if (b.linha) Object.assign(out, { linha: { a: b.linha.a, b: b.linha.b, cota: b.linha.z, arco: !!b.linha.arco } });
   if (b.objectName && !b.sistema) out.objeto = b.objectName;
+  if (b.camadaId) out.camada = b.camadaId;
   const m = e.dados?.matriz;
   if (m && (m[12] || m[13] || m[14])) out.deslocamento = [r6(m[12]), r6(m[13]), r6(m[14])];
   return out;
@@ -105,7 +106,7 @@ function summary(e) {
 
 // ---------------------------------------------------------------- ferramentas
 
-const P_PROJ = { projeto: { type: 'string', description: 'id ou nome do projeto (veja listar_projetos)' } };
+const P_PROJ = { projeto: { type: 'string', description: 'id ou nome do projeto (veja listar_projetos)' }, camada: { type: 'string', description: 'camada de destino ("Ambiente › Camada", nome ou id; veja ler_projeto). Obrigatória se você só tem algumas camadas liberadas.' } };
 const PT = { type: 'array', items: { type: 'number' }, minItems: 2, maxItems: 2 };
 
 const TOOLS = [
@@ -127,6 +128,23 @@ const TOOLS = [
     inputSchema: { type: 'object', properties: { ...P_PROJ, ids: { type: 'array', items: { type: 'string' } } }, required: ['projeto', 'ids'] } },
 ];
 
+/** Camada de destino (nome ou id, de qualquer ambiente) e a checagem das camadas liberadas para o usuário. */
+function camadaFor(ctx, p, ref) {
+  const all = (p.dados?.ambientes || []).flatMap(a => (a.camadas || []).map(c => ({ ...c, ambiente: a.nome })));
+  let c = null;
+  if (ref) {
+    const s = String(ref).toLowerCase();
+    c = all.find(x => x.id === ref || String(x.nome).toLowerCase() === s || `${x.ambiente} › ${x.nome}`.toLowerCase() === s);
+    if (!c) throw new Error(`Camada "${ref}" não existe. Camadas: ${all.map(x => `${x.ambiente} › ${x.nome}`).join(', ') || '(nenhuma)'}`);
+  }
+  const perm = ctx.perm?.[p.id];
+  if (Array.isArray(perm) && (!c || !perm.includes(c.id))) {
+    const liberadas = all.filter(x => perm.includes(x.id)).map(x => `${x.ambiente} › ${x.nome}`);
+    throw new Error(`Você só pode modelar nas camadas liberadas: ${liberadas.join(', ') || '(nenhuma)'} — informe "camada".`);
+  }
+  return c?.id || null;
+}
+
 async function projectFor(ctx, ref, need = 'leitor') {
   let id = ref;
   if (id && !/^[0-9a-f-]{36}$/i.test(id)) {
@@ -138,7 +156,9 @@ async function projectFor(ctx, ref, need = 'leitor') {
     if (!p) throw new Error(`Projeto "${ref}" não encontrado. Use listar_projetos.`);
     id = p.id;
   }
-  return (await access(id, ctx.user, need)).projeto;
+  const r = await access(id, ctx.user, need);
+  (ctx.perm ||= {})[r.projeto.id] = r.camadas;
+  return r.projeto;
 }
 
 const HANDLERS = {
@@ -157,7 +177,9 @@ const HANDLERS = {
     const porTipo = {};
     for (const e of els) { const t = e.dados?.bim?.type || e.tipo; porTipo[t] = (porTipo[t] || 0) + 1; }
     const lim = Math.min(1000, Math.max(1, Number(a.limite) || 200));
-    return { id: p.id, nome: p.nome, unidade: p.dados?.unidade || 'm', niveis: levelsOf(p).map(l => ({ id: l.id, nome: l.nome, cota: l.cota })), total: els.length, porTipo, elementos: list.slice(0, lim).map(summary), truncado: list.length > lim };
+    return { id: p.id, nome: p.nome, unidade: p.dados?.unidade || 'm',
+      ambientes: (p.dados?.ambientes || []).map(a2 => ({ nome: a2.nome, camadas: (a2.camadas || []).map(c => ({ id: c.id, nome: c.nome, liberada: !Array.isArray(ctx.perm[p.id]) || ctx.perm[p.id].includes(c.id) })) })),
+      niveis: levelsOf(p).map(l => ({ id: l.id, nome: l.nome, cota: l.cota })), total: els.length, porTipo, elementos: list.slice(0, lim).map(summary), truncado: list.length > lim };
   },
   async criar_nivel(ctx, a) {
     const p = await projectFor(ctx, a.projeto, 'editor');
@@ -180,7 +202,7 @@ const HANDLERS = {
     const height = Number(a.altura) || heightOf(p, lvl);
     const guid = uuid();
     const bim = {
-      type: 'IfcWall', name: 'Parede', guid, levelId: lvl.id, sistema: 'parede',
+      type: 'IfcWall', name: 'Parede', guid, levelId: lvl.id, sistema: 'parede', camadaId: camadaFor(ctx, p, a.camada),
       wall: { start: a.inicio.map(r6), end: a.fim.map(r6), height, thickness, base: lvl.cota, extendStart: 0, extendEnd: 0, openings: [] },
       layers: spec?.layers || null, typeId: spec?.typeId || null, typeName: spec?.typeName || null,
       props: { Nivel: lvl.nome, Espessura: thickness, Altura: height, Comprimento: r6(L) },
@@ -195,7 +217,7 @@ const HANDLERS = {
     const top = r6(lvl.cota + (Number(a.deslocamento) || 0));
     const guid = uuid();
     const slab = { points: a.pontos.map(q => q.map(r6)), elevation: top, thickness: spec?.thickness || 0.15, ...(a.furos?.length ? { holes: a.furos.map(f => f.map(q => q.map(r6))) } : {}) };
-    const bim = { type: 'IfcSlab', name: 'Laje', guid, levelId: lvl.id, sistema: 'laje', slab, layers: spec?.layers || null, typeId: spec?.typeId || null, typeName: spec?.typeName || null, props: { Nivel: lvl.nome, Cota: top } };
+    const bim = { type: 'IfcSlab', name: 'Laje', guid, levelId: lvl.id, sistema: 'laje', camadaId: camadaFor(ctx, p, a.camada), slab, layers: spec?.layers || null, typeId: spec?.typeId || null, typeName: spec?.typeName || null, props: { Nivel: lvl.nome, Cota: top } };
     await upsert(ctx, p, [{ id: guid, tipo: 'IfcSlab', dados: { bim, matriz: IDENT } }]);
     return { criado: summary({ id: guid, dados: { bim } }) };
   },
@@ -203,19 +225,21 @@ const HANDLERS = {
     const p = await projectFor(ctx, a.projeto, 'editor');
     const lvl = findLevel(p, a.nivel);
     const pts = a.pontos.map(q => q.map(r6));
+    const camadaId = camadaFor(ctx, p, a.camada);
     if (a.fechar && pts.length > 2) pts.push(pts[0]);
     const els = [];
     for (let i = 1; i < pts.length; i++) {
       const guid = uuid();
       const L = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
-      els.push({ id: guid, tipo: 'IfcAnnotation', dados: { bim: { type: 'IfcAnnotation', name: 'Linha', guid, levelId: lvl.id, linha: { z: lvl.cota, a: pts[i - 1], b: pts[i], arco: null }, props: { Comprimento: r6(L), Cota: lvl.cota } }, matriz: IDENT } });
+      els.push({ id: guid, tipo: 'IfcAnnotation', dados: { bim: { type: 'IfcAnnotation', name: 'Linha', guid, levelId: lvl.id, camadaId, linha: { z: lvl.cota, a: pts[i - 1], b: pts[i], arco: null }, props: { Comprimento: r6(L), Cota: lvl.cota } }, matriz: IDENT } });
     }
     await upsert(ctx, p, els);
     return { criadas: els.map(e => e.id) };
   },
   async mover_elementos(ctx, a) {
     const p = await projectFor(ctx, a.projeto, 'editor');
-    const rows = await db.Elemento.findAll({ where: { id: a.ids || [], ProjetoId: p.id } });
+    const perm = ctx.perm[p.id];
+    const rows = (await db.Elemento.findAll({ where: { id: a.ids || [], ProjetoId: p.id } })).filter(e => !Array.isArray(perm) || perm.includes(e.dados?.bim?.camadaId));
     const els = rows.map(e => {
       const m = [...(e.dados?.matriz || IDENT)];
       m[12] = r6(m[12] + (Number(a.dx) || 0)); m[13] = r6(m[13] + (Number(a.dy) || 0)); m[14] = r6(m[14] + (Number(a.dz) || 0));
@@ -226,7 +250,9 @@ const HANDLERS = {
   },
   async apagar_elementos(ctx, a) {
     const p = await projectFor(ctx, a.projeto, 'editor');
-    const ids = (a.ids || []).filter(x => typeof x === 'string');
+    let ids = (a.ids || []).filter(x => typeof x === 'string');
+    const perm = ctx.perm[p.id];
+    if (Array.isArray(perm)) ids = (await db.Elemento.findAll({ where: { id: ids, ProjetoId: p.id } })).filter(e => perm.includes(e.dados?.bim?.camadaId)).map(e => e.id);
     const n = await db.Elemento.destroy({ where: { id: ids, ProjetoId: p.id } });
     ctx.realtime.notify(p.id, { t: 'remove', ids, autor: ctx.user.id });
     return { apagados: n };

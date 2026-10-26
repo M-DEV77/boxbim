@@ -148,7 +148,8 @@ export class Panels {
     const root = $('#memory-panel');
     const s = this.app.settings;
     const mems = await B.memory.list();
-    const dirs = await B.dirs();
+    // pastas do servidor: só o administrador do servidor vê (os demais seguem sem o botão)
+    const dirs = await B.dirs().catch(() => null);
     const toggle = (key, label) => h('label', { class: 'inline' }, h('input', {
       type: 'checkbox', checked: s.memory[key],
       onchange: async e => { await this.app.saveSettings({ memory: { ...s.memory, [key]: e.target.checked } }); },
@@ -156,13 +157,13 @@ export class Panels {
     root.innerHTML = '';
     root.append(
       h('div', { class: 'section-title' }, 'Memória em Markdown', h('span', { class: 'spacer' }),
-        h('button', { onclick: () => B.shell.open(dirs.memory) }, 'Abrir pasta'),
+        dirs ? h('button', { onclick: () => B.shell.open(dirs.memory) }, 'Abrir pasta') : null,
         h('button', { onclick: () => this.editMemory({ name: '', description: '', type: 'project', body: '' }) }, '+ Nova')),
       h('div', { class: 'form' },
         toggle('enabled', 'Guardar memórias em arquivos Markdown'),
         toggle('autoSave', 'O agente salva memórias sozinho quando aprende algo duradouro'),
         toggle('injectIndex', 'Incluir o índice MEMORY.md no contexto de cada conversa')),
-      h('div', { class: 'small muted' }, `Pasta: ${dirs.memory}`),
+      dirs ? h('div', { class: 'small muted' }, `Pasta: ${dirs.memory}`) : null,
       mems.length ? h('div', { class: 'list' }, mems.map(m => h('div', { class: 'item', onclick: () => this.editMemory(m) },
         h('div', {}, h('div', { class: 'title' }, m.name), h('div', { class: 'desc' }, m.description)),
         h('span', { class: 'badge' }, m.type)))) : h('div', { class: 'muted' }, 'Nenhuma memória ainda.'),

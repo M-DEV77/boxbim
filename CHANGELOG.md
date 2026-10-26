@@ -6,12 +6,31 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.17.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.18.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.18.0] — 2026-10-26 · Ambientes e camadas com permissões
+
+### Adicionado
+- **Ambientes e camadas** (Modelar › Ambientes, ou ⚙ no navegador): o dono do projeto cria ambientes com o nome
+  que quiser (ex.: Arquitetura, Estrutura, Instalações) e, dentro de cada um, camadas com os desenhos que recebem
+  (ex.: Arquitetura › Paredes recebe paredes; Pisos e lajes recebe lajes). "Usar o modelo" preenche um ponto de
+  partida. Ao salvar, os elementos sem camada são distribuídos pelo tipo.
+- Cada elemento novo cai na camada ativa (ou na primeira que aceita o seu tipo); o painel de propriedades mostra
+  e troca a camada. No navegador, cada camada pode ser **ocultada** (👁) ou **travada** (🔒).
+- **Permissão por camada**: no Compartilhar, o botão "Camadas" de cada participante libera uma ou mais camadas
+  (ou todas). Quem tem camadas limitadas vê o projeto inteiro, mas só seleciona e edita o que está nas camadas
+  liberadas (⛔ nas outras). O servidor também confere: alterações fora das camadas liberadas são recusadas, no
+  tempo real e no MCP (as ferramentas do MCP ganharam o parâmetro `camada`).
+
+### Corrigido
+- Participante que não é administrador não conseguia abrir o app (a tela de memórias pedia uma informação só do
+  administrador).
+- Elemento antigo sem propriedades travava a reconstrução da geometria.
 
 ## [2.17.0] — 2026-10-26 · Sem a conexão com o Unreal Engine
 

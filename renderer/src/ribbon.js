@@ -127,6 +127,7 @@ export function buildRibbon(app) {
       btn('glTF', 'glb', () => app.exportAs('glb'), { title: 'Exportar glTF' })),
     group('Modelar',
       btn('Inserir\nobjeto', 'library', () => app.openObjectLibrary(), { id: 'inserir-objeto', title: 'Inserir um Objeto da biblioteca (parede, laje, pilar, viga, caixa, portas, móveis…)' }),
+      btn('Ambientes', 'layers', () => app.envs.openManager(), { id: 'ambientes', title: 'Ambientes e camadas do projeto (administrador): nomes, camadas e os desenhos de cada uma' }),
       btn('Telhado', 'roof', () => app.roofTool.start(), { id: 'telhado', title: 'Telhado: desenhe o perfil num eixo de trabalho vertical e extrude; tipo com camadas (telha, ripas, caibros…)' }),
       btn('Laje', 'slabLayers', () => app.slabTool.start(), { id: 'laje-contorno', title: 'Laje: contorno por croqui 2D, linhas 2D, paredes (face externa/interna/eixo) ou face de sólido; contornos internos viram furos' }),
       orthoBtn,

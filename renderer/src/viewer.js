@@ -210,6 +210,7 @@ export class Viewer extends EventTarget {
 
   add(obj, { fit = false } = {}) {
     this.model.add(obj);
+    this.onAdd?.(obj); // ambientes: camada dos elementos novos, visibilidade e trava
     if (this.clipPlanes.length || this.showEdges) this._prepare2D(obj);
     obj.traverse(o => { if (o.isLine) o.layers.set(LINE_LAYER); });
     if (fit) this.fit();
@@ -503,6 +504,7 @@ export class Viewer extends EventTarget {
   }
 
   select(objs, additive = false) {
+    objs = objs.filter(o => !o.userData?.locked); // camada travada ou não liberada: não seleciona
     if (!additive) for (const o of this.selected) this._highlight(o, false);
     if (!additive) this.selected.clear();
     for (const o of objs) {

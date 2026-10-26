@@ -419,6 +419,7 @@ export function applyWallMiter(geo, w) {
 
 export function rebuildElement(el) {
   const b = el.userData.bim;
+  b.props ||= {}; // elementos vindos de fora (MCP, outros clientes) podem chegar sem propriedades
   let parts;
   if (b.wall) {
     const ls = effectiveLayers(b.layers, b.wall.thickness, 'IfcWall');

@@ -6,6 +6,7 @@ import { Levels, fmtElev } from './levels.js';
 import { ViewManager, ELEVATIONS } from './views.js';
 import { LevelEditor } from './levels-edit.js';
 import { WorkPlanes } from './workplanes.js';
+import { Environments } from './environments.js';
 import { Grips } from './grips.js';
 import { createOnLevel, syncLevelNames } from './modeling.js';
 import { Chat } from './chat.js';
@@ -87,6 +88,10 @@ class App {
     this.transformTool = new TransformTool(this);
     this.levelEditor = new LevelEditor(this);
     this.workPlanes = new WorkPlanes(this);
+    // ambientes e camadas (camada dos elementos novos, visibilidade, trava e permissões)
+    this.envs = new Environments(this);
+    this.viewer.onAdd = el => this.envs.onAdd(el);
+    this.envs.addEventListener('change', () => { this.renderBrowser(); if (this.viewer.selected.size) this.renderProps(); });
     this.grips = new Grips(this);
     // widget de eixos (orbitar em X/Y/Z) no canto da vista 3D
     const axes = new AxisWidget({ getCamera: () => this.viewer.camera, getControls: () => this.viewer.controls });
@@ -257,7 +262,12 @@ class App {
       for (const m of r.membros) {
         const role = h('select', { onchange: async e => { await rest('POST', `/api/projetos/${pid}/membros`, { email: m.email, papel: e.target.value }); toast(`${m.nome}: ${e.target.value}.`); } },
           ['editor', 'leitor'].map(x => h('option', { value: x, selected: x === m.papel }, x === 'editor' ? 'editor (modela)' : 'leitor (só vê)')));
-        list.append(h('div', { class: 'member' }, h('strong', {}, m.nome), h('span', { class: 'muted' }, m.email), role,
+        const perms = h('button', { class: 'mini', title: 'Camadas que esta pessoa pode editar', onclick: () => this.envs.memberDialog(m, async camadas => {
+          await rest('POST', `/api/projetos/${pid}/membros`, { email: m.email, papel: m.papel, camadas });
+          toast(`${m.nome}: ${camadas ? `${camadas.length} camada(s) liberada(s)` : 'todas as camadas'}.`);
+          render();
+        }) }, m.camadas ? `Camadas (${m.camadas.length})` : 'Camadas: todas');
+        list.append(h('div', { class: 'member' }, h('strong', {}, m.nome), h('span', { class: 'muted' }, m.email), role, perms,
           h('button', { class: 'mini danger', title: 'Remover do projeto', onclick: async () => { await rest('DELETE', `/api/projetos/${pid}/membros/${m.id}`); render(); } }, '✕')));
       }
     };
@@ -733,6 +743,10 @@ class App {
           group('elevs', 'Elevações (Elevação da construção)', '⌂',
             Object.entries(ELEVATIONS).sort((a, b) => a[1].name.localeCompare(b[1].name)).map(([k, e]) => node(`elev:${k}`, e.name)))),
       ]),
+      h('details', { 'data-key': 'ambientes', open: isOpen('ambientes') },
+        h('summary', {}, h('span', { class: 'ico' }, '◧'), 'Ambientes e camadas',
+          this.envs?.isAdmin ? h('span', { class: 'act', title: 'Ambientes e camadas (administrador)', onclick: e => { e.preventDefault(); e.stopPropagation(); this.envs.openManager(); } }, ' ⚙') : null),
+        this.envs ? this.envs.panel() : []),
       group('levels', 'Níveis', '≡', [...lv].reverse().map(l => h('div', { class: 'node', title: 'Clique duplo para editar', ondblclick: () => this.levelDialog(l) },
         l.name,
         h('span', { class: 'elev' }, fmtElev(l.elevation)),
@@ -1070,6 +1084,14 @@ class App {
       h('table', {}, h('tr', {}, h('td', {}, 'Nome'), h('td', {}, nameInput)), row('Tipo IFC', b.type), row('Nível', this.levels.ofElement(o).name), row('GUID', b.guid), row('ID BoxBim', o.uuid)),
     );
     if (b.eixo) root.append(...this.workPlanes.propsSection(o));
+    if (this.envs.list.length) {
+      // camada do elemento: mover só entre as que eu posso editar
+      const opts = this.envs.camadas().filter(c => this.envs.editable(c.id) || c.id === b.camadaId);
+      const sel = h('select', { onchange: e => { this.envs.moveTo([o], e.target.value); this.status(`Movido para ${this.envs.label(e.target.value)}.`); } },
+        !b.camadaId ? h('option', { value: '', selected: true, disabled: true }, 'Sem camada') : null,
+        opts.map(c => h('option', { value: c.id, selected: c.id === b.camadaId, disabled: !this.envs.editable(c.id) }, `${c.ambiente} › ${c.nome}`)));
+      root.append(h('h4', {}, 'Ambiente e camada'), h('table', {}, h('tr', {}, h('td', {}, 'Camada'), h('td', {}, sel))));
+    }
     if (b.linha) this.renderLineStyle(root, [o]);
     if (b.wall) root.append(h('h4', {}, 'Parede'), h('div', { class: 'row-buttons' },
       h('button', { onclick: () => editWall(this, o), title: 'Também com clique duplo na parede' }, 'Editar parede e perfil…'),
