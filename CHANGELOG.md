@@ -6,12 +6,31 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.15.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.16.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.16.0] — 2026-10-26 · IA local com o BoxBim na nuvem e MCP (servidor e cliente)
+
+### Corrigido
+- **LM Studio / Ollama / llama.cpp não funcionavam com o BoxBim numa VPS**: `http://127.0.0.1:1234` no servidor é a
+  própria VPS, não o seu computador. Agora, com o servidor remoto (`BOXBIM_REMOTO=1`) e o endereço local ou da rede
+  interna, **o navegador chama a IA direto** (ele está no seu computador). No LM Studio, ligue Developer › Server
+  Settings › "Enable CORS"; no Ollama, `OLLAMA_ORIGINS=*`; se o navegador pedir acesso à rede local, permita.
+  `BOXBIM_CONNECT_SRC` libera outros endereços (ex.: um servidor na rede do escritório).
+
+### Adicionado
+- **BoxBim como servidor MCP** (`POST /mcp`, Streamable HTTP): Claude Desktop, Claude Code e outros clientes MCP
+  listam e leem os projetos e modelam neles — criar níveis, paredes (com tipo), lajes (com furos), linhas 2D, mover e
+  apagar elementos — com as permissões do usuário; o resultado aparece **ao vivo** para quem está com o projeto
+  aberto. Acesso por **token** de cada usuário (⚙ Configurações › MCP › Gerar token), com os comandos prontos para
+  Claude Code e Claude Desktop; tokens guardados só como hash, revogáveis.
+- **Chat IA usando servidores MCP**: em ⚙ Configurações › MCP, cadastre servidores (URL + token opcional); as
+  ferramentas deles entram nos agentes do Chat IA. Servidores na internet são chamados pelo servidor do BoxBim
+  (tokens cifrados); os "no meu computador" (localhost), pelo navegador. Respostas em JSON ou SSE, com sessão.
 
 ## [2.15.0] — 2026-10-23 · Espelhar, parede até o telhado e editor de parede
 

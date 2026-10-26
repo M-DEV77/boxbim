@@ -100,7 +100,17 @@ const Preset = sequelize.define('Preset', {
   ordem: { type: DataTypes.INTEGER, defaultValue: 0 },
 }, { tableName: 'presets' });
 
+// tokens de acesso por programa (servidor MCP: Claude Desktop/Code e outros clientes) — guarda só o hash
+const TokenApi = sequelize.define('TokenApi', {
+  id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+  nome: { type: DataTypes.STRING(80), allowNull: false },
+  hash: { type: DataTypes.STRING(64), allowNull: false, unique: true }, // sha256 do token
+  prefixo: { type: DataTypes.STRING(16) },                            // começo do token, para reconhecer na lista
+  usadoEm: { type: DataTypes.DATE, allowNull: true },
+}, { tableName: 'tokens_api' });
+
 // relações
+Usuario.hasMany(TokenApi, { onDelete: 'CASCADE' }); TokenApi.belongsTo(Usuario);
 Usuario.hasMany(Preset, { onDelete: 'CASCADE' }); Preset.belongsTo(Usuario);
 Usuario.hasMany(Sessao, { onDelete: 'CASCADE' }); Sessao.belongsTo(Usuario);
 Projeto.belongsTo(Usuario, { as: 'dono', foreignKey: 'donoId' });
@@ -119,4 +129,4 @@ async function init() {
   return sequelize;
 }
 
-module.exports = { sequelize, init, Preset, Usuario, Sessao, Projeto, Membro, Elemento, Objeto, ObjetoProjeto, Config, Ferramentas, storage };
+module.exports = { sequelize, init, TokenApi, Preset, Usuario, Sessao, Projeto, Membro, Elemento, Objeto, ObjetoProjeto, Config, Ferramentas, storage };

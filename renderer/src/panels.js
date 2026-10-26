@@ -198,10 +198,13 @@ export class Panels {
   openSettings(section = 'providers') {
     const s = structuredClone(this.app.settings);
     const keys = {}; // chaves digitadas nesta sessão
+    const mcpKeys = {}; // tokens dos servidores MCP digitados nesta sessão
+    s.mcp ||= [];
     const pane = h('div', { class: 'pane' });
     const nav = h('nav', {});
     const sections = {
       providers: ['Provedores de IA', () => this.providersPane(s, keys)],
+      mcp: ['MCP', () => this.mcpPane(s, mcpKeys)],
       tools: ['Ferramentas', () => this.toolsPane(s)],
       data: ['Dados', () => this.dataPane(s)],
       about: ['Sobre', () => aboutPane()],
@@ -223,7 +226,8 @@ export class Panels {
           const { hasKey, ...rest } = p;
           providers[id] = id in keys ? { ...rest, apiKey: keys[id] } : rest;
         }
-        await this.app.saveSettings({ providers, tools: s.tools, revit: s.revit, dataDir: s.dataDir, autoApprove: s.autoApprove });
+        const mcp = s.mcp.map(({ hasToken, ...m }) => (m.id in mcpKeys ? { ...m, token: mcpKeys[m.id] } : m));
+        await this.app.saveSettings({ providers, mcp, tools: s.tools, revit: s.revit, dataDir: s.dataDir, autoApprove: s.autoApprove });
         await this.app.loadAgents();
         await this.renderAll();
         toast('Configurações salvas.');
@@ -259,7 +263,7 @@ export class Panels {
             p.custom ? h('button', { class: 'danger', onclick: () => { delete s.providers[id]; render(); } }, '✕') : null),
           h('div', { class: 'form' },
             h('div', { class: 'row' }, h('label', {}, `URL base (${p.type === 'openai' ? 'compatível com OpenAI' : p.type})`, url), h('label', {}, 'Modelo padrão', model, models)),
-            h('label', {}, 'Chave de API (guardada criptografada pelo Windows)', key))));
+            h('label', {}, 'Chave de API (guardada cifrada no servidor)', key))));
       }
     };
     render();
@@ -271,8 +275,86 @@ export class Panels {
     return h('div', {},
       h('div', { class: 'small muted', style: 'margin-bottom:8px' },
         'Locais: LM Studio (Developer › Start Server, porta 1234), Ollama (porta 11434) e llama.cpp (llama-server, porta 8080) usam a API compatível com OpenAI. Nuvem: Claude, OpenAI, Gemini, OpenRouter, Groq, DeepSeek, Mistral e xAI.'),
+      this.app.info?.local === false ? h('div', { class: 'small note', style: 'margin-bottom:8px' },
+        'O BoxBim está num servidor na nuvem: os provedores locais (localhost, 127.0.0.1, rede interna) são chamados pelo SEU NAVEGADOR, no seu computador. No LM Studio, ligue Developer › Server Settings › "Enable CORS"; no Ollama, defina OLLAMA_ORIGINS=*. Se o navegador pedir permissão para acessar a rede local, permita. A chave de API não é usada nesse modo.') : null,
       list,
       h('button', { onclick: addCustom }, '+ Provedor personalizado (OpenAI-compatível)'));
+  }
+
+  /** MCP: servidores que o Chat IA usa e o BoxBim como servidor MCP (tokens de cada usuário). */
+  mcpPane(s, mcpKeys) {
+    const admin = !!this.app.info?.usuario?.admin;
+    const list = h('div', {});
+    const render = () => {
+      list.replaceChildren();
+      if (!s.mcp.length) list.append(h('div', { class: 'small muted' }, 'Nenhum servidor MCP cadastrado.'));
+      for (const m of s.mcp) {
+        const status = h('span', { class: `tag${m.ativo ? ' ok' : ''}` }, m.ativo ? 'ativo' : 'desligado');
+        const test = async () => {
+          // salva primeiro (o servidor usa a URL/token atuais)
+          await this.app.saveSettings({ mcp: s.mcp.map(({ hasToken, ...x }) => (x.id in mcpKeys ? { ...x, token: mcpKeys[x.id] } : x)) });
+          try {
+            const names = await B.mcp.test(m.id);
+            status.textContent = `${names.length} ferramentas`; status.className = 'tag ok';
+            toast(`MCP "${m.nome}": ${names.slice(0, 12).join(', ')}${names.length > 12 ? '…' : ''}`);
+          } catch (e) { status.textContent = 'falhou'; status.className = 'tag'; toast(e.message, 'error'); }
+        };
+        list.append(h('div', { class: 'provider' },
+          h('div', { class: 'head' }, m.nome || 'MCP', status, h('span', { class: 'spacer' }),
+            h('button', { onclick: test, disabled: !admin, title: 'Conecta e lista as ferramentas' }, 'Testar'),
+            h('button', { class: 'danger', disabled: !admin, onclick: () => { s.mcp = s.mcp.filter(x => x !== m); render(); } }, '✕')),
+          h('div', { class: 'form' },
+            h('div', { class: 'row' },
+              h('label', {}, 'Nome', h('input', { value: m.nome || '', oninput: e => { m.nome = e.target.value; } })),
+              h('label', {}, 'URL (Streamable HTTP)', h('input', { value: m.url || '', placeholder: 'https://…/mcp', oninput: e => { m.url = e.target.value.trim(); } }))),
+            h('label', {}, 'Token (Authorization: Bearer …) — opcional', h('input', { type: 'password', placeholder: m.hasToken ? '•••••••• (salvo — digite para trocar)' : 'sem token', oninput: e => { mcpKeys[m.id] = e.target.value; } })),
+            h('label', { class: 'inline' }, h('input', { type: 'checkbox', checked: !!m.ativo, onchange: e => { m.ativo = e.target.checked; } }), 'Ativo no Chat IA'),
+            h('label', { class: 'inline', title: 'O servidor MCP roda no computador de quem usa o BoxBim (localhost): quem chama é o navegador' },
+              h('input', { type: 'checkbox', checked: !!m.local, onchange: e => { m.local = e.target.checked; } }), 'No meu computador (o navegador chama — ex.: http://localhost:…)'))));
+      }
+    };
+    render();
+    const add = () => { s.mcp.push({ id: 'm' + Math.random().toString(36).slice(2, 8), nome: 'Servidor MCP', url: '', ativo: true, local: false }); render(); };
+
+    // ---- BoxBim como servidor MCP
+    const endpoint = `${location.origin}/mcp`;
+    const tokens = h('div', {});
+    const shown = h('div', {});
+    const loadTokens = async () => {
+      try {
+        const r = await fetch('/api/tokens').then(x => x.json());
+        tokens.replaceChildren(...(r.tokens || []).map(t => h('div', { class: 'row-buttons' },
+          h('code', {}, `${t.prefixo}…`), h('span', {}, t.nome), h('span', { class: 'small muted' }, t.usadoEm ? `usado ${new Date(t.usadoEm).toLocaleString()}` : 'nunca usado'),
+          h('button', { class: 'mini danger', onclick: async () => { await fetch(`/api/tokens/${t.id}`, { method: 'DELETE' }); loadTokens(); } }, 'Revogar'))));
+        if (!r.tokens?.length) tokens.append(h('div', { class: 'small muted' }, 'Nenhum token ainda.'));
+      } catch (e) { tokens.replaceChildren(h('div', { class: 'error-text' }, e.message)); }
+    };
+    const nameIn = h('input', { placeholder: 'ex.: Claude Desktop do escritório', value: 'Claude' });
+    const create = async () => {
+      const r = await fetch('/api/tokens', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nome: nameIn.value || 'Cliente MCP' }) }).then(x => x.json());
+      if (!r.token) { toast(r.erro || 'Não foi possível criar o token.', 'error'); return; }
+      const cc = `claude mcp add --transport http boxbim ${endpoint} --header "Authorization: Bearer ${r.token}"`;
+      const desk = JSON.stringify({ mcpServers: { boxbim: { command: 'npx', args: ['-y', 'mcp-remote', endpoint, '--header', `Authorization: Bearer ${r.token}`] } } }, null, 2);
+      const copy = t => navigator.clipboard?.writeText(t).then(() => toast('Copiado.'), () => toast('Copie manualmente.'));
+      shown.replaceChildren(h('div', { class: 'provider' },
+        h('div', { class: 'small' }, h('strong', {}, 'Token criado — copie agora, ele não aparece de novo:')),
+        h('pre', { class: 'mcp-snippet' }, r.token), h('button', { class: 'mini', onclick: () => copy(r.token) }, 'Copiar token'),
+        h('div', { class: 'small muted' }, 'Claude Code (terminal):'), h('pre', { class: 'mcp-snippet' }, cc), h('button', { class: 'mini', onclick: () => copy(cc) }, 'Copiar comando'),
+        h('div', { class: 'small muted' }, 'Claude Desktop (claude_desktop_config.json):'), h('pre', { class: 'mcp-snippet' }, desk), h('button', { class: 'mini', onclick: () => copy(desk) }, 'Copiar configuração')));
+      loadTokens();
+    };
+    loadTokens();
+    return h('div', {},
+      h('div', { class: 'section-title' }, 'Servidores MCP do Chat IA'),
+      h('div', { class: 'small muted', style: 'margin-bottom:6px' }, 'As ferramentas dos servidores ativos entram no Chat IA (os agentes com ferramentas ligadas as usam). Servidores na internet: o BoxBim chama pelo servidor. Servidores no seu computador: marque "No meu computador" — o navegador chama.'),
+      list,
+      h('button', { onclick: add, disabled: !admin }, '+ Servidor MCP'),
+      h('div', { class: 'section-title', style: 'margin-top:14px' }, 'BoxBim como servidor MCP'),
+      h('div', { class: 'small muted' }, 'Claude Desktop, Claude Code ou outro cliente MCP leem e modelam os SEUS projetos (com as suas permissões): listar projetos, ler níveis e elementos, criar níveis, paredes, lajes e linhas, mover e apagar — o resultado aparece ao vivo no BoxBim.'),
+      h('label', {}, 'Endereço', h('input', { value: endpoint, readonly: true, onclick: e => e.target.select() })),
+      h('div', { class: 'row-buttons' }, nameIn, h('button', { class: 'primary', onclick: create }, 'Gerar token')),
+      shown,
+      h('div', { class: 'small muted', style: 'margin-top:6px' }, 'Seus tokens:'), tokens);
   }
 
   toolsPane(s) {

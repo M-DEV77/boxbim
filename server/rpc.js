@@ -10,6 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const { execFile } = require('child_process');
 const store = require('./lib/store');
+const mcpClient = require('./lib/mcp-client');
 const ai = require('./lib/ai');
 const conv = require('./lib/converters');
 const unreal = require('./lib/unreal');
@@ -232,8 +233,20 @@ function channels(ctx) {
       return true;
     },
 
+    // servidores MCP do Chat IA (cadastrados pelo administrador em Configurações › MCP)
+    'mcp:tools': async () => {
+      const out = [];
+      for (const m of store.publicSettings().mcp || []) {
+        if (!m.ativo || m.local) continue; // os "locais" (no computador de quem usa) o navegador chama
+        try { out.push({ server: m.id, nome: m.nome, tools: await mcpClient.listTools(store.mcpWithToken(m.id)) }); }
+        catch (e) { out.push({ server: m.id, nome: m.nome, erro: e.message, tools: [] }); }
+      }
+      return out;
+    },
+    'mcp:test': async id => { const cfg = store.mcpWithToken(id); mcpClient.forget(id); return (await mcpClient.listTools(cfg, true)).map(t => t.name); },
+    'mcp:call': (id, name, args) => mcpClient.callTool(store.mcpWithToken(id), name, args),
     'settings:get': () => store.publicSettings(),
-    'settings:set': s => { admin(); return store.saveSettings(s); },
+    'settings:set': s => { admin(); const r = store.saveSettings(s); (s.mcp || []).forEach(m => mcpClient.forget(m.id)); return r; },
 
     'ai:chat': r => ai.chat(r),
     'ai:cancel': id => ai.cancel(id),

@@ -116,6 +116,21 @@ Responda em português do Brasil, de forma objetiva. Use as ferramentas em vez d
     this.stopped = false;
     const settings = this.app.settings;
     const tools = agent.useTools ? toolsFor(agent, settings) : [];
+    // ferramentas dos servidores MCP ativos (Configurações › MCP): nome "mcp_<servidor>_<ferramenta>"
+    const mcpMap = new Map();
+    if (agent.useTools && agent.mcp !== false && (settings.mcp || []).some(m => m.ativo)) {
+      try {
+        for (const srv of await B.mcp.tools()) {
+          if (srv.erro) { this.info(`MCP "${srv.nome}": ${srv.erro}`); continue; }
+          for (const t of srv.tools) {
+            const name = `mcp_${srv.server}_${t.name}`.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 64);
+            if (mcpMap.has(name)) continue;
+            mcpMap.set(name, { server: srv.server, tool: t.name });
+            tools.push({ name, description: `[MCP ${srv.nome}] ${t.description || t.title || t.name}`.slice(0, 1000), parameters: t.inputSchema || { type: 'object', properties: {} } });
+          }
+        }
+      } catch (e) { this.info(`MCP indisponível: ${e.message}`); }
+    }
     const providerLabel = settings.providers[agent.provider]?.label || agent.provider;
     const typing = h('div', { class: 'msg assistant' }, h('span', { class: 'typing' }, h('i'), h('i'), h('i')));
     try {
@@ -147,7 +162,8 @@ Responda em português do Brasil, de forma objetiva. Use as ferramentas em vez d
           this.el.append(card); this.scroll();
           let out, isError = false;
           try {
-            out = await runTool(tc.name, tc.arguments || {}, this.toolContext());
+            const mcp = mcpMap.get(tc.name);
+            out = mcp ? await B.mcp.call(mcp.server, mcp.tool, tc.arguments || {}) : await runTool(tc.name, tc.arguments || {}, this.toolContext());
           } catch (e) {
             out = `Erro: ${e.message}`; isError = true;
             card.classList.add('err');

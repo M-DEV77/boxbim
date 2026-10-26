@@ -16,6 +16,7 @@ const projects = require('./projects');
 const rpc = require('./rpc');
 const realtimeMod = require('./realtime');
 const library = require('./library');
+const mcp = require('./mcp');
 
 const ROOT = path.join(__dirname, '..', 'renderer');
 const PORT = Number(process.env.PORTA || process.env.PORT || 3000);
@@ -41,7 +42,9 @@ async function main() {
     if (req.path.endsWith('object-worker.js')) res.setHeader('Content-Security-Policy', "default-src 'none'; script-src 'unsafe-eval'");
     else res.setHeader('Content-Security-Policy', [
       "default-src 'self'", "script-src 'self' 'wasm-unsafe-eval'", "style-src 'self' 'unsafe-inline'", "img-src 'self' data: blob:",
-      "connect-src 'self'", "worker-src 'self' blob:", "font-src 'self' data:", "object-src 'none'", "base-uri 'self'", "frame-ancestors 'self'",
+      // IA e MCP locais (LM Studio, Ollama, llama.cpp… no computador de quem usa) são chamados pelo navegador quando o
+      // servidor está na nuvem; BOXBIM_CONNECT_SRC acrescenta outros endereços (ex.: http://192.168.0.10:1234)
+      `connect-src 'self' http://localhost:* http://127.0.0.1:* http://[::1]:*${process.env.BOXBIM_CONNECT_SRC ? ' ' + process.env.BOXBIM_CONNECT_SRC : ''}`, "worker-src 'self' blob:", "font-src 'self' data:", "object-src 'none'", "base-uri 'self'", "frame-ancestors 'self'",
     ].join('; '));
     next();
   });
@@ -54,11 +57,13 @@ async function main() {
   });
   app.use('/api/enviar', (req, res, next) => next()); // corpo cru (arquivo): sem parser JSON
   app.use(/^\/api\/(?!enviar).*/, express.json({ limit: '200mb' }));
+  app.use('/mcp', express.json({ limit: '20mb' }));
 
   auth.routes(app);
   projects.routes(app, { requireUser: auth.requireUser, realtime });
   rpc.routes(app, { requireUser: auth.requireUser, realtime });
   library.routes(app, { requireUser: auth.requireUser });
+  mcp.routes(app, { requireUser: auth.requireUser, realtime }); // servidor MCP (/mcp) e tokens (/api/tokens)
 
   // verificação de saúde (Docker/Easypanel): sem login
   app.get('/api/saude', (req, res) => res.json({ ok: true, versao: require('../package.json').version }));

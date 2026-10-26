@@ -43,6 +43,26 @@ git push -u origin main
 - Importar/exportar IFC, DXF, glTF, OBJ, STL, Collada e FBX (o FBX sai pelo Blender só no modo local) funcionam
   pelo navegador.
 
+## IA local (LM Studio, Ollama) com o BoxBim na VPS
+O LM Studio roda no **seu** computador; a VPS não o alcança. O BoxBim resolve isso chamando a IA local **pelo
+navegador** (que está no seu computador) sempre que o servidor está em `BOXBIM_REMOTO=1` e o endereço do provedor é
+local (localhost, 127.0.0.1, 192.168.x…). Para funcionar:
+- **LM Studio**: Developer › Start Server e, em Server Settings, ligue **Enable CORS**.
+- **Ollama**: defina a variável `OLLAMA_ORIGINS=*` (ou o seu domínio) e reinicie o Ollama.
+- Se o navegador perguntar se o site pode **acessar dispositivos da rede local**, permita.
+- Servidor de IA em outra máquina da rede (ex.: `http://192.168.0.10:1234`): acrescente o endereço em
+  `BOXBIM_CONNECT_SRC` (separados por espaço).
+
+## MCP
+- **BoxBim como servidor MCP**: endereço `https://SEU-DOMINIO/mcp`. Cada usuário gera o próprio token em
+  ⚙ Configurações › MCP e copia o comando pronto:
+  ```bash
+  claude mcp add --transport http boxbim https://SEU-DOMINIO/mcp --header "Authorization: Bearer bbx_…"
+  ```
+  No Claude Desktop, a configuração com `mcp-remote` também aparece pronta para copiar.
+- **Chat IA usando servidores MCP**: o administrador cadastra em ⚙ Configurações › MCP (URL + token). Servidores no
+  computador de quem usa: marque "No meu computador" (o navegador chama; o servidor MCP precisa aceitar CORS).
+
 ## Atualizar
 Envie os commits para o GitHub e clique **Deploy** (ou ligue o deploy automático). O volume `/data` é mantido.
 
@@ -60,3 +80,4 @@ Copie o volume `/data` (por exemplo, com o backup de volumes do Easypanel). O ar
 | `BOXBIM_PROXY` | `1` (na imagem) | confia no `X-Forwarded-For` do proxy |
 | `BOXBIM_REMOTO` | `1` (na imagem) | desliga recursos do computador local |
 | `BOXBIM_CODIGO_CADASTRO` | — | código exigido para criar conta |
+| `BOXBIM_CONNECT_SRC` | — | endereços extras que o navegador pode chamar (IA/MCP na rede interna) |

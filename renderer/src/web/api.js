@@ -5,6 +5,8 @@
 //     (se um conversor do servidor precisa gravar nele, grava num temporário e o navegador baixa em seguida).
 // O projeto aberto vai no cabeçalho X-Projeto (biblioteca de objetos e tipos do projeto).
 
+import { localChat, localModels, cancelLocal, isLocalUrl, localMcpTools, localMcpCall, forgetLocalMcp } from './local-ai.js';
+
 const params = new URLSearchParams(location.search);
 export const projectId = params.get('projeto') || null;
 
@@ -124,6 +126,15 @@ function pickFiles({ filters = [], properties = [] } = {}) {
 
 // ---------------------------------------------------------------- API
 
+// provedor de IA local que o servidor (na nuvem) não alcança: o navegador chama
+let remoteServer = null;
+async function localProvider(id) {
+  if (remoteServer === null) { try { remoteServer = !(await call('app:info')).local; } catch { remoteServer = false; } }
+  if (!remoteServer) return null;
+  const p = (await call('settings:get')).providers?.[id];
+  return p && (p.local || isLocalUrl(p.baseUrl)) && isLocalUrl(p.baseUrl) ? p : null;
+}
+
 const api = {
   web: true,
   version: () => call('app:version'),
@@ -137,7 +148,32 @@ const api = {
     export: (id, file) => viaTmp([file], f => call('objects:export', id, f)),
   },
   settings: { get: () => call('settings:get'), set: s => call('settings:set', s) },
-  ai: { chat: req => call('ai:chat', req), cancel: id => call('ai:cancel', id), models: id => call('ai:models', id) },
+  // IA local (LM Studio, Ollama…) com o servidor na nuvem: o navegador chama direto (ver local-ai.js)
+  ai: {
+    chat: async req => { const p = await localProvider(req.providerId); return p ? localChat(p, req) : call('ai:chat', req); },
+    cancel: id => (cancelLocal(id) ? Promise.resolve(true) : call('ai:cancel', id)),
+    models: async id => { const p = await localProvider(id); return p ? localModels(p) : call('ai:models', id); },
+  },
+  // servidores MCP do Chat IA: os do servidor por ele; os "no meu computador" pelo navegador
+  mcp: {
+    tools: async () => {
+      const s = await call('settings:get');
+      const out = await call('mcp:tools');
+      for (const m of (s.mcp || []).filter(x => x.ativo && x.local)) {
+        try { out.push({ server: m.id, nome: m.nome, local: true, tools: await localMcpTools(m) }); } catch (e) { out.push({ server: m.id, nome: m.nome, local: true, erro: e.message, tools: [] }); }
+      }
+      return out;
+    },
+    call: async (id, name, args) => {
+      const m = ((await call('settings:get')).mcp || []).find(x => x.id === id);
+      return m?.local ? localMcpCall(m, name, args) : call('mcp:call', id, name, args);
+    },
+    test: async id => {
+      const m = ((await call('settings:get')).mcp || []).find(x => x.id === id);
+      if (m?.local) { forgetLocalMcp(id); return (await localMcpTools(m)).map(t => t.name); }
+      return call('mcp:test', id);
+    },
+  },
   agents: { list: () => call('agents:list'), save: a => call('agents:save', a), remove: id => call('agents:delete', id) },
   skills: { list: () => call('skills:list'), save: s => call('skills:save', s), remove: id => call('skills:delete', id) },
   memory: { list: () => call('memory:list'), index: () => call('memory:index'), save: m => call('memory:save', m), remove: id => call('memory:delete', id) },

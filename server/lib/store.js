@@ -31,6 +31,8 @@ function defaultSettings() {
     activeAgent: 'arquiteto-bim',
     memory: { enabled: true, autoSave: true, injectIndex: true },
     revit: { port: 48884 },
+    // servidores MCP externos usados pelo Chat IA: [{ id, nome, url, token (cifrado), ativo, local }]
+    mcp: [],
     tools: {
       blenderPath: findBlender(),
       odaPath: findOda(),
@@ -119,6 +121,15 @@ function loadSettings() {
 function saveSettings(next) {
   const cur = loadSettings();
   const merged = { ...cur, ...next };
+  if (next.mcp) {
+    // tokens dos servidores MCP: cifrados como as chaves de API; vazio = mantém o que já estava
+    merged.mcp = next.mcp.slice(0, 30).map(m => {
+      const old = (cur.mcp || []).find(o => o.id === m.id) || {};
+      const token = m.token === undefined ? old.token : (m.token ? encrypt(m.token) : null);
+      const { hasToken, ...rest } = m;
+      return { ...rest, token };
+    });
+  }
   if (next.providers) {
     merged.providers = {};
     for (const [id, p] of Object.entries(next.providers)) {
@@ -142,7 +153,14 @@ function publicSettings() {
     const { apiKey, ...rest } = p;
     providers[id] = { ...rest, hasKey: !!decrypt(apiKey) };
   }
-  return { ...s, providers };
+  return { ...s, providers, mcp: (s.mcp || []).map(({ token, ...m }) => ({ ...m, hasToken: !!decrypt(token) })) };
+}
+
+/** Servidor MCP com o token decifrado (só no servidor). */
+function mcpWithToken(id) {
+  const m = (loadSettings().mcp || []).find(x => x.id === id);
+  if (!m) throw new Error(`Servidor MCP desconhecido: ${id}`);
+  return { ...m, token: decrypt(m.token) };
 }
 
 function providerWithKey(id) {
@@ -424,6 +442,7 @@ function exportObject(id, file) {
 }
 
 module.exports = {
+  mcpWithToken,
   DATA_ROOT, SERVER_DIR,
   loadTypes, saveTypes, listObjects, saveObject, deleteObject, importObject, exportObject,
   loadSettings, saveSettings, publicSettings, providerWithKey, dirs,

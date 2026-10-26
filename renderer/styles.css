@@ -638,3 +638,7 @@ table.budget tr.muted td { color: var(--muted); }
 .wp-opening { fill: #11161b; stroke: #7f8c99; stroke-dasharray: 3 2; }
 .wp-pt { fill: #2f9bff; stroke: #fff; stroke-width: 1.5; cursor: move; }
 .wp-pt:hover, .wp-pt.on { fill: #ff9f1a; }
+
+/* Configurações › MCP */
+.mcp-snippet { background: #0f1318; border: 1px solid var(--line); border-radius: 5px; padding: 6px 8px; font-size: 11px; white-space: pre-wrap; word-break: break-all; margin: 4px 0; user-select: all; }
+.small.note { border-left: 3px solid var(--green); padding: 4px 8px; background: rgba(31, 191, 59, .07); }
