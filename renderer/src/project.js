@@ -26,6 +26,9 @@ export class ProjectSession extends EventTarget {
     this.app = app;
     this.id = projectId;
     this.sent = new Map();      // guid → JSON enviado/recebido por último (para achar o que mudou)
+    // DESFAZER / REFAZER: cada lote de mudanças locais gravado é um passo [{ id, before, after }] (JSON ou null)
+    this.undoStack = [];
+    this.redoStack = [];
     this.applying = false;      // aplicando mudança remota: não reenvia
     this.online = [];
     this.remoteSel = new Map(); // usuário → { cor, ids }
@@ -60,7 +63,7 @@ export class ProjectSession extends EventTarget {
     this.viewer.fit();
     this.connect();
     this.viewer.addEventListener('change', () => this.schedule());
-    if (relinked) this.schedule(); // grava os vínculos refeitos
+    if (relinked) { this._skipUndo = true; this.schedule(); } // grava os vínculos refeitos (sem virar passo do desfazer)
     this.viewer.addEventListener('select', () => this.sendPresence());
     this.app.levels.addEventListener('change', () => { if (!this.applying) this.sendLevels(); });
     addEventListener('beforeunload', () => this.flush());
@@ -169,6 +172,7 @@ export class ProjectSession extends EventTarget {
     if (this.applying || this.readonly || !this.ws || this.ws.readyState !== 1) return;
     const up = [];
     const seen = new Set();
+    const step = [];
     for (const el of this.viewer.elements()) {
       const b = el.userData.bim;
       if (!b.guid) b.guid = crypto.randomUUID();
@@ -176,13 +180,77 @@ export class ProjectSession extends EventTarget {
       seen.add(b.guid);
       const rec = this.serialize(el);
       const s = JSON.stringify(rec.dados);
-      if (this.sent.get(rec.id) !== s) { up.push(rec); this.sent.set(rec.id, s); }
+      if (this.sent.get(rec.id) !== s) { step.push({ id: rec.id, before: this.sent.get(rec.id) ?? null, after: s }); up.push(rec); this.sent.set(rec.id, s); }
     }
     const gone = [...this.sent.keys()].filter(id => !seen.has(id));
-    gone.forEach(id => this.sent.delete(id));
+    gone.forEach(id => { step.push({ id, before: this.sent.get(id), after: null }); this.sent.delete(id); });
+    if (step.length && !this._replaying && !this._skipUndo) {
+      this.undoStack.push(step);
+      if (this.undoStack.length > 100) this.undoStack.shift();
+      this.redoStack.length = 0;
+      this.dispatchEvent(new Event('history'));
+    }
+    this._skipUndo = false;
     if (up.length) this.send({ t: 'upsert', elementos: up });
     if (gone.length) this.send({ t: 'remove', ids: gone });
     if (up.length || gone.length) { this.dirtyThumb = true; this.setSaved(true); }
+  }
+
+  /** Tira um elemento que vai ser trocado pela versão nova (parede trocada não apaga as portas que hospeda). */
+  replaceRemove(old) {
+    this.viewer._replacing = true;
+    try { this.viewer.remove(old); } finally { this.viewer._replacing = false; }
+  }
+
+  // ------------------------------------------------------------ desfazer / refazer
+
+  get canUndo() { return !this.readonly && this.undoStack.length > 0; }
+  get canRedo() { return !this.readonly && this.redoStack.length > 0; }
+
+  /** Descrição curta de um passo ("Parede", "3 elementos"…), para o título dos botões. */
+  describe(step) {
+    if (!step) return '';
+    const names = step.map(e => { try { return JSON.parse(e.after || e.before)?.bim?.name; } catch { return null; } }).filter(Boolean);
+    const verb = step.every(e => !e.before) ? 'criar' : step.every(e => !e.after) ? 'apagar' : 'alterar';
+    return `${verb} ${names.length === 1 ? `"${names[0]}"` : `${step.length} elemento(s)`}`;
+  }
+
+  async undo() { return this._travel(this.undoStack, this.redoStack, 'before', 'Desfeito'); }
+  async redo() { return this._travel(this.redoStack, this.undoStack, 'after', 'Refeito'); }
+
+  async _travel(from, to, key, label) {
+    if (this.readonly || this._busyUndo) return;
+    if (!this.ws || this.ws.readyState !== 1) { this.app.status('Sem conexão com o servidor: desfazer/refazer espera a conexão voltar.'); return; }
+    this.flush(); // o que acabou de mudar vira passo antes de voltar
+    const step = from.pop();
+    if (!step) return;
+    this._busyUndo = true;
+    this._replaying = true;
+    try {
+      this.viewer.select([]);
+      this.app.transformTool?.stop?.();
+      // paredes primeiro (portas e janelas se hospedam nelas)
+      const order = e => { const d = e[key] && JSON.parse(e[key]); return d?.bim?.wall ? 0 : d?.bim?.host ? 2 : 1; };
+      for (const e of [...step].sort((a, b) => order(a) - order(b))) {
+        const old = this.viewer.findById(e.id);
+        if (e[key] === null) { if (old) this.viewer.remove(old); continue; }
+        const dados = JSON.parse(e[key]);
+        const el = await this.build(dados);
+        if (!el) continue;
+        this.place(el, dados.matriz);
+        if (old) this.replaceRemove(old);
+        this.viewer.add(el);
+      }
+      this.flush(); // grava (sem virar outro passo)
+      // reajustes automáticos que vêm depois (eixos de trabalho, portas acompanhando a parede…) também não viram passo
+      await new Promise(r => setTimeout(r, SYNC_DELAY + 80));
+      this.flush();
+    } finally { this._replaying = false; this._busyUndo = false; }
+    to.push(step);
+    this.app.refreshTree?.();
+    this.app.renderProps?.();
+    this.app.status(`${label}: ${this.describe(step)}.`);
+    this.dispatchEvent(new Event('history'));
   }
 
   sendLevels() {
@@ -277,7 +345,7 @@ export class ProjectSession extends EventTarget {
         const el = await this.build(rec.dados);
         if (!el) continue;
         this.place(el, rec.dados.matriz);
-        if (old) this.viewer.remove(old);
+        if (old) this.replaceRemove(old);
         this.viewer.add(el);
         this.sent.set(rec.id, s);
         if (wasSelected) this.viewer.select([el], true);

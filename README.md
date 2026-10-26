@@ -138,6 +138,7 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
 | **Alt + direito** | gira a vista (nas plantas, arrasta) |
 | Meio · roda | arrasta · aproxima |
 | **H** · **Shift+H** | oculta a seleção · mostra tudo |
+| **Ctrl+Z** · **Ctrl+Y** (ou ↶ ↷ no topo) | desfaz · refaz qualquer alteração do projeto |
 
 - **Chips na vista** (canto direito): Níveis, Eixos de trabalho e marcadores de Elevação — ligar/desligar na tela.
 - **👁 na barra de baixo** (com o número de ocultos): "Revelar ocultos" — os ocultos aparecem com contorno magenta;
@@ -391,4 +392,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.25.1</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.26.0</a>

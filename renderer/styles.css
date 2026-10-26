@@ -759,3 +759,11 @@ table.budget tr.muted td { color: var(--muted); }
 .elev-dir input { width: 64px !important; flex: none; }
 .elev-act { display: flex; gap: 4px; justify-content: flex-end; }
 .center .nav-help { bottom: calc(var(--dock-h) + 36px); }
+
+/* desfazer / refazer no topo (logo depois do nome do BoxBim) */
+.undo-redo { display: flex; gap: 2px; margin: 0 8px 0 2px; }
+.undo-redo .icon-btn { width: 28px; height: 26px; padding: 0; display: grid; place-items: center; background: transparent; border: 1px solid transparent; border-radius: 6px; color: var(--text); }
+.undo-redo .icon-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.undo-redo .icon-btn svg path:first-child { stroke: var(--green-2); }
+.undo-redo .icon-btn:hover:not(:disabled) { background: var(--panel-2); border-color: var(--line); }
+.undo-redo .icon-btn:disabled { opacity: .35; cursor: default; }

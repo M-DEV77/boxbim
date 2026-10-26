@@ -10,6 +10,10 @@
 <body>
   <header class="topbar">
     <a class="brand" href="/projetos.html" title="Meus projetos"><img src="/assets/icon.svg" alt=""><span>BoxBim</span></a>
+    <div class="undo-redo">
+      <button id="btn-undo" class="icon-btn" title="Desfazer (Ctrl+Z)" disabled><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
+      <button id="btn-redo" class="icon-btn" title="Refazer (Ctrl+Y)" disabled><svg viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg></button>
+    </div>
     <div class="project-head"><span id="project-name" class="project-name">…</span><span id="project-role" class="tag"></span></div>
     <nav class="menus">
       <button data-menu="file">Arquivo</button>

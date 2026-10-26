@@ -180,7 +180,12 @@ class App {
         // Esc: some o gizmo e limpa a seleção (com 'Ao selecionar', ele voltaria na próxima seleção)
         if (e.key === 'Escape' && this.transformTool.mode) { this.transformTool.stop(); this.viewer.select([]); }
       }
-      if (e.ctrlKey && e.key.toLowerCase() === 'z' && this.transformTool.history.length) { e.preventDefault(); this.transformTool.undo(); }
+      // desfazer / refazer de tudo (Ctrl+Z · Ctrl+Y ou Ctrl+Shift+Z); dentro de campos de texto vale o do campo
+      if (e.ctrlKey && !e.target.closest?.('input, textarea, [contenteditable]')) {
+        const k = e.key.toLowerCase();
+        if (k === 'z' && !e.shiftKey) { e.preventDefault(); this.project?.undo(); }
+        if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); this.project?.redo(); }
+      }
       if (e.ctrlKey && e.key.toLowerCase() === 'o') { e.preventDefault(); this.openFiles(); }
     });
 
@@ -188,6 +193,7 @@ class App {
     this.project = new ProjectSession(this);
     await this.project.open();
     this.renderProjectHead();
+    this.bindUndoButtons();
     this.viewStyles.apply(); // estilo da vista inicial, já com os elementos do projeto
     this.refreshTree();
     this.renderBrowser();
@@ -214,6 +220,22 @@ class App {
     $('#btn-share').hidden = p.papel !== 'dono';
     $('#btn-share').onclick = () => this.shareDialog();
     $('#user-name').textContent = this.info.usuario.nome;
+  }
+
+  /** Botões ↶ ↷ do topo (logo depois do nome do BoxBim): desfazer e refazer de todo o projeto. */
+  bindUndoButtons() {
+    const undo = $('#btn-undo'), redo = $('#btn-redo'), p = this.project;
+    if (!undo || !redo) return;
+    undo.onclick = () => p.undo();
+    redo.onclick = () => p.redo();
+    const sync = () => {
+      undo.disabled = !p.canUndo;
+      redo.disabled = !p.canRedo;
+      undo.title = p.canUndo ? `Desfazer: ${p.describe(p.undoStack.at(-1))} (Ctrl+Z)` : 'Nada para desfazer (Ctrl+Z)';
+      redo.title = p.canRedo ? `Refazer: ${p.describe(p.redoStack.at(-1))} (Ctrl+Y)` : 'Nada para refazer (Ctrl+Y)';
+    };
+    p.addEventListener('history', sync);
+    sync();
   }
 
   /** Grade do projeto (vale para todos que estão nele). */

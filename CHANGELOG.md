@@ -6,12 +6,24 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.25.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.26.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.26.0] — 2026-10-26 · Desfazer e refazer
+
+### Adicionado
+- **Desfazer e refazer de todo o projeto**: botões **↶ ↷** no topo, logo depois do nome do BoxBim, e **Ctrl+Z** /
+  **Ctrl+Y** (ou Ctrl+Shift+Z). Vale para qualquer alteração sua — criar, apagar, mover, mudar tipo, portas e
+  janelas… —, até 100 passos por sessão; o título do botão diz o que será desfeito. O resultado é gravado e a equipe
+  vê na hora. Alterações de outras pessoas não entram no seu histórico.
+
+### Corrigido
+- Uma parede trocada pela versão nova (alteração de outra pessoa, desfazer) apagava as portas e janelas que ela
+  hospedava.
 
 ## [2.25.1] — 2026-10-26 · Conserto de portas e janelas em projetos antigos
 

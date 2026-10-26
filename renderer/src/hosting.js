@@ -251,7 +251,7 @@ export class Hosting {
   }
 
   _onRemove(obj) {
-    if (!obj?.userData?.bim) return;
+    if (!obj?.userData?.bim || this.viewer._replacing) return; // trocado pela versão nova: o vínculo continua
     if (obj.userData.bim.host) this.detach(obj);
     // parede apagada: some com as portas e janelas que ela hospedava (como no Revit)
     for (const o of obj.userData.bim.wall?.openings || []) {
