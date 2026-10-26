@@ -128,7 +128,8 @@ flowchart LR
 | 2026-10-26 | 2.28.0 | `2fbf1f8` | Ícones genéricos da Tabler Icons (MIT) embutidos (`icons-tabler.js`, gerado por `scripts/gen-tabler-icons.py`); ícones de CAD próprios mantidos; `THIRD-PARTY-NOTICES.md` |
 | 2026-10-26 | 2.29.0 | `44b4d48` | Gizmo da origem 0,0 (`origin-gizmo.js`, SVG de tamanho fixo; seta na borda quando fora da tela) |
 | 2026-10-26 | 2.30.0 | `1a9f6dd` | Escala por vista e pesos de linha (`drawing.js`); arestas e linhas de corte com espessura real (LineSegments2/LineMaterial; `viewer.updateSectionLines`) |
-| 2026-10-26 | 2.31.0 | este commit | Hachura nos materiais (`hatch.js`: padrões, shader da tampa do corte em coordenadas do modelo, prévia no editor) |
+| 2026-10-26 | 2.31.0 | `f8c2e1b` | Hachura nos materiais (`hatch.js`: padrões, shader da tampa do corte em coordenadas do modelo, prévia no editor) |
+| 2026-10-26 | 2.32.0 | este commit | Renomear e duplicar vistas (`views.js`: `names`, `dups`, `dados.vistas`); servidor grava os dados do projeto um por vez (corrige perda de alterações seguidas) |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.31.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.32.0</a>

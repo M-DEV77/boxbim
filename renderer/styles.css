@@ -843,3 +843,9 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: rgba(31
 .hatch-prev canvas { width: 96px; height: 96px; border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12); display: block; }
 .hatch-fields { flex: 1; min-width: 0; }
 .hatch-fields .me-row { grid-template-columns: 104px 1fr 0; }
+
+/* vistas no navegador: renomear / duplicar (ações ao passar o mouse) */
+.view-node { display: flex; align-items: center; gap: 4px; }
+.view-node .view-acts { margin-left: auto; display: none; gap: 2px; }
+.view-node:hover .view-acts { display: inline-flex; }
+.view-node .dup-mark { color: #8fb8d6; font-size: 11px; }

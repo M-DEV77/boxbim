@@ -5,6 +5,8 @@
 //     profundidade: m | null (até onde enxerga a partir da linha; null = tudo), largura: m | null (centrada na
 //     origem, ao longo da linha; null = toda a extensão), visivel (no navegador, nos menus e
 //     com o marcador nas plantas) }
+// NOMES E CÓPIAS (dados.vistas = { nomes: { idDaVista: nome }, duplicadas: [{ id: 'dup:…', base, nome }] }): qualquer
+//   vista pode ser renomeada; uma vista duplicada mostra o mesmo que a original, com câmera, estilo e escala próprios.
 import * as THREE from 'three';
 import { textSprite } from './viewer.js';
 import { fmtElev, cutOf } from './levels.js';
@@ -73,6 +75,8 @@ export class ViewManager extends EventTarget {
     this.cams = new Map();     // câmera salva por vista
     this.ranges = new Map();   // faixa de vista por planta (cutHeight, viewDepth)
     this.elevs = defaultElevations();
+    this.names = {};           // id da vista → nome dado pelo usuário
+    this.dups = [];            // vistas duplicadas: { id, base, nome }
     levels.addEventListener('change', () => this._onLevelsChanged());
     viewer.addEventListener('change', () => this._refreshAnnotations());
     this.renderTabs();
@@ -85,7 +89,72 @@ export class ViewManager extends EventTarget {
     for (const l of this.levels.list) views.push({ id: `plan:${l.id}`, kind: 'plan', levelId: l.id, name: l.name });
     for (const l of this.levels.list) views.push({ id: `ceiling:${l.id}`, kind: 'ceiling', levelId: l.id, name: l.name });
     for (const e of this.elevs) views.push({ id: `elev:${e.id}`, kind: 'elevation', dir: [e.dir[0], e.dir[1], 0], name: e.nome, elev: e, hidden: !e.visivel });
+    for (const d of this.dups) {
+      const b = views.find(v => v.id === d.base);
+      if (b) views.push({ ...b, id: d.id, dupOf: b.id, name: d.nome, renamed: true });
+    }
+    for (const v of views) if (this.names[v.id]) { v.name = this.names[v.id]; v.renamed = true; }
     return views;
+  }
+
+  // ------------------------------------------------------------ renomear / duplicar
+
+  /** Dados gravados no projeto (dados.vistas). */
+  loadViews(d = {}) {
+    this.names = { ...(d.nomes || {}) };
+    this.dups = (Array.isArray(d.duplicadas) ? d.duplicadas : []).filter(x => x?.id && x.base).map(x => ({ id: String(x.id), base: String(x.base), nome: String(x.nome || 'Vista') }));
+    this._onLevelsChanged();
+  }
+
+  viewsData() { return { nomes: this.names, duplicadas: this.dups }; }
+
+  _changedViews() {
+    this.renderTabs();
+    this.dispatchEvent(new Event('views'));
+  }
+
+  rename(id, nome) {
+    const v = this.get(id);
+    if (!v) return;
+    nome = String(nome || '').trim().slice(0, 80);
+    const dup = this.dups.find(d => d.id === id);
+    if (dup) dup.nome = nome || dup.nome;
+    else if (nome && nome !== this.defaultName(v)) this.names[id] = nome;
+    else delete this.names[id];
+    this._changedViews();
+  }
+
+  /** Nome da vista sem o que o usuário mudou. */
+  defaultName(v) {
+    const fresh = { ...v, renamed: false };
+    if (v.kind === 'plan' || v.kind === 'ceiling') fresh.name = this.levels.get(v.levelId)?.name || v.name;
+    if (v.kind === 'elevation') fresh.name = v.elev?.nome || v.name;
+    if (v.kind === '3d') fresh.name = '{3D}';
+    return this.label(fresh);
+  }
+
+  /** Duplica uma vista (abre a cópia); copia câmera e configurações via o evento "duplicate". */
+  duplicate(id) {
+    const v = this.get(id);
+    if (!v) return null;
+    const nid = `dup:${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
+    let nome = `${this.label(v)} — cópia`, n = 2;
+    while (this.list().some(x => this.label(x) === nome)) nome = `${this.label(v)} — cópia ${n++}`;
+    this.dups.push({ id: nid, base: v.dupOf || v.id, nome });
+    if (this.activeId === id) this.cams.set(id, this.viewer.cameraState());
+    if (this.cams.has(id)) this.cams.set(nid, this.cams.get(id));
+    this.dispatchEvent(new CustomEvent('duplicate', { detail: { from: id, to: nid } }));
+    this._changedViews();
+    this.openView(nid);
+    return nid;
+  }
+
+  removeDuplicate(id) {
+    if (!this.dups.some(d => d.id === id)) return;
+    this.dups = this.dups.filter(d => d.id !== id);
+    delete this.names[id];
+    this.closeView(id);
+    this._changedViews();
   }
 
   /** Elevações (visíveis, ou todas). */
@@ -128,6 +197,7 @@ export class ViewManager extends EventTarget {
   }
 
   label(v) {
+    if (v.renamed) return v.name;
     if (v.kind === '3d') return 'Vista 3D';
     if (v.kind === 'plan') return v.name;
     if (v.kind === 'ceiling') return `${v.name} (forro)`;

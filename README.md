@@ -162,6 +162,8 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
 - **Hachura dos materiais** (Editor de materiais › Hachura): padrão (sólido, diagonal, cruzada, concreto, alvenaria,
   areia/reboco, isolamento, madeira, metal, vidro, terra), espaçamento em mm de papel, ângulo, cor e fundo — aparece
   só no preenchimento do corte das plantas e forros, seguindo a escala da vista.
+- **Vistas no navegador**: renomeie (clique duplo ou ✎) e duplique (⧉) qualquer vista — a cópia tem câmera, estilo e
+  escala próprios; ✕ apaga a cópia; botão direito abre o menu. Nomes e cópias ficam gravados no projeto.
 
 ## Mover, girar e orbitar
 
@@ -402,4 +404,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.31.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.32.0</a>

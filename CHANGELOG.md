@@ -6,12 +6,25 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.31.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.32.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.32.0] — 2026-10-26 · Renomear e duplicar vistas
+
+### Adicionado
+- **Renomear vistas** no navegador de projeto (clique duplo, ✎ ou botão direito): vale para qualquer vista, inclusive
+  as de fábrica; nome vazio volta ao original.
+- **Duplicar vistas** (⧉ ou botão direito): a cópia mostra o mesmo que a original, com câmera, estilo e escala
+  próprios (começa com os da original) e aparece logo abaixo dela; ✕ apaga a cópia. Nomes e cópias ficam gravados
+  no projeto (`dados.vistas`).
+
+### Corrigido
+- Servidor: duas alterações de configuração do projeto enviadas quase juntas (ex.: escala e nome de vista) podiam
+  se sobrepor, e a primeira se perdia. Agora a gravação é feita uma por vez, por projeto.
 
 ## [2.31.0] — 2026-10-26 · Hachura nos materiais
 

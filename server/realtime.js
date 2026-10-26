@@ -27,6 +27,7 @@ function canEdit(ws, camadaId, existing) {
 function create(server) {
   const wss = new WebSocketServer({ noServer: true, maxPayload: MAX_MSG });
   const rooms = new Map(); // projetoId → Set<ws>
+  const projectLocks = new Map(); // projetoId → Promise da última gravação de dados do projeto
 
   const send = (ws, msg) => { if (ws.readyState === 1) ws.send(JSON.stringify(msg)); };
   const broadcast = (pid, msg, except) => { for (const ws of rooms.get(pid) || []) if (ws !== except) send(ws, msg); };
@@ -111,11 +112,17 @@ function create(server) {
       await db.Elemento.destroy({ where: { id: ids, ProjetoId: pid } });
       broadcast(pid, { t: 'remove', ids, autor: ws.user.id }, ws);
     } else if (msg.t === 'projeto') {
-      const p = await db.Projeto.findByPk(pid);
       // ambientes e camadas: só o dono (administrador do projeto) define
       if (msg.dados?.ambientes !== undefined && ws.papel !== 'dono') delete msg.dados.ambientes;
-      p.dados = { ...p.dados, ...(msg.dados || {}) };
-      await p.save();
+      // uma gravação por vez por projeto: duas mensagens seguidas liam o mesmo estado e a última apagava a outra
+      const prev = projectLocks.get(pid) || Promise.resolve();
+      const run = prev.then(async () => {
+        const p = await db.Projeto.findByPk(pid);
+        p.dados = { ...p.dados, ...(msg.dados || {}) };
+        await p.save();
+      });
+      projectLocks.set(pid, run.catch(() => {}));
+      await run;
       broadcast(pid, { t: 'projeto', dados: msg.dados, autor: ws.user.id }, ws);
     } else if (msg.t === 'objeto') {
       // um objeto do projeto foi editado (cópia do projeto): os outros recarregam a biblioteca

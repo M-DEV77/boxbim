@@ -79,6 +79,7 @@ export class ProjectSession extends EventTarget {
     if (dados.unidade) setUnit(dados.unidade);
     if (dados.elevacoes) this.app.views?.setElevations(dados.elevacoes);
     if (dados.escalas || dados.pesos) this.app.drawing?.load(dados);
+    if (dados.vistas) this.app.views?.loadViews(dados.vistas);
   }
 
   loadLevels(niveis) {

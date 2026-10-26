@@ -124,6 +124,17 @@ class App {
     // hachura do corte: a do material da biblioteca (só nas vistas de desenho)
     this.viewer.hatchFor = mat => (mat?.name && this.types.materials[mat.name] ? hatchOf(mat.name, this.types.materials[mat.name]) : null);
     this.types.addEventListener('change', () => { this.viewer._bucketsDirty = true; });
+    // vistas renomeadas/duplicadas: grava no projeto; a cópia herda estilo, projeção e escala da original
+    this.views.addEventListener('views', () => {
+      this.project?.send({ t: 'projeto', dados: { vistas: this.views.viewsData() } });
+      this.renderBrowser();
+    });
+    this.views.addEventListener('duplicate', e => {
+      const { from, to } = e.detail, vs = this.viewStyles, d = this.drawing;
+      if (vs.byView.has(from)) vs.byView.set(to, vs.byView.get(from));
+      if (vs.projByView.has(from)) vs.projByView.set(to, vs.projByView.get(from));
+      if (d.scales[from]) { d.scales[to] = d.scales[from]; this.project?.send({ t: 'projeto', dados: { escalas: d.scales } }); }
+    });
     this.display = new Display(this); // chips de exibição, 👁 revelar ocultos, H/Shift+H, ajuda do mouse, elevações
     this.wallTool = new WallDrawTool(this);
     this.slabTool = new SlabTool(this);
@@ -759,6 +770,26 @@ class App {
     if (!this.viewer.selected.size) this.renderProps();
   }
 
+  /** Renomeia uma vista (nome vazio volta ao de fábrica). */
+  async renameView(id) {
+    const v = this.views.get(id);
+    if (!v) return;
+    const r = await formDialog('Renomear vista', [{ key: 'nome', label: 'Nome (vazio = o de fábrica)', value: this.views.label(v) }], { ok: 'Renomear' });
+    if (r) this.views.rename(id, r.nome);
+  }
+
+  viewMenu(anchor, id) {
+    const v = this.views.get(id);
+    if (!v) return;
+    dropdown(anchor, [
+      { label: 'Abrir', action: () => this.views.openView(id) },
+      { label: 'Renomear…', hint: 'clique duplo', action: () => this.renameView(id) },
+      { label: 'Duplicar', action: () => this.views.duplicate(id) },
+      v.dupOf ? { label: 'Apagar esta cópia', action: () => this.views.removeDuplicate(id) } : null,
+      v.renamed && !v.dupOf ? { label: 'Voltar ao nome de fábrica', action: () => this.views.rename(id, '') } : null,
+    ].filter(Boolean));
+  }
+
   renderBrowser() {
     const root = $('#browser');
     if (!root || !this.views) return;
@@ -766,10 +797,24 @@ class App {
     const first = !root.childElementCount;
     const isOpen = key => first || open.has(key);
     const active = this.views.activeId;
-    const node = (id, label, extra) => h('div', {
-      class: `node${id === active ? ' active' : ''}`, title: label,
-      onclick: () => this.views.openView(id),
-    }, label, extra);
+    // vista no navegador: abrir (clique), renomear (✎ ou clique duplo), duplicar (⧉), apagar cópia (✕), menu (direito)
+    const node = (id, fallback, extra) => {
+      const v = this.views.get(id);
+      const label = v ? this.views.label(v) : fallback;
+      const isDup = !!v?.dupOf;
+      return h('div', {
+        class: `node view-node${id === active ? ' active' : ''}${isDup ? ' dup' : ''}`, title: `${label} — clique duplo renomeia; botão direito: mais opções`,
+        onclick: () => this.views.openView(id),
+        ondblclick: e => { e.stopPropagation(); this.renameView(id); },
+        oncontextmenu: e => { e.preventDefault(); this.viewMenu(e.currentTarget, id); },
+      }, isDup ? h('span', { class: 'dup-mark', title: 'Vista duplicada' }, '⧉') : null, label, extra,
+      h('span', { class: 'view-acts' },
+        h('span', { class: 'act', title: 'Renomear', onclick: e => { e.stopPropagation(); this.renameView(id); } }, '✎'),
+        h('span', { class: 'act', title: 'Duplicar a vista', onclick: e => { e.stopPropagation(); this.views.duplicate(id); } }, '⧉'),
+        isDup ? h('span', { class: 'act', title: 'Apagar esta cópia', onclick: e => { e.stopPropagation(); this.views.removeDuplicate(id); } }, '✕') : null));
+    };
+    // cópias logo abaixo da vista original
+    const withDups = (id, label) => [node(id, label), ...this.views.dups.filter(d => d.base === id).map(d => node(d.id, d.nome))];
     const group = (key, title, icon, children) => h('details', { 'data-key': key, open: isOpen(key) },
       h('summary', {}, h('span', { class: 'ico' }, icon), title), children);
 
@@ -778,13 +823,13 @@ class App {
     root.append(
       group('views', 'Vistas (todas)', '▣', [
         h('div', { style: 'padding-left:12px' },
-          group('3d', 'Vistas 3D', '⬡', [node('3d', '{3D}')]),
-          group('plans', 'Plantas de piso', '▦', [...lv].reverse().map(l => node(`plan:${l.id}`, l.name))),
-          group('ceilings', 'Plantas de forro', '▤', [...lv].reverse().map(l => node(`ceiling:${l.id}`, l.name))),
+          group('3d', 'Vistas 3D', '⬡', withDups('3d', '{3D}')),
+          group('plans', 'Plantas de piso', '▦', [...lv].reverse().flatMap(l => withDups(`plan:${l.id}`, l.name))),
+          group('ceilings', 'Plantas de forro', '▤', [...lv].reverse().flatMap(l => withDups(`ceiling:${l.id}`, l.name))),
           h('details', { 'data-key': 'elevs', open: isOpen('elevs') },
             h('summary', {}, h('span', { class: 'ico' }, '⌂'), 'Elevações',
               h('span', { class: 'act', title: 'Elevações: criar, nomear, profundidade, visíveis', onclick: e => { e.preventDefault(); e.stopPropagation(); this.display.elevationsDialog(); } }, ' ⚙')),
-            [...this.views.elevations()].sort((a, b) => a.nome.localeCompare(b.nome)).map(e => node(`elev:${e.id}`, e.nome)))),
+            [...this.views.elevations()].sort((a, b) => a.nome.localeCompare(b.nome)).flatMap(e => withDups(`elev:${e.id}`, e.nome)))),
       ]),
       h('details', { 'data-key': 'ambientes', open: isOpen('ambientes') },
         h('summary', {}, h('span', { class: 'ico' }, '◧'), 'Ambientes e camadas',
