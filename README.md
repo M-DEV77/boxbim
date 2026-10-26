@@ -159,6 +159,9 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
   papel: linha de **corte** grossa (contorno onde o plano de corte atravessa as peças), divisas entre camadas e
   arestas de **projeção** mais finas; aproximar engrossa, como no Revit. "Pesos de linha…" no seletor de escala; **LF**
   põe todas as linhas com 1 px.
+- **Hachura dos materiais** (Editor de materiais › Hachura): padrão (sólido, diagonal, cruzada, concreto, alvenaria,
+  areia/reboco, isolamento, madeira, metal, vidro, terra), espaçamento em mm de papel, ângulo, cor e fundo — aparece
+  só no preenchimento do corte das plantas e forros, seguindo a escala da vista.
 
 ## Mover, girar e orbitar
 
@@ -399,4 +402,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.30.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.31.0</a>

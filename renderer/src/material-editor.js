@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { h, modal, toast } from './ui.js';
 import { openTextureEditor } from './texture-editor.js';
+import { HATCHES, hatchOf, hatchPreview } from './hatch.js';
 import { patternList, patternLabel, MAPS, materialProps, createMaterial, applyMaterial, boxUv, mapThumbnail } from './materials.js';
 
 export function openMaterialEditor(app, startName) {
@@ -67,7 +68,7 @@ export function openMaterialEditor(app, startName) {
   const scaleNote = h('div', { class: 'muted', style: 'font-size:11px' });
 
   const cur = () => work[name];
-  const props = () => materialProps(name, cur());
+  const props = () => { const p = materialProps(name, cur()); p.opacidade ??= cur().opacity ?? 1; return p; };
   const set = (k, v, { rebuild = false } = {}) => {
     const d = cur();
     if (k === 'color') d.color = v; else d.render = { ...(d.render || {}), [k]: v };
@@ -101,6 +102,25 @@ export function openMaterialEditor(app, startName) {
     for (const [k, label] of Object.entries(MAPS)) {
       mapsBox.append(h('figure', { class: 'me-map', title: label }, mapThumbnail(p.textura, k), h('figcaption', {}, label)));
     }
+  }
+
+  /** Hachura do material (só nas vistas de desenho: preenchimento do corte). */
+  function hatchSection() {
+    const d = cur(), hs = hatchOf(name, d);
+    const prev = h('div', { class: 'hatch-prev' }, hatchPreview(hs, 96));
+    const upd = (k, v) => { d.hachura = { ...(d.hachura || {}), [k]: v }; prev.replaceChildren(hatchPreview(hatchOf(name, d), 96)); };
+    const num = (k, label, min, max, step, title) => h('label', { class: 'me-row', title }, h('span', {}, label),
+      h('input', { type: 'number', min, max, step, value: hs[k], onchange: e => upd(k, Number(e.target.value) || hs[k]) }), h('span'));
+    const col = (k, label) => h('label', { class: 'me-row' }, h('span', {}, label), h('input', { type: 'color', value: hs[k], oninput: e => upd(k, e.target.value) }), h('span'));
+    return h('fieldset', { class: 'me-sec' }, h('legend', {}, 'Hachura (vista desenho)'),
+      h('div', { class: 'hatch-wrap' }, prev, h('div', { class: 'hatch-fields' },
+        h('label', { class: 'me-row' }, h('span', {}, 'Padrão'), h('select', { onchange: e => upd('padrao', e.target.value) },
+          Object.entries(HATCHES).map(([k, l]) => h('option', { value: k, selected: k === hs.padrao }, l))), h('span')),
+        num('escala', 'Espaçamento (mm)', 0.3, 20, 0.1, 'Distância entre as linhas no papel; na tela segue a escala da vista'),
+        num('angulo', 'Ângulo (°)', -180, 180, 5),
+        col('cor', 'Cor da linha'),
+        col('fundo', 'Fundo'))),
+      h('div', { class: 'muted small', style: 'font-size:11px;margin-top:4px' }, 'Aparece só no preenchimento do corte das plantas e forros.'));
   }
 
   function renderControls() {
@@ -163,7 +183,8 @@ export function openMaterialEditor(app, startName) {
       section('Emissão',
         color('emissao', 'Cor da emissão', p.emissao),
         slider('intensidadeEmissao', 'Intensidade', 0, 20, 0.1),
-        check('mapaEmissao', 'Mapa de emissão', 'Só as faces do padrão emitem luz (juntas apagadas)')));
+        check('mapaEmissao', 'Mapa de emissão', 'Só as faces do padrão emitem luz (juntas apagadas)')),
+      hatchSection());
     const ttl = h('div', { class: 'me-title' }, h('strong', {}, name),
       h('button', { class: 'mini', title: 'Volta aos valores de fábrica deste material', onclick: () => { delete cur().render; applyMaterial(preview, name, cur()); draw(); renderControls(); renderMaps(); } }, 'Restaurar padrão'));
     ctrlBox.prepend(ttl);

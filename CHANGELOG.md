@@ -6,12 +6,24 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.30.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.31.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.31.0] — 2026-10-26 · Hachura nos materiais
+
+### Adicionado
+- **Hachura dos materiais**, vista só nas vistas de desenho (preenchimento do corte das plantas e forros): padrão
+  (sólido, diagonal, cruzada, concreto, alvenaria, areia/reboco, isolamento, madeira, metal, vidro, terra ou
+  nenhuma), espaçamento em mm de papel, ângulo, cor da linha e cor de fundo — em Editor de materiais › Hachura,
+  com prévia. Os materiais de fábrica já vêm com o padrão certo (concreto, alvenaria no bloco cerâmico, areia no
+  reboco, isolamento na lã mineral…). Desenhada em coordenadas do modelo: acompanha a peça e respeita a escala.
+
+### Corrigido
+- Editor de materiais mostrava "undefined" ao lado da opacidade de materiais sem opacidade gravada.
 
 ## [2.30.0] — 2026-10-26 · Escala das vistas e peso das linhas
 

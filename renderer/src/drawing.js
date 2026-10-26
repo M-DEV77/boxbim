@@ -69,6 +69,7 @@ export class Drawing extends EventTarget {
 
   /** A cada quadro: espessura das linhas pelo peso, pela escala e pelo zoom. */
   updateWidths() {
+    this.app.viewer.paperScale = this.scaleOf(); // espaçamento das hachuras do corte
     // plano de corte mudou (outra vista, altura de corte do nível): refaz as linhas de corte
     const cap = this.app.viewer.showEdges ? this.app.viewer.capPlane : null;
     if (cap !== this._cap) { this._cap = cap; this.scheduleSection(); }

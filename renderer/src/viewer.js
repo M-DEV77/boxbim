@@ -5,6 +5,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
+import { HATCH_VERT, HATCH_FRAG, hatchCode } from './hatch.js';
 
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
 
@@ -20,8 +21,13 @@ const stencilMat = (side, op) => new THREE.MeshBasicMaterial({
 });
 const STENCIL_BACK = stencilMat(THREE.BackSide, THREE.IncrementWrapStencilOp);
 const STENCIL_FRONT = stencilMat(THREE.FrontSide, THREE.DecrementWrapStencilOp);
-const CAP_MAT = new THREE.MeshBasicMaterial({
-  color: 0x262626, side: THREE.DoubleSide,
+// tampa do corte: cor de fundo + HACHURA do material (hatch.js), desenhada em coordenadas do modelo
+const CAP_MAT = new THREE.ShaderMaterial({
+  vertexShader: HATCH_VERT, fragmentShader: HATCH_FRAG, side: THREE.DoubleSide,
+  uniforms: {
+    uBg: { value: new THREE.Color(0x262626) }, uLine: { value: new THREE.Color(0x2b2b2b) }, uPattern: { value: 0 },
+    uSpacing: { value: 0.25 }, uAngle: { value: 0.785 }, uLinePx: { value: 1 },
+  },
   stencilWrite: true, stencilRef: 0, stencilFunc: THREE.NotEqualStencilFunc,
   stencilFail: THREE.ReplaceStencilOp, stencilZFail: THREE.ReplaceStencilOp, stencilZPass: THREE.ReplaceStencilOp,
 });
@@ -166,7 +172,7 @@ export class Viewer extends EventTarget {
     scene.background = null;
     const gizmo = this.gizmoHelper?.visible;
     if (gizmo) this.gizmoHelper.visible = false; // o gizmo não entra na contagem do corte
-    for (const [color, layer] of this._capBuckets) {
+    for (const [, { layer, color, spec }] of this._capBuckets) {
       // 1) contagem só com o plano de corte: se a profundidade também recortasse, geraria tampas falsas
       r.clippingPlanes = this.clipPlanes.slice(0, 1);
       cam.layers.set(layer);
@@ -174,7 +180,14 @@ export class Viewer extends EventTarget {
       scene.overrideMaterial = STENCIL_FRONT; r.render(scene, cam);
       scene.overrideMaterial = null;
       // 2) tampa desta cor no plano de corte (sem recorte, senão ela mesma seria cortada)
-      CAP_MAT.color.setHex(color);
+      const u = CAP_MAT.uniforms;
+      if (spec && spec.padrao !== 'nenhuma') {
+        u.uBg.value.set(spec.fundo);
+        u.uLine.value.set(spec.cor);
+        u.uPattern.value = hatchCode(spec);
+        u.uSpacing.value = Math.max(0.0005, spec.escala * (this.paperScale || 100) / 1000);
+        u.uAngle.value = (spec.angulo || 0) * Math.PI / 180;
+      } else { u.uBg.value.setHex(color); u.uPattern.value = 0; }
       r.clippingPlanes = [];
       r.render(this.capScene, cam);
       r.clearStencil();
@@ -197,13 +210,17 @@ export class Viewer extends EventTarget {
       if (!o.isMesh || o.userData.isEdge) return;
       if (o.userData.noCap) { o.layers.set(0); return; } // vazios não recebem preenchimento de corte
       const mat = [].concat(o.userData._origMat || o.material)[0];
+      // material de verdade da peça (o estilo da vista troca o material; a hachura é do material da biblioteca)
+      const base = [].concat(o.userData._styleBase || o.userData._origMat || o.material)[0];
+      const spec = this.hatchFor?.(base) || null;
       let color = mat?.userData?.capColor ?? DEFAULT_CAP;
-      if (!buckets.has(color)) {
-        if (next > 31) color = DEFAULT_CAP; // limite de camadas de render: o resto usa o padrão
-        if (!buckets.has(color)) buckets.set(color, next++);
+      let key = spec ? `h:${JSON.stringify(spec)}` : `c:${color}`;
+      if (!buckets.has(key)) {
+        if (next > 31) key = `c:${DEFAULT_CAP}`; // limite de camadas de render: o resto usa o padrão
+        if (!buckets.has(key)) buckets.set(key, { layer: next++, color: key === `c:${DEFAULT_CAP}` ? DEFAULT_CAP : color, spec: key.startsWith('h:') ? spec : null });
       }
       o.layers.set(0);
-      o.layers.enable(buckets.get(color));
+      o.layers.enable(buckets.get(key).layer);
     });
     this._capBuckets = buckets;
     this._bucketsDirty = false;
