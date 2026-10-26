@@ -642,3 +642,10 @@ table.budget tr.muted td { color: var(--muted); }
 /* Configurações › MCP */
 .mcp-snippet { background: #0f1318; border: 1px solid var(--line); border-radius: 5px; padding: 6px 8px; font-size: 11px; white-space: pre-wrap; word-break: break-all; margin: 4px 0; user-select: all; }
 .small.note { border-left: 3px solid var(--green); padding: 4px 8px; background: rgba(31, 191, 59, .07); }
+
+/* créditos no rodapé da lateral direita */
+.right .credits { flex: none; padding: 6px 10px; border-top: 1px solid var(--line); font-size: 11px; text-align: center; background: var(--panel); }
+.right .credits a { color: var(--muted); text-decoration: none; }
+.right .credits a:hover { color: var(--green); text-decoration: underline; }
+/* a lateral direita fica por cima do que transborda da área central (ex.: barra de status em janela estreita) */
+.layout > .right { position: relative; z-index: 8; }

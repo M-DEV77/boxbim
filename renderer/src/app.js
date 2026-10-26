@@ -54,6 +54,7 @@ class App {
     this.version = await B.version();
     document.title = `BoxBim ${this.version}`;
     $('#version-btn').textContent = `v${this.version}`;
+    $('#credits-version').textContent = `v${this.version}`;
     $('#version-btn').addEventListener('click', () => this.showChangelog());
     this.dirs = await B.dirs().catch(() => null); // só o administrador vê as pastas do servidor
     this.info = await B.info();

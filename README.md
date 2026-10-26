@@ -2,7 +2,7 @@
 
 Modelagem BIM no navegador, em equipe, com chat de IA e ponte com o Revit 2025.
 
-**Versão 2.16.0** · add-in BoxBim Bridge **1.1.0** · histórico completo em [CHANGELOG.md](CHANGELOG.md) · servidor na nuvem (Easypanel): [DEPLOY.md](DEPLOY.md).
+**Versão 2.16.1** · add-in BoxBim Bridge **1.1.0** · histórico completo em [CHANGELOG.md](CHANGELOG.md) · servidor na nuvem (Easypanel): [DEPLOY.md](DEPLOY.md) · arquitetura e histórico: [AGENT.MD](AGENT.MD).
 
 ## Rodar
 
@@ -350,3 +350,6 @@ revit-addin/ add-in C# .NET 8 para Revit 2025
 defaults/    agentes, skills e objetos de fábrica (entram no banco/pasta de dados na primeira execução)
 assets/      ícone
 ```
+
+---
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.16.1</a>

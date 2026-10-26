@@ -6,12 +6,22 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.16.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.16.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.16.1] — 2026-10-26 · Créditos, AGENT.MD e regras do projeto
+
+### Adicionado
+- Créditos **"BoxHoney By Marcelo Olimpio – Eng. de software"** (link para marceloolimpio.com.br) no rodapé da lateral
+  direita do aplicativo, com a versão atual, e no fim da documentação (README, DEPLOY, CHANGELOG, AGENT.MD).
+- **AGENT.MD**: mapa da arquitetura (diagrama Mermaid de como os módulos e funções se ligam: navegador, servidor,
+  banco, tempo real, IA e MCP), fluxos principais e a lista de cada commit.
+- Regras do projeto no `CLAUDE.md`: commit no modelo `data – especificações - vX.Y.Z`, AGENT.MD e créditos sempre
+  atualizados.
 
 ## [2.16.0] — 2026-10-26 · IA local com o BoxBim na nuvem e MCP (servidor e cliente)
 
@@ -806,3 +816,6 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 [1.2.0]: #120--2026-10-21--barra-de-ferramentas-superior
 [1.1.0]: #110--2026-10-21--níveis-e-vistas-como-no-revit
 [1.0.0]: #100--2026-10-21--primeira-versão
+
+---
+[BoxHoney By Marcelo Olimpio – Eng. de software v2.16.1](https://marceloolimpio.com.br/)

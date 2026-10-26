@@ -1,0 +1,93 @@
+# BoxBim — AGENT.MD (histórico e mapa do projeto)
+
+Documento de referência para quem (pessoa ou agente de IA) vai trabalhar no BoxBim: como a aplicação se liga por
+dentro e o histórico de cada commit. **Atualize a cada commit** (regra do `CLAUDE.md`).
+
+## Mapa da arquitetura
+
+O BoxBim é uma aplicação web: o **navegador** modela (three.js) e o **servidor** Node (Express + Sequelize/SQLite)
+guarda os projetos, sincroniza a equipe em tempo real (WebSocket), executa conversões e fala com a IA e com o MCP.
+
+```mermaid
+flowchart LR
+  subgraph NAV["Navegador (renderer/src)"]
+    MAIN["web/main.js<br/>inicia o App"] --> APP["app.js<br/>App: faixa, painéis, atalhos"]
+    APP --> VIEWER["viewer.js<br/>cena three.js, seleção, cortes"]
+    APP --> VIEWS["views.js / levels.js / levels-edit.js<br/>vistas, níveis, corte por nível"]
+    APP --> RIB["ribbon.js / toolbars.js<br/>comandos e presets"]
+    APP --> PANELS["panels.js<br/>Configurações, agentes, MCP"]
+    APP --> CHAT["chat.js<br/>Chat IA (agentes)"]
+    CHAT --> TOOLS["tools.js<br/>ferramentas do BoxBim p/ a IA"]
+    APP --> PROJ["project.js<br/>ProjectSession: carrega e sincroniza"]
+    APP --> MODEL["Ferramentas de modelagem"]
+    MODEL --> DRAW["draw.js parede"]
+    MODEL --> SLAB["slab-tool.js laje"]
+    MODEL --> ROOF["roof-tool.js telhado"]
+    MODEL --> WALLED["wall-edit.js editar parede / até o telhado"]
+    MODEL --> COPY["copy-tool.js / mirror-tool.js<br/>copiar, espelhar"]
+    MODEL --> SK["sketch/*<br/>linhas 2D, aparar, canto, offset,<br/>extrudar, varrer, vazios, lineares"]
+    MODEL --> WP["workplanes.js eixos de trabalho"]
+    MODEL --> TRANS["transform.js / grips.js<br/>mover, girar, pontos"]
+    VIEWER --> ELEM["elements.js<br/>geometria nativa: parede, laje, pilar,<br/>viga, caixa, telhado (camadas, esquadria)"]
+    ELEM --> SYS["objects/system.js<br/>objetos de sistema (scripts .bbo)"]
+    SYS --> OBJ["objects/objects.js<br/>biblioteca, buildParts, vazios"]
+    OBJ --> WORKER["objects/worker.js<br/>executa o script do objeto (sandbox)"]
+    OBJ --> EDITOR["objects/editor.js + sketch2d.js<br/>editor de objetos com 2D"]
+    APP --> IO["io/*<br/>IFC, DXF, glTF, Collada…"]
+    API["web/api.js<br/>window.boxbim (RPC)"] --> LOCALAI["web/local-ai.js<br/>IA e MCP locais pelo navegador"]
+    CHAT --> API
+    PROJ --> API
+    PANELS --> API
+  end
+
+  subgraph SRV["Servidor (server/)"]
+    IDX["index.js<br/>Express, CSP, rotas, estático"] --> AUTH["auth.js<br/>login, cadastro, sessão"]
+    IDX --> PROJS["projects.js<br/>projetos, membros, access()"]
+    IDX --> RPC["rpc.js<br/>/api/rpc/&lt;canal&gt;"]
+    IDX --> LIB["library.js<br/>biblioteca, ferramentas, presets"]
+    IDX --> MCPS["mcp.js<br/>servidor MCP /mcp + tokens"]
+    IDX --> RT["realtime.js<br/>WebSocket /ws (salas por projeto)"]
+    RPC --> AI["lib/ai.js<br/>OpenAI-compat, Claude, Gemini"]
+    RPC --> MCPC["lib/mcp-client.js<br/>cliente MCP (HTTP/SSE)"]
+    RPC --> STORE["lib/store.js<br/>configurações, chaves cifradas,<br/>agentes, skills, memórias"]
+    RPC --> CONV["lib/converters.js / unreal.js<br/>Blender, ODA, Unreal (só local)"]
+    MCPS --> PROJS
+    MCPS --> RT
+    AUTH --> DB[("db/ SQLite<br/>Sequelize: Usuario, Projeto,<br/>Elemento, Objeto, TokenApi…")]
+    PROJS --> DB
+    RT --> DB
+    LIB --> DB
+    MCPS --> DB
+  end
+
+  API -- "HTTP /api/rpc" --> RPC
+  PROJ -- "WebSocket /ws<br/>upsert / remove / projeto" --> RT
+  RT -- "mudanças da equipe e do MCP" --> PROJ
+  LOCALAI -. "fetch direto (CORS)" .-> LMS["LM Studio / Ollama<br/>no computador do usuário"]
+  AI -. HTTPS .-> CLOUD["Claude, OpenAI, Gemini,<br/>OpenRouter…"]
+  MCPC -. HTTP .-> EXTMCP["servidores MCP externos"]
+  CLIENTMCP["Claude Desktop / Code<br/>(clientes MCP)"] -- "POST /mcp + token" --> MCPS
+```
+
+### Fluxos principais
+- **Modelar**: ferramenta (ex.: `draw.js`) → `createOnLevel`/`elements.js` cria o elemento → `viewer.add` →
+  `viewer.changed` → `project.js` envia `upsert` pelo `/ws` → `realtime.js` grava (`Elemento`) e repassa à equipe.
+- **Objeto de sistema**: `rebuildElement` (nativo, imediato) → `system.build` roda o script do `.bbo` no
+  `worker.js` → `buildParts` → malhas por camada (com esquadria, vãos, perfil próprio).
+- **Chat IA**: `chat.js` → `B.ai.chat` → `rpc.js` → `lib/ai.js` (ou `local-ai.js` no navegador, quando a IA é
+  local e o servidor está na nuvem) → chamadas de ferramenta → `tools.js` (BoxBim) ou `B.mcp.call` (MCP).
+- **MCP (servidor)**: cliente MCP → `POST /mcp` (token) → `mcp.js` → banco + `realtime.notify` → aparece ao vivo.
+
+## Commits
+
+| Data | Versão | Hash | Resumo |
+|---|---|---|---|
+| 2026-10-23 | 2.14.0 | `c75dead` | Estado inicial do repositório (BoxBim web: modelagem, níveis, objetos, IA, Copiar, Telhado…) |
+| 2026-10-23 | 2.14.1 | `1ed8e0e` | Pronto para VPS: Dockerfile, DEPLOY.md, `/api/saude`, `BOXBIM_PROXY/REMOTO/CODIGO_CADASTRO`; regra de commit |
+| 2026-10-23 | 2.15.0 | `ac0a483` | Espelhar por uma linha (2D/3D), parede até o telhado, editor de parede com perfil (clique duplo) |
+| 2026-10-23 | 2.15.0 | `f359b44` | DEPLOY.md: branch `main` |
+| 2026-10-26 | 2.16.0 | `9a6ecb0` | IA local pelo navegador na VPS (LM Studio/Ollama); BoxBim como servidor MCP; Chat IA usando MCP externos |
+| 2026-10-26 | 2.16.1 | este commit | Regras do projeto (modelo de commit, AGENT.MD, créditos), créditos na lateral direita e na documentação, AGENT.MD |
+
+---
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.16.1</a>

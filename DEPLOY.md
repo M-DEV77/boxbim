@@ -81,3 +81,6 @@ Copie o volume `/data` (por exemplo, com o backup de volumes do Easypanel). O ar
 | `BOXBIM_REMOTO` | `1` (na imagem) | desliga recursos do computador local |
 | `BOXBIM_CODIGO_CADASTRO` | — | código exigido para criar conta |
 | `BOXBIM_CONNECT_SRC` | — | endereços extras que o navegador pode chamar (IA/MCP na rede interna) |
+
+---
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.16.1</a>
