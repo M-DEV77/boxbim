@@ -179,7 +179,6 @@ const api = {
   memory: { list: () => call('memory:list'), index: () => call('memory:index'), save: m => call('memory:save', m), remove: id => call('memory:delete', id) },
   chats: { save: (title, md) => call('chat:save', title, md) },
   dirs: () => call('data:dirs'),
-  unreal: { engines: () => call('unreal:engines'), open: (glb, meta) => call('unreal:open', glb, meta) },
   dialog: {
     /** Escolhe arquivo(s) no computador de quem usa e envia ao servidor; devolve os caminhos no servidor. */
     open: async opts => {

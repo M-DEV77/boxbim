@@ -3,7 +3,7 @@
 // permissões:
 //   - configurações (chaves de IA, caminhos de ferramentas): só o administrador altera;
 //   - arquivos: só dentro da pasta de trabalho do usuário no servidor (envios, conversões, exportações);
-//   - Revit, Unreal e abrir pastas: só quando o navegador está NESTE computador (servidor local).
+//   - Revit e abrir pastas: só quando o navegador está NESTE computador (servidor local).
 // Binários viajam como { __b64: '...' }.
 'use strict';
 const fs = require('fs');
@@ -13,7 +13,6 @@ const store = require('./lib/store');
 const mcpClient = require('./lib/mcp-client');
 const ai = require('./lib/ai');
 const conv = require('./lib/converters');
-const unreal = require('./lib/unreal');
 const db = require('./db');
 const { access } = require('./projects');
 
@@ -58,7 +57,7 @@ function allowedPath(user, p) {
   return full;
 }
 
-// "Local" = o navegador está no próprio computador do servidor (Revit, Unreal, arquivos). Na nuvem (BOXBIM_REMOTO=1)
+// "Local" = o navegador está no próprio computador do servidor (Revit, arquivos). Na nuvem (BOXBIM_REMOTO=1)
 // nunca: um proxy reverso na mesma máquina chegaria por 127.0.0.1 e pareceria local.
 const isLocal = req => process.env.BOXBIM_REMOTO !== '1' && ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
 
@@ -178,7 +177,7 @@ function channels(ctx) {
       return {
         local: isLocal(req),
         blender: exists(s.tools.blenderPath), oda: exists(s.tools.odaPath),
-        revit: isLocal(req), unreal: isLocal(req) && unreal.findEngines().length > 0,
+        revit: isLocal(req),
       };
     },
 
@@ -265,8 +264,6 @@ function channels(ctx) {
     'chat:save': (t, md) => store.saveChat(t, md),
     'data:dirs': () => { admin(); return store.dirs(); },
 
-    'unreal:engines': () => unreal.findEngines().map(e => ({ ...e, dlss: !!unreal.dlssPluginIn(e.root) })),
-    'unreal:open': (glb, meta) => { local('Abrir no Unreal'); return unreal.openInUnreal(glb, meta); },
     'revit': (route, body) => { local('A ponte com o Revit'); return conv.revit(route, body); },
     'convert:blender': (src, dst) => conv.blenderConvert(allowedPath(user, src), allowedPath(user, dst)),
     'convert:oda': (src, fmt, outDir) => conv.odaConvert(allowedPath(user, src), fmt, outDir ? allowedPath(user, outDir) : undefined),

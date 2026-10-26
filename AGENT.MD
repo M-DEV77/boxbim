@@ -50,7 +50,7 @@ flowchart LR
     RPC --> AI["lib/ai.js<br/>OpenAI-compat, Claude, Gemini"]
     RPC --> MCPC["lib/mcp-client.js<br/>cliente MCP (HTTP/SSE)"]
     RPC --> STORE["lib/store.js<br/>configurações, chaves cifradas,<br/>agentes, skills, memórias"]
-    RPC --> CONV["lib/converters.js / unreal.js<br/>Blender, ODA, Unreal (só local)"]
+    RPC --> CONV["lib/converters.js<br/>Blender, ODA (conversões)"]
     MCPS --> PROJS
     MCPS --> RT
     AUTH --> DB[("db/ SQLite<br/>Sequelize: Usuario, Projeto,<br/>Elemento, Objeto, TokenApi…")]
@@ -87,7 +87,8 @@ flowchart LR
 | 2026-10-23 | 2.15.0 | `ac0a483` | Espelhar por uma linha (2D/3D), parede até o telhado, editor de parede com perfil (clique duplo) |
 | 2026-10-23 | 2.15.0 | `f359b44` | DEPLOY.md: branch `main` |
 | 2026-10-26 | 2.16.0 | `9a6ecb0` | IA local pelo navegador na VPS (LM Studio/Ollama); BoxBim como servidor MCP; Chat IA usando MCP externos |
-| 2026-10-26 | 2.16.1 | este commit | Regras do projeto (modelo de commit, AGENT.MD, créditos), créditos na lateral direita e na documentação, AGENT.MD |
+| 2026-10-26 | 2.16.1 | `98b322e` | Regras do projeto (modelo de commit, AGENT.MD, créditos), créditos na lateral direita e na documentação, AGENT.MD |
+| 2026-10-26 | 2.17.0 | este commit | Retirada a conexão com o Unreal Engine; na nuvem o app não consulta mais o Revit (403); CSP corrigido |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.16.1</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.17.0</a>

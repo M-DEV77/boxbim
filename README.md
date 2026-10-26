@@ -2,7 +2,7 @@
 
 Modelagem BIM no navegador, em equipe, com chat de IA e ponte com o Revit 2025.
 
-**Versão 2.16.1** · add-in BoxBim Bridge **1.1.0** · histórico completo em [CHANGELOG.md](CHANGELOG.md) · servidor na nuvem (Easypanel): [DEPLOY.md](DEPLOY.md) · arquitetura e histórico: [AGENT.MD](AGENT.MD).
+**Versão 2.17.0** · add-in BoxBim Bridge **1.1.0** · histórico completo em [CHANGELOG.md](CHANGELOG.md) · servidor na nuvem (Easypanel): [DEPLOY.md](DEPLOY.md) · arquitetura e histórico: [AGENT.MD](AGENT.MD).
 
 ## Rodar
 
@@ -23,7 +23,7 @@ endereço da rede (ex.: `http://192.168.1.31:3000`) para os outros entrarem.
 | `BOXBIM_DATA` | `Documentos\BoxBim` | pasta de dados (agentes, skills, memória; banco em `.servidor/`) |
 | `BOXBIM_HTTPS` | — | `1` atrás de HTTPS (cookie Secure) |
 
-**Na internet**: rode atrás de um proxy HTTPS (`BOXBIM_HTTPS=1`). Revit, Unreal e "abrir pasta" só funcionam
+**Na internet**: rode atrás de um proxy HTTPS (`BOXBIM_HTTPS=1`). Revit e "abrir pasta" só funcionam
 quando o navegador está no próprio computador do servidor; Blender e ODA convertem no servidor para todos.
 
 ## Contas, projetos e equipe
@@ -286,18 +286,14 @@ Vistas 3D têm **Perspectiva/Ortogonal**. Grade e ponto base (0,0,0) aparecem em
   escolhidos; aparecem no começo da aba Início. Parede, Laje, Pilar, Viga e Caixa são objetos — ficam no
   conjunto "Elementos" criado no primeiro acesso.
 
-## Render (materiais em tempo real) e Unreal com DLSS
+## Render (materiais em tempo real)
 
 | Onde | O quê |
 |---|---|
 | Estilo **Render** (qualquer vista) | céu, sol (azimute/altura), sombras, oclusão ambiente, tonemapping; materiais PBR com texturas procedurais |
 | Propriedades › **Materiais (render)** | cor, rugosidade, metal, vidro, textura e escala do material, ao vivo (grava nos tipos do projeto) |
 | Qualidade › **Path tracing** | luz global progressiva para a imagem final; **Salvar imagem** grava o PNG |
-| **Abrir no Unreal (DLSS)** | projeto Unreal 5 com Lumen + ray tracing + DLSS (plugin NVIDIA), modelo, câmera e sol importados |
 
-O DLSS não roda dentro do BoxBim (WebGL não acessa o SDK da NVIDIA); por isso a ponte com o Unreal. Instale o
-plugin **NVIDIA DLSS** no Unreal (Fab) para ligar Super Resolution, Ray Reconstruction e Frame Generation; sem
-ele o projeto usa TSR. A renderização neural do **DLSS 5** é, por enquanto, só das RTX 50.
 
 ## Ponte com o Revit 2025
 
@@ -343,7 +339,7 @@ No console do navegador (F12): `app.runTool('scene_summary', {})` executa qualqu
 ```
 server/      servidor web: Express (páginas, API), WebSocket (tempo real), Sequelize + SQLite (db/),
              login (auth.js), projetos (projects.js), chamadas do editor (rpc.js), lib/ (IA, conversores,
-             Revit, Unreal, configurações)
+             Revit, configurações)
 renderer/    interface (three.js): app.html (editor), login.html, projetos.html, biblioteca.html;
              src/ é empacotado em dist/ pelo esbuild (src/web/api.js faz o papel do antigo Electron)
 revit-addin/ add-in C# .NET 8 para Revit 2025
@@ -352,4 +348,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.16.1</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.17.0</a>

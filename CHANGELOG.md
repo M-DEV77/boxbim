@@ -6,12 +6,24 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.16.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.17.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.17.0] — 2026-10-26 · Sem a conexão com o Unreal Engine
+
+### Removido
+- **Conexão com o Unreal Engine** (DLSS): o botão "Abrir no Unreal" do Render, o comando "Unreal (DLSS)" da faixa
+  (presets que o tinham simplesmente o ignoram), a ponte no servidor (`unreal:*`, projeto e script Python do
+  Unreal) e o caminho do Unreal em Configurações › Ferramentas. O estilo Render e o path tracing continuam.
+
+### Corrigido
+- **Servidor na nuvem**: o app não fica mais perguntando pelo Revit a cada 15 s (o servidor recusava com 403 e o
+  console enchia de erros); o indicador mostra "Revit (só local)".
+- Política de segurança (CSP): tirado um endereço inválido (`http://[::1]:*`) que o navegador acusava no console.
 
 ## [2.16.1] — 2026-10-26 · Créditos, AGENT.MD e regras do projeto
 
@@ -818,4 +830,4 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 [1.0.0]: #100--2026-10-21--primeira-versão
 
 ---
-[BoxHoney By Marcelo Olimpio – Eng. de software v2.16.1](https://marceloolimpio.com.br/)
+[BoxHoney By Marcelo Olimpio – Eng. de software v2.17.0](https://marceloolimpio.com.br/)

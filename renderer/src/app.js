@@ -559,6 +559,15 @@ class App {
 
   async checkRevit(verbose) {
     const pill = $('#revit-pill');
+    // servidor na nuvem: a ponte com o Revit é do computador do servidor — não fica perguntando (o servidor recusa)
+    if (this.info?.local === false) {
+      pill.className = 'pill off';
+      pill.querySelector('.label').textContent = 'Revit (só local)';
+      pill.title = 'A ponte com o Revit funciona quando o BoxBim roda no mesmo computador do Revit (BoxBim.cmd).';
+      this.revitOnline = false;
+      if (verbose) toast(pill.title, 'error');
+      return;
+    }
     try {
       const s = await B.revit('/status');
       pill.className = 'pill on';

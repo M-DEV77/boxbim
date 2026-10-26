@@ -536,63 +536,6 @@ export class RenderMode extends EventTarget {
     this._saveT = setTimeout(() => this.app.types.save(), 400);
   }
 
-  // ------------------------------------------------------------ Unreal Engine (DLSS)
-
-  /**
-   * Cena glTF para o Unreal: malhas com a transformação aplicada e os materiais de render (PBR, texturas,
-   * vidro), a câmera da vista e o sol. glTF é Y para cima: tudo vai dentro de um grupo girado −90° em X.
-   */
-  async exportUnreal() {
-    const { GLTFExporter } = await import('three/examples/jsm/exporters/GLTFExporter.js');
-    const v = this.viewer;
-    const root = new THREE.Group();
-    root.name = 'BoxBim';
-    root.rotation.x = -Math.PI / 2;
-    root.updateMatrixWorld(true);
-    v.model.updateMatrixWorld(true);
-    const visible = o => { for (let p = o; p; p = p.parent) if (!p.visible) return false; return true; };
-    v.model.traverse(o => {
-      if (!o.isMesh || o.userData.isEdge || !visible(o)) return;
-      const ud = o.userData;
-      const flat = ud._flatMat || ud._origMat || o.material;
-      let owner = o;
-      while (owner && !owner.userData?.bim) owner = owner.parent;
-      const m = new THREE.Mesh(o.geometry.clone().applyMatrix4(o.matrixWorld), this.renderFor(flat));
-      m.name = `${owner?.userData.bim.name || 'Elemento'} · ${o.name || 'peça'}`;
-      root.add(m);
-    });
-    const box = new THREE.Box3().setFromObject(v.model);
-    const c = box.getCenter(new THREE.Vector3()), R = Math.max(1, box.getSize(new THREE.Vector3()).length() / 2);
-    // câmera da vista (o glTF olha para −Z, como o three.js)
-    const cam = new THREE.PerspectiveCamera(v.perspCam.fov, v.perspCam.aspect, 0.05, 20000);
-    cam.name = 'Câmera BoxBim';
-    cam.position.copy(v.perspCam.position);
-    cam.quaternion.copy(v.perspCam.quaternion);
-    root.add(cam);
-    // sol: luz direcional apontando do céu para o centro do modelo (glTF: luz aponta para −Z local)
-    const sun = new THREE.DirectionalLight(0xffffff, 3);
-    sun.name = 'Sol BoxBim';
-    sun.position.copy(c).addScaledVector(this.sunDir(), R * 3);
-    root.add(sun);
-    root.updateMatrixWorld(true);
-    sun.lookAt(root.localToWorld(c.clone()));
-    sun.add(sun.target);
-    sun.target.position.set(0, 0, -1);
-    return new Promise((res, rej) => new GLTFExporter().parse(root, res, rej, { binary: true, onlyVisible: true, maxTextureSize: 1024 }));
-  }
-
-  /** Exporta e abre (ou atualiza) o projeto Unreal com DLSS. */
-  async openInUnreal() {
-    if (!this.viewer.elements().length) { this.app.status('O projeto está vazio.'); return null; }
-    this.app.status('Unreal: exportando o projeto com materiais, câmera e sol…');
-    const glb = await this.exportUnreal();
-    const r = await window.boxbim.unreal.open(new Uint8Array(glb), { name: this.app.projectName?.() || 'BoxBim', settings: this.settings });
-    this.app.status(r.reused
-      ? `Unreal ${r.engine}: projeto atualizado — o editor aberto reimporta sozinho.`
-      : `Unreal ${r.engine}: abrindo ${r.project}${r.dlssPlugin ? ' (DLSS ligado)' : ' — plugin NVIDIA DLSS não instalado: usando TSR'}.`);
-    return r;
-  }
-
   // ------------------------------------------------------------ path tracing
 
   async startPathTracing() {
@@ -677,8 +620,6 @@ export class RenderMode extends EventTarget {
     q.addEventListener('change', () => this.setQuality(q.value));
     const shot = h2('button', { class: 'primary', title: 'Salvar a imagem renderizada (PNG)' }, 'Salvar imagem');
     shot.addEventListener('click', () => this.app.saveScreenshot());
-    const ue = h2('button', { title: 'Abre o projeto no Unreal Engine 5 (Lumen, ray tracing e DLSS com o plugin da NVIDIA)' }, 'Abrir no Unreal');
-    ue.addEventListener('click', () => this.openInUnreal().catch(e => this.app.status(`Unreal: ${e.message}`)));
     this.bar = h2('div', { class: 'draw-bar render-bar' },
       h2('strong', {}, '☀ Render'),
       h2('label', { title: 'Direção do sol (graus a partir do Norte, sentido horário)' }, 'Azimute', ...range('azimute', 0, 360, 1)),
@@ -688,7 +629,7 @@ export class RenderMode extends EventTarget {
       h2('label', { title: 'Exposição' }, 'Exposição', ...range('exposicao', 0.2, 3, 0.05)),
       h2('label', { title: 'Oclusão ambiente (cantos mais escuros)' }, ao, 'AO'),
       h2('label', {}, 'Qualidade', q),
-      shot, ue);
+      shot);
     document.querySelector('.center').append(this.bar);
     if (s.qualidade === 'path-tracing' && !this.pt) this.startPathTracing();
   }

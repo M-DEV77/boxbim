@@ -361,19 +361,17 @@ export class Panels {
     const input = {
       blenderPath: h('input', { value: s.tools.blenderPath || '', oninput: e => { s.tools.blenderPath = e.target.value; } }),
       odaPath: h('input', { value: s.tools.odaPath || '', oninput: e => { s.tools.odaPath = e.target.value; } }),
-      unrealPath: h('input', { value: s.tools.unrealPath || '', placeholder: 'automático (Epic Games Launcher)', oninput: e => { s.tools.unrealPath = e.target.value; } }),
     };
     const port = h('input', { type: 'number', value: s.revit.port, oninput: e => { s.revit.port = Number(e.target.value) || 48884; } });
     const auto = h('input', { type: 'checkbox', checked: !!s.autoApprove, onchange: e => { s.autoApprove = e.target.checked; } });
     return h('div', { class: 'form' },
-      h('div', { class: 'small muted' }, 'Caminhos NO COMPUTADOR DO SERVIDOR. Revit, Unreal e abrir pastas só funcionam quando o BoxBim é aberto no próprio servidor (localhost); Blender e ODA convertem para todos.'),
+      h('div', { class: 'small muted' }, 'Caminhos NO COMPUTADOR DO SERVIDOR. Revit e abrir pastas só funcionam quando o BoxBim é aberto no próprio servidor (localhost); Blender e ODA convertem para todos.'),
       h('div', { class: 'section-title' }, 'Revit 2025'),
       h('label', {}, 'Porta da ponte BoxBim Bridge (add-in)', port),
       h('div', { class: 'small muted' }, 'Instale o add-in com revit-addin\\install-addin.ps1 e reinicie o Revit. Ele cria a aba "BoxBim" na faixa de opções.'),
       h('div', { class: 'section-title' }, 'Conversores'),
       h('label', {}, 'Blender (exportar FBX)', input.blenderPath),
       h('label', {}, 'ODA File Converter (ler/gravar DWG)', input.odaPath),
-      h('label', {}, 'Unreal Engine 5 (render com DLSS)', input.unrealPath),
       h('div', { class: 'small muted' }, 'O ODA File Converter é gratuito (opendesign.com/guestfiles/oda_file_converter). Sem ele, o DWG passa pelo Revit: importe o DWG no Revit e traga o modelo, ou peça ao Revit para exportar DWG.'),
       h('div', { class: 'section-title' }, 'Agentes'),
       h('label', { class: 'inline' }, auto, 'Permitir que o agente apague/limpe elementos do BoxBim sem perguntar (ações no Revit sempre perguntam)'));

@@ -38,7 +38,7 @@ git push -u origin main
 - Em ⚙ Configurações, o administrador cadastra as chaves de API da IA (ficam cifradas em `/data`).
 
 ## O que muda na nuvem (`BOXBIM_REMOTO=1`)
-- Revit, Unreal, Blender e o acesso a pastas do computador ficam desligados: são do computador onde o BoxBim
+- Revit, Blender e o acesso a pastas do computador ficam desligados: são do computador onde o BoxBim
   roda. Para usar o Revit, rode o BoxBim também no Windows (`BoxBim.cmd`) e troque arquivos IFC/DWG.
 - Importar/exportar IFC, DXF, glTF, OBJ, STL, Collada e FBX (o FBX sai pelo Blender só no modo local) funcionam
   pelo navegador.
@@ -83,4 +83,4 @@ Copie o volume `/data` (por exemplo, com o backup de volumes do Easypanel). O ar
 | `BOXBIM_CONNECT_SRC` | — | endereços extras que o navegador pode chamar (IA/MCP na rede interna) |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.16.1</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.17.0</a>

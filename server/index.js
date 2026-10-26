@@ -2,9 +2,9 @@
 // colaboração em tempo real (/ws). Roda neste PC (acesso pela rede) ou num servidor na internet:
 //   PORTA (padrão 3000) · HOST (padrão 0.0.0.0) · BOXBIM_DATA (pasta de dados) · BOXBIM_HTTPS=1 (cookie Secure)
 //   BOXBIM_PROXY=1 (atrás de proxy reverso — Easypanel/Traefik, nginx: IP real do cliente pelo X-Forwarded-For)
-//   BOXBIM_REMOTO=1 (servidor na nuvem: desliga Revit/Unreal/Blender e o acesso a arquivos do computador)
+//   BOXBIM_REMOTO=1 (servidor na nuvem: desliga Revit/Blender e o acesso a arquivos do computador)
 //   BOXBIM_CODIGO_CADASTRO (se definido, criar conta exige este código — exceto a 1ª conta, do administrador)
-// Sem o Revit/Blender/ODA/Unreal nesta máquina, essas pontes ficam desligadas (app:capacidades).
+// Sem o Revit/Blender/ODA nesta máquina, essas pontes ficam desligadas (app:capacidades).
 'use strict';
 const http = require('http');
 const os = require('os');
@@ -44,7 +44,7 @@ async function main() {
       "default-src 'self'", "script-src 'self' 'wasm-unsafe-eval'", "style-src 'self' 'unsafe-inline'", "img-src 'self' data: blob:",
       // IA e MCP locais (LM Studio, Ollama, llama.cpp… no computador de quem usa) são chamados pelo navegador quando o
       // servidor está na nuvem; BOXBIM_CONNECT_SRC acrescenta outros endereços (ex.: http://192.168.0.10:1234)
-      `connect-src 'self' http://localhost:* http://127.0.0.1:* http://[::1]:*${process.env.BOXBIM_CONNECT_SRC ? ' ' + process.env.BOXBIM_CONNECT_SRC : ''}`, "worker-src 'self' blob:", "font-src 'self' data:", "object-src 'none'", "base-uri 'self'", "frame-ancestors 'self'",
+      `connect-src 'self' http://localhost:* http://127.0.0.1:*${process.env.BOXBIM_CONNECT_SRC ? ' ' + process.env.BOXBIM_CONNECT_SRC : ''}`, "worker-src 'self' blob:", "font-src 'self' data:", "object-src 'none'", "base-uri 'self'", "frame-ancestors 'self'",
     ].join('; '));
     next();
   });
