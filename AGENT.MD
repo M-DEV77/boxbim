@@ -116,7 +116,8 @@ flowchart LR
 | 2026-10-26 | 2.22.0 | `f9450ed` | Entrada com demonstração (`demo.html` + `pages/demo.js`): Casa Horizonte com materiais procedurais, céu e sol; login por cima depois de `BOXBIM_DEMO_MIN` min |
 | 2026-10-26 | 2.23.0 | `5304bfb` | Ferramentas parecidas em botões de família com ▾ (`ribbon.js`, presets convertidos em `toolbars.js`); ícones novos nas cores da marca (`icons.js`) |
 | 2026-10-26 | 2.24.0 | `8e71a9e` | Mouse (direito seleciona/janela, Alt+direito gira), visibilidade central e 👁 revelar ocultos (`viewer.js`, `display.js`), cotas até peças paralelas (`smart-dims.js`), elevações próprias com profundidade e largura (`views.js`) |
-| 2026-10-26 | 2.25.0 | este commit | Hospedagem por GUID (vínculo parede ↔ porta/janela sobrevive à reabertura; `repair` religa os antigos) e portas/janelas acompanham a parede (`hosting.follow`); arrastar marcadores de elevação nas plantas (`display.js`) |
+| 2026-10-26 | 2.25.0 | `bd21d31` | Hospedagem por GUID (vínculo parede ↔ porta/janela sobrevive à reabertura; `repair` religa os antigos) e portas/janelas acompanham a parede (`hosting.follow`); arrastar marcadores de elevação nas plantas (`display.js`) |
+| 2026-10-26 | 2.25.1 | este commit | `hosting.repair` conserta projetos antigos: porta deixada para trás volta para o vão (mesma medida e deslocamento); vão sem porta fecha |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.25.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.25.1</a>

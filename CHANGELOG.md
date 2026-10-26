@@ -6,12 +6,20 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.25.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.25.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.25.1] — 2026-10-26 · Conserto de portas e janelas em projetos antigos
+
+### Corrigido
+- Projetos salvos antes da 2.25.0 podiam ter portas/janelas **soltas da parede** (a parede foi movida e elas
+  ficaram para trás) e **vãos sem porta** (a porta foi apagada mas o furo ficou). Ao abrir o projeto, o BoxBim agora
+  conserta sozinho: a porta/janela solta volta para o vão de mesma medida e mesmo deslocamento na parede (e passa a
+  acompanhá-la), e o vão que ninguém ocupa fecha. As correções são gravadas no projeto.
 
 ## [2.25.0] — 2026-10-26 · Paredes levam portas e janelas; marcadores de elevação arrastáveis
 

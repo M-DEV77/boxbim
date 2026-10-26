@@ -187,42 +187,65 @@ export class Hosting {
   }
 
   /**
-   * Ao abrir o projeto: refaz vínculos parede ↔ porta/janela gravados com o uuid antigo (que muda a cada abertura).
-   * A instância solta é ligada ao vão da parede que fica no ponto dela (eixo + deslocamento gravado). Devolve
-   * quantos vínculos foram refeitos.
+   * Ao abrir o projeto: conserta vínculos parede ↔ porta/janela quebrados por versões antigas (uuid que muda a cada
+   * abertura; parede movida que deixou as portas para trás).
+   *   1. vão de parede sem a sua instância ← instância solta com o mesmo vão (largura, altura, peitoril) e o mesmo
+   *      deslocamento; a mais próxima ganha (de preferência a que já apontava para essa parede); ela volta para dentro
+   *      da parede;
+   *   2. vão que ninguém reclama (a porta foi apagada com o vínculo quebrado) fecha;
+   *   3. referências antigas (uuid) viram GUID.
+   * Devolve quantas correções fez.
    */
   repair() {
     const els = this.viewer.elements();
-    const walls = els.filter(e => e.userData.bim.wall?.openings?.length);
-    const hosted = els.filter(e => e.userData.bim.host);
+    const byRef = id => els.find(e => isRef(e, id));
+    const walls = els.filter(e => e.userData.bim.wall);
+    const near = (a, b, tol = 0.011) => Math.abs((a ?? 0) - (b ?? 0)) <= tol;
+    const linkedTo = (inst, wall) => isRef(wall, inst.userData.bim.host?.wallId)
+      && (wall.userData.bim.wall.openings || []).some(o => isRef(inst, o.id));
+    const linked = inst => { const w = this.viewer.findById(inst.userData.bim.host?.wallId); return !!(w?.userData.bim.wall && linkedTo(inst, w)); };
+    const loose = new Set(els.filter(e => e.userData.bim.host && !linked(e)));
+    const rebuild = new Set();
     let fixed = 0;
-    for (const inst of hosted) {
-      const b = inst.userData.bim;
-      const wall = this.viewer.findById(b.host.wallId);
-      const linked = wall?.userData.bim.wall && (wall.userData.bim.wall.openings || []).some(o => isRef(inst, o.id));
-      if (linked && b.host.wallId === refOf(wall)) continue;
-      // procura o vão (de uma parede) que fica onde a instância está
-      let best = null;
-      for (const w of wall ? [wall, ...walls] : walls) {
-        const ax = this.axisOf(w);
-        for (const o of w.userData.bim.wall.openings) {
-          if (els.some(e => e !== inst && isRef(e, o.id))) continue; // vão de outra instância
-          const p = this.pose(w, o.offset, b.host.flip, b.opening);
+    for (const wall of walls) {
+      const w = wall.userData.bim.wall;
+      for (const o of [...(w.openings || [])]) {
+        const inst = byRef(o.id);
+        if (inst && linkedTo(inst, wall)) continue; // vínculo bom
+        const cands = [...loose].filter(i => {
+          const b = i.userData.bim, op = b.opening || {};
+          return near(b.host.offset, o.offset) && near(op.width, o.width) && near(op.height, o.height) && near(op.sill, o.sill);
+        });
+        let best = null;
+        for (const i of cands) {
+          const p = this.pose(wall, o.offset, i.userData.bim.host.flip, i.userData.bim.opening);
           if (!p) continue;
-          const d = Math.hypot(inst.position.x - p.position[0], inst.position.y - p.position[1]) + Math.abs(inst.position.z - ax.base) * 0.1;
-          if (d < 0.05 && (!best || d < best.d)) best = { d, w, o };
+          const d = Math.hypot(i.position.x - p.position[0], i.position.y - p.position[1]) - (isRef(wall, i.userData.bim.host.wallId) ? 1e6 : 0);
+          if (!best || d < best.d) best = { d, i, p };
         }
+        if (best) {
+          const b = best.i.userData.bim;
+          o.id = refOf(best.i);
+          b.host.wallId = refOf(wall);
+          best.i.position.set(...best.p.position);           // volta para dentro da parede
+          best.i.rotation.set(0, 0, best.p.rotation * DEG);
+          loose.delete(best.i);
+          fixed++;
+          continue;
+        }
+        // ninguém é dono deste vão: a porta/janela foi apagada com o vínculo quebrado → fecha o vão
+        w.openings = w.openings.filter(x => x !== o);
+        rebuild.add(wall);
+        fixed++;
       }
-      if (!best) continue;
-      best.o.id = refOf(inst);
-      b.host.wallId = refOf(best.w);
-      fixed++;
+      // referências antigas (uuid) → GUID
+      for (const o of w.openings || []) { const inst = byRef(o.id); if (inst && o.id !== refOf(inst)) { o.id = refOf(inst); fixed++; } }
     }
-    // vãos ainda com uuid de instâncias que existem: troca pelo GUID
-    for (const w of walls) for (const o of w.userData.bim.wall.openings) {
-      const inst = els.find(e => isRef(e, o.id));
-      if (inst && o.id !== refOf(inst)) { o.id = refOf(inst); fixed++; }
+    for (const i of els) {
+      const h = i.userData.bim.host, wall = h && this.viewer.findById(h.wallId);
+      if (wall && h.wallId !== refOf(wall)) { h.wallId = refOf(wall); fixed++; }
     }
+    for (const wall of rebuild) { rebuildElement(wall); this.viewer._prepare2D(wall); }
     if (fixed) this.viewer.changed();
     return fixed;
   }
