@@ -164,6 +164,11 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
   só no preenchimento do corte das plantas e forros, seguindo a escala da vista.
 - **Vistas no navegador**: renomeie (clique duplo ou ✎) e duplique (⧉) qualquer vista — a cópia tem câmera, estilo e
   escala próprios; ✕ apaga a cópia; botão direito abre o menu. Nomes e cópias ficam gravados no projeto.
+- **Cotas** (Desenho › Cota): clique dois pontos (encaixe em pontas e quinas; Shift solta) e a posição da linha. Cada
+  cota é um objeto do projeto, com **estilos de cota** e todos os parâmetros no painel Propriedades: texto (altura em mm
+  de papel, cor, posição, fundo, texto substituto, prefixo/sufixo), número (unidade, casas, mostrar unidade), marca
+  (traço, seta, ponto, nenhuma; tamanho), linha (cor, peso), chamadas (afastamento, além da linha) e orientação
+  (alinhada, horizontal, vertical). Arraste o texto de uma cota selecionada para mudar o afastamento.
 
 ## Mover, girar e orbitar
 
@@ -404,4 +409,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.32.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.33.0</a>

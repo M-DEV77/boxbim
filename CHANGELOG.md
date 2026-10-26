@@ -6,12 +6,28 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.32.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.33.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.33.0] — 2026-10-26 · Cotas como objeto
+
+### Adicionado
+- **Cotas** (Desenho › Cota): clique o 1º ponto, o 2º (encaixe em pontas e faces de paredes/vigas e quinas das
+  peças; Shift solta o encaixe) e a posição da linha. Cada cota é um **objeto do projeto** (grava, sincroniza com a
+  equipe, desfaz/refaz, apaga, camadas, Mover) e aparece nas plantas e forros do nível dela e no 3D.
+- **Todos os parâmetros configuráveis**, no painel Propriedades: orientação (alinhada, horizontal, vertical),
+  afastamento, texto substituto e — por estilo ou só nesta cota (↺ volta ao estilo) — altura do texto (mm de papel),
+  cor, posição (acima, sobre, abaixo), fundo, unidade (projeto, m, cm, mm), casas decimais, mostrar unidade, prefixo,
+  sufixo, marca (traço 45°, seta, ponto, nenhuma) e tamanho, cor e peso da linha, afastamento e prolongamento das
+  linhas de chamada.
+- **Estilos de cota** do projeto (como os tipos de cota do Revit): criar, duplicar, renomear, apagar e editar; "Salvar
+  como novo estilo" a partir de uma cota.
+- Tamanhos em mm de papel, convertidos pela escala da vista; arrastar o texto de uma cota selecionada muda o
+  afastamento.
 
 ## [2.32.0] — 2026-10-26 · Renomear e duplicar vistas
 

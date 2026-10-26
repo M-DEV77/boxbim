@@ -14,6 +14,7 @@ import { Display } from './display.js';
 import { OriginGizmo } from './origin-gizmo.js';
 import { Drawing } from './drawing.js';
 import { hatchOf } from './hatch.js';
+import { Dimensions, isDimension } from './dims.js';
 import { createOnLevel, syncLevelNames } from './modeling.js';
 import { Chat } from './chat.js';
 import { runTool, syncLevels } from './tools.js';
@@ -121,6 +122,7 @@ class App {
     this.views.projectionOf = v => this.viewStyles.projectionOf(v);
     this.origin = new OriginGizmo(this); // gizmo da origem 0,0 (tamanho fixo na tela)
     this.drawing = new Drawing(this);    // escala das vistas e peso das linhas (corte / projeção)
+    this.dims = new Dimensions(this);    // cotas como objeto (estilos e parâmetros)
     // hachura do corte: a do material da biblioteca (só nas vistas de desenho)
     this.viewer.hatchFor = mat => (mat?.name && this.types.materials[mat.name] ? hatchOf(mat.name, this.types.materials[mat.name]) : null);
     this.types.addEventListener('change', () => { this.viewer._bucketsDirty = true; });
@@ -1181,6 +1183,7 @@ class App {
       h('table', {}, h('tr', {}, h('td', {}, 'Nome'), h('td', {}, nameInput)), row('Tipo IFC', b.type), row('Nível', this.levels.ofElement(o).name), row('GUID', b.guid), row('ID BoxBim', o.uuid)),
     );
     if (b.eixo) root.append(...this.workPlanes.propsSection(o));
+    if (isDimension(o)) root.append(...this.dims.propsSection(o));
     if (this.envs.list.length) {
       // camada do elemento: mover só entre as que eu posso editar
       const opts = this.envs.camadas().filter(c => this.envs.editable(c.id) || c.id === b.camadaId);

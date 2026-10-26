@@ -64,7 +64,8 @@ export class SmartDims {
   /** Cotas até as vizinhas paralelas: [{ A, B (Vector3, face a face), gap, away (Vector3: afasta da vizinha) }] */
   compute(el) {
     const v = this.viewer;
-    const others = v.elements().filter(o => o !== el && o.visible && !o.userData.bim?.eixo && !o.userData.bim?.host);
+    if (el.userData.bim?.cota) return []; // cota não tem cota automática
+    const others = v.elements().filter(o => o !== el && o.visible && !o.userData.bim?.eixo && !o.userData.bim?.host && !o.userData.bim?.cota);
     const myBox = new THREE.Box3().setFromObject(el);
     if (myBox.isEmpty()) return [];
     const ax = axisOf(el);

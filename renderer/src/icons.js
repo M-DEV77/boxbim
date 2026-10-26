@@ -47,6 +47,8 @@ export const ICONS = {
   cut: '<rect class="b" x="2.5" y="8" width="13.5" height="13"/><rect class="g" x="9.5" y="3" width="12" height="10.5" stroke-dasharray="3 2"/>',
   uncut: '<rect class="b" x="2.5" y="8" width="13.5" height="13"/><path class="g" d="M15.5 3.5l6 6M21.5 3.5l-6 6"/>',
 
+  dim: '<path class="g" d="M3 6v12M21 6v12"/><path d="M3 12h18"/><path class="b" d="M6.5 10l-3.5 2 3.5 2zM17.5 10l3.5 2-3.5 2z"/><path class="g" d="M9 8.5h6"/>',
+
   // ---------------- modificar
   move: '<path d="M12 3v18M3 12h18"/><path class="g" d="M12 3l-2.8 2.8M12 3l2.8 2.8M12 21l-2.8-2.8M12 21l2.8-2.8M3 12l2.8-2.8M3 12l2.8 2.8M21 12l-2.8-2.8M21 12l-2.8 2.8"/><rect class="b" x="9.6" y="9.6" width="4.8" height="4.8"/>',
   rotate: '<path d="M20 12a8 8 0 1 1-2.4-5.7"/><path class="g" d="M20 3.8v5h-5"/><path class="b" d="M9 9h6v6H9z" transform="rotate(20 12 12)"/>',

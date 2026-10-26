@@ -6,6 +6,7 @@
 //   - mudanças locais são detectadas por diferença (a cada alteração do modelo, com atraso curto) e enviadas;
 //     as de outros chegam pelo WebSocket e substituem o elemento (a última gravação vence);
 //   - presença: quem está no projeto, com a cor de cada um destacando o que ele selecionou.
+import { buildDimension } from './dims.js';
 import * as THREE from 'three';
 import { rest, projectId } from './web/api.js';
 import { rebuildElement, systemKindOf } from './elements.js';
@@ -80,6 +81,7 @@ export class ProjectSession extends EventTarget {
     if (dados.elevacoes) this.app.views?.setElevations(dados.elevacoes);
     if (dados.escalas || dados.pesos) this.app.drawing?.load(dados);
     if (dados.vistas) this.app.views?.loadViews(dados.vistas);
+    if (dados.estilosCota) this.app.dims?.load(dados.estilosCota);
   }
 
   loadLevels(niveis) {
@@ -100,7 +102,7 @@ export class ProjectSession extends EventTarget {
     const b = el.userData.bim;
     const bim = clone(b);
     const dados = { bim, matriz: this.matrixOf(el) };
-    if (!systemKindOf(b) && !b.objectId && !b.linha && !b.forma && !b.eixo) {
+    if (!systemKindOf(b) && !b.objectId && !b.linha && !b.forma && !b.eixo && !b.cota) {
       // geometria importada: a malha vai uma vez (com os materiais originais, sem o destaque de seleção)
       if (!el.userData._malha) el.userData._malha = meshJSON(el);
       dados.malha = el.userData._malha;
@@ -125,6 +127,7 @@ export class ProjectSession extends EventTarget {
     if (bim.linha) return buildSketch(bim);
     if (bim.forma) return buildForm(bim);
     if (bim.eixo) return buildWorkPlane(bim);
+    if (bim.cota) return buildDimension(bim); // cota (desenho em overlay; dims.js)
     if (systemKindOf(bim)) {
       // parede, laje, pilar, viga, caixa: refeitos pelos dados (o script do objeto de sistema desenha)
       const g = new THREE.Group();

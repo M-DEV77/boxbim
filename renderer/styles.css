@@ -849,3 +849,15 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: rgba(31
 .view-node .view-acts { margin-left: auto; display: none; gap: 2px; }
 .view-node:hover .view-acts { display: inline-flex; }
 .view-node .dup-mark { color: #8fb8d6; font-size: 11px; }
+
+/* cotas (dims.js) */
+.dims-layer { position: absolute; inset: 0; z-index: 4; pointer-events: none; overflow: hidden; }
+.dims-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.dim { pointer-events: visiblePainted; cursor: pointer; }
+.dim path:first-child { stroke-linecap: butt; }
+.dim text { font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; font-weight: 600; user-select: none; }
+.dim rect { fill: var(--dim-bg, #f4f5f2); }
+.dim.sel text { cursor: move; }
+.dim.preview { opacity: .75; pointer-events: none; }
+.dim-params .own { font-weight: 700; }
+.dim-styles { grid-template-columns: 200px 1fr; }
