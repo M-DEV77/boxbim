@@ -209,7 +209,7 @@ button.mini { padding: 1px 7px; font-size: 11.5px; font-weight: normal; }
 .rbtn:active { background: var(--blue); }
 /* ícones nas cores do ícone do BoxBim: traço claro, azul petróleo preenchido (.b), verde de destaque (.g/.gf) */
 .rbtn svg, .dd-ico svg, svg.ico24 { width: 24px; height: 24px; stroke: #dfe5ec; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-svg .b { fill: #26536e; stroke: #5ea6cf; }
+svg .b { fill: rgba(38, 83, 110, .62); stroke: #6fb0d6; }
 svg .g, .rbtn .accent { stroke: var(--green-2); }
 svg .gf { fill: var(--green); stroke: var(--green-2); }
 svg .t { fill: #7ee08f; stroke: none; font: 700 6.2px system-ui, sans-serif; text-anchor: middle; }
@@ -731,7 +731,9 @@ table.budget tr.muted td { color: var(--muted); }
 .view-chip.ghost { color: #8fb8d6; }
 /* 👁 revelar ocultos (barra inferior) */
 .eye-btn { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; }
-.eye-btn .eye-ico svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; display: block; }
+.eye-btn .eye-ico svg { width: 17px; height: 17px; display: block; }
+.eye-btn.on svg .b { fill: rgba(255, 255, 255, .25); stroke: #fff; }
+.eye-btn.on svg .g { stroke: #fff; }
 .eye-btn.on { background: #ff2fd6; border-color: #ff2fd6; color: #fff; }
 .eye-btn .eye-count { font-size: 11px; font-variant-numeric: tabular-nums; }
 .eye-btn .eye-count:empty { display: none; }
@@ -764,7 +766,6 @@ table.budget tr.muted td { color: var(--muted); }
 .undo-redo { display: flex; gap: 2px; margin: 0 8px 0 2px; }
 .undo-redo .icon-btn { width: 28px; height: 26px; padding: 0; display: grid; place-items: center; background: transparent; border: 1px solid transparent; border-radius: 6px; color: var(--text); }
 .undo-redo .icon-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-.undo-redo .icon-btn svg path:first-child { stroke: var(--green-2); }
 .undo-redo .icon-btn:hover:not(:disabled) { background: var(--panel-2); border-color: var(--line); }
 .undo-redo .icon-btn:disabled { opacity: .35; cursor: default; }
 

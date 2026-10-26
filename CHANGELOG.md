@@ -6,12 +6,25 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.27.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.28.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.28.0] — 2026-10-26 · Ícones da Tabler
+
+### Mudado
+- **Ícones genéricos da [Tabler Icons](https://tabler.io/icons)** (licença MIT), embutidos no BoxBim — sem
+  dependência nova: abrir, captura, inserir objeto, ambientes, seleção, aparar, mover, girar, desfazer/refazer,
+  copiar, espelhar, vistas, vista 3D, enquadrar, aparência, render, estilo Textura, materiais, Revit (trazer/enviar,
+  conexão), biblioteca, novo objeto, orçamento, IA, chat, agentes, memória, configurações e o 👁 da barra de baixo.
+  Recebem as cores da marca: forma principal em azul-petróleo translúcido, detalhe da ação em verde.
+- Os ícones de CAD que a Tabler não tem continuam próprios, no mesmo traço: parede/laje/telhado, níveis, eixos de
+  trabalho, estender, canto, offset 2D/3D, linhas do sólido, extrudar, varrer, vazios, junções, parede até o telhado,
+  plantas, forro, elevação e os formatos de arquivo (IFC, DWG, DXF, FBX, DAE, GLB, RVT, BBO).
+- Licença registrada em `THIRD-PARTY-NOTICES.md`; `scripts/gen-tabler-icons.py` refaz o arquivo a partir do pacote.
 
 ## [2.27.0] — 2026-10-26 · Acabamento visual (skill high-end-visual-design)
 

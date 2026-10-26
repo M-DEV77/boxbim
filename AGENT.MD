@@ -20,6 +20,7 @@ flowchart LR
     APP --> VIEWS["views.js / levels.js / levels-edit.js<br/>vistas, níveis, corte por nível"]
     APP --> RIB["ribbon.js / toolbars.js<br/>comandos, famílias ▾ e presets"]
     RIB --> ICONS["icons.js<br/>ícones nas cores da marca"]
+    ICONS --> TABLER["icons-tabler.js<br/>Tabler Icons (MIT), gerado"]
     APP --> PANELS["panels.js<br/>Configurações, agentes, MCP"]
     APP --> CHAT["chat.js<br/>Chat IA (agentes)"]
     CHAT --> TOOLS["tools.js<br/>ferramentas do BoxBim p/ a IA"]
@@ -119,7 +120,8 @@ flowchart LR
 | 2026-10-26 | 2.25.0 | `bd21d31` | Hospedagem por GUID (vínculo parede ↔ porta/janela sobrevive à reabertura; `repair` religa os antigos) e portas/janelas acompanham a parede (`hosting.follow`); arrastar marcadores de elevação nas plantas (`display.js`) |
 | 2026-10-26 | 2.25.1 | `a7229b4` | `hosting.repair` conserta projetos antigos: porta deixada para trás volta para o vão (mesma medida e deslocamento); vão sem porta fecha |
 | 2026-10-26 | 2.26.0 | `7aee41c` | Desfazer/refazer geral (`project.js`: passos do envio ao servidor) e botões ↶ ↷ no topo; troca de parede não apaga mais as portas hospedadas |
-| 2026-10-26 | 2.27.0 | este commit | Acabamento visual pela skill high-end-visual-design: páginas (`pages.css`: vidro, moldura dupla, ilha, pílulas, entrada animada) e editor (`styles.css`: janelas, menus, barras, movimento de mola) |
+| 2026-10-26 | 2.27.0 | `5bbf141` | Acabamento visual pela skill high-end-visual-design: páginas (`pages.css`: vidro, moldura dupla, ilha, pílulas, entrada animada) e editor (`styles.css`: janelas, menus, barras, movimento de mola) |
+| 2026-10-26 | 2.28.0 | este commit | Ícones genéricos da Tabler Icons (MIT) embutidos (`icons-tabler.js`, gerado por `scripts/gen-tabler-icons.py`); ícones de CAD próprios mantidos; `THIRD-PARTY-NOTICES.md` |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.27.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.28.0</a>

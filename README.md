@@ -280,7 +280,8 @@ Um parâmetro chamado `espessuraParede` recebe a espessura da parede hospedeira 
   estender, canto), Offset (2D/3D), Sólido (extrudar, varrer), Vazio, Mover e girar, Copiar e espelhar, Ajustar
   paredes, Vistas, Aparência (Render, Textura, materiais, texturas), Biblioteca, Revit e IA. O clique repete a
   última usada (o botão mostra qual); a seta **▾** lista as outras. Os comandos soltos continuam no Personalizar.
-- Ícones nas cores do ícone do BoxBim: azul petróleo preenchido, verde de destaque; arquivos com a sigla.
+- Ícones nas cores do ícone do BoxBim (azul petróleo e verde de destaque): os genéricos vêm da **Tabler Icons**
+  (MIT, embutidos em `renderer/src/icons-tabler.js`; licença em `THIRD-PARTY-NOTICES.md`), os de CAD são próprios.
 - Todas as abas da faixa são suas (nenhuma é fixa): **+** ao lado das abas (ou ▦ › Personalizar menus) cria,
   renomeia, reordena e apaga abas e grupos e escolhe os comandos e objetos de cada grupo.
 - **▦ Presets** (canto superior direito): cada preset guarda as abas e o arranjo das janelas (faixa e barras
@@ -392,4 +393,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.27.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.28.0</a>

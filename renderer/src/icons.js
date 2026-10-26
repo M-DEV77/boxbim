@@ -2,6 +2,10 @@
 //   traço claro (currentColor) para o desenho, .b = azul petróleo da marca (#26536E, preenchido),
 //   .g = verde da marca (#169E2E / #1FBF3B, destaque), .gf = verde preenchido, .t = sigla de arquivo (verde).
 // A classe antiga "accent" continua valendo (= .g) para os ícones de Objetos e presets antigos.
+// Os ícones genéricos (abrir, câmera, mover, girar, copiar, olho, configurações, IA…) vêm da TABLER (MIT, embutidos
+// em icons-tabler.js); os de CAD que ela não tem (parede, laje, níveis, aparar/estender, offset, extrudar, vãos,
+// elevações, formatos de arquivo…) são desenhados aqui no mesmo traço.
+import { TABLER } from './icons-tabler.js';
 
 /** Documento com a sigla do formato (IFC, DWG…). */
 const file = ext => `<path class="b" d="M5.5 2.5h8.5l4.5 4.5v14.5h-13z"/><path d="M14 2.5V7h4.5"/><text class="t" x="12" y="17.6">${ext}</text>`;
@@ -79,5 +83,7 @@ export const ICONS = {
   memory: '<path class="b" d="M6 2.8h9l4 4v14.4H6z"/><path d="M15 2.8v4h4"/><path class="g" d="M9 11h7M9 14.5h7M9 7.5h3"/>',
   settings: '<circle class="gf" cx="12" cy="12" r="3"/><path class="b" d="M12 2.5l1.8 2.6 3.1-.6.6 3.1 2.6 1.8-1.5 2.6 1.5 2.6-2.6 1.8-.6 3.1-3.1-.6L12 21.5l-1.8-2.6-3.1.6-.6-3.1-2.6-1.8L5.4 12 3.9 9.4l2.6-1.8.6-3.1 3.1.6z" fill-opacity=".55"/>',
 };
+
+Object.assign(ICONS, TABLER);
 
 export const icon = name => `<svg viewBox="0 0 24 24" class="ico24">${ICONS[name] || ''}</svg>`;

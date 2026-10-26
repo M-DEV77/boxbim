@@ -9,6 +9,7 @@ import { WorkPlanes } from './workplanes.js';
 import { Environments } from './environments.js';
 import { Grips } from './grips.js';
 import { SmartDims } from './smart-dims.js';
+import { icon } from './icons.js';
 import { Display } from './display.js';
 import { createOnLevel, syncLevelNames } from './modeling.js';
 import { Chat } from './chat.js';
@@ -226,6 +227,8 @@ class App {
   bindUndoButtons() {
     const undo = $('#btn-undo'), redo = $('#btn-redo'), p = this.project;
     if (!undo || !redo) return;
+    undo.innerHTML = icon('undo');
+    redo.innerHTML = icon('redo');
     undo.onclick = () => p.undo();
     redo.onclick = () => p.redo();
     const sync = () => {

@@ -7,6 +7,7 @@
 // E o gerenciador de ELEVAÇÕES (nome, direção, linha, profundidade, visível), gravado no projeto. Nas plantas, os
 // marcadores das elevações se ARRASTAM (botão esquerdo) para mudar a linha da elevação; clique duplo abre a vista.
 import { h, modal, toast } from './ui.js';
+import { icon } from './icons.js';
 import { normalizeElevations, defaultElevations } from './views.js';
 import { fromUnit, toUnit, unitLabel, fmtLen } from './units.js';
 
@@ -135,7 +136,7 @@ export class Display {
   buildEye() {
     const v = this.app.viewer;
     this.eye = h('button', { id: 'reveal-btn', class: 'toggle eye-btn', title: 'Revelar ocultos: mostra em magenta o que está oculto; clique num deles para mostrá-lo de volta', onclick: () => this.toggleReveal() },
-      h('span', { class: 'eye-ico', html: '<svg viewBox="0 0 24 24"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3.2"/></svg>' }),
+      h('span', { class: 'eye-ico', html: icon('eye') }),
       h('span', { class: 'eye-count' }));
     const right = document.querySelector('.status-right');
     right.prepend(this.eye);
