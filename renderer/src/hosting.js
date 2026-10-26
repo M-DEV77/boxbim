@@ -1,20 +1,60 @@
 // Hospedagem de portas e janelas (Objetos com vão) em paredes, como no Revit.
 //
-// Instância hospedada:  userData.bim.host    = { wallId (uuid da parede), offset (m do início do eixo), flip }
+// Instância hospedada:  userData.bim.host    = { wallId (GUID da parede), offset (m do início do eixo), flip }
 //                       userData.bim.opening = { width, height, sill, x } (vão em coordenadas locais do objeto)
-// Parede:               userData.bim.wall.openings = [{ id (uuid da instância), offset, width, sill, height }]
+// Parede:               userData.bim.wall.openings = [{ id (GUID da instância), offset, width, sill, height }]
+// As referências usam o GUID (fica no banco); o uuid do three.js muda a cada vez que o projeto abre. Vínculos antigos
+// gravados com uuid são refeitos ao abrir o projeto pela posição (repair).
 //
 // O objeto é orientado com o eixo X local ao longo da parede e Y local na espessura; "flip" gira 180°
 // (inverte o lado de abertura). Apagar a instância fecha o vão; apagar a parede apaga o que ela hospeda.
+// Parede que muda de lugar (mover, cota, pontas, aparar, espelhar, outra pessoa…) leva junto o que hospeda: a
+// instância fica no mesmo deslocamento ao longo do eixo (follow).
 import * as THREE from 'three';
 import { rebuildElement } from './elements.js';
 
 const DEG = Math.PI / 180;
+/** Referência permanente de um elemento (GUID; o uuid só vale nesta sessão). */
+export const refOf = el => el?.userData?.bim?.guid || el?.uuid;
+const isRef = (el, id) => !!id && (id === el.uuid || id === el.userData?.bim?.guid);
 
 export class Hosting {
   constructor(app) {
     this.app = app;
+    this._sig = new WeakMap(); // parede → assinatura do eixo (para perceber que ela mudou de lugar)
     app.viewer.addEventListener('remove', e => this._onRemove(e.detail));
+    app.viewer.addEventListener('change', () => {
+      if (this._queued) return;
+      this._queued = true;
+      queueMicrotask(() => { this._queued = false; this.follow(); });
+    });
+  }
+
+  /** Portas e janelas acompanham as paredes que mudaram de lugar (mesmo deslocamento ao longo do eixo). */
+  follow() {
+    let moved = false;
+    for (const wall of this.viewer.elements()) {
+      const w = wall.userData.bim.wall;
+      if (!w?.openings?.length || !wall.parent) continue;
+      wall.updateMatrixWorld(true);
+      const sig = [...w.start, ...w.end, w.base, ...wall.matrixWorld.elements].map(v => (+v).toFixed(5)).join(',');
+      const prev = this._sig.get(wall);
+      this._sig.set(wall, sig);
+      if (prev === undefined || prev === sig) continue;
+      for (const inst of this.hostedOf(wall)) {
+        const host = inst.userData.bim.host;
+        if (!host || !isRef(wall, host.wallId)) continue;
+        const p = this.pose(wall, host.offset, host.flip, inst.userData.bim.opening);
+        if (!p) continue;
+        const rot = p.rotation * DEG;
+        if (inst.position.distanceTo(new THREE.Vector3(...p.position)) < 1e-6 && Math.abs(inst.rotation.z - rot) < 1e-9) continue;
+        inst.position.set(...p.position);
+        inst.rotation.set(0, 0, rot);
+        inst.updateMatrixWorld(true);
+        moved = true;
+      }
+    }
+    if (moved) this.viewer.changed(); // grava a nova posição das portas/janelas
   }
 
   get viewer() { return this.app.viewer; }
@@ -76,7 +116,7 @@ export class Hosting {
     if (!p) throw new Error(`O vão (${(b.opening?.width || 0).toFixed(2)} m) não cabe na parede "${wall.name}".`);
     inst.position.set(...p.position);
     inst.rotation.set(0, 0, p.rotation * DEG);
-    b.host = { wallId: wall.uuid, offset: p.offset, flip: !!flip };
+    b.host = { wallId: refOf(wall), offset: p.offset, flip: !!flip };
     b.levelId = wall.userData.bim.levelId || b.levelId;
     b.props = { ...b.props, Hospedeiro: wall.name, 'Deslocamento na parede': p.offset };
     this._writeOpening(wall, inst);
@@ -110,14 +150,14 @@ export class Hosting {
     delete inst.userData.bim.host;
     if (inst.userData.bim.props) { delete inst.userData.bim.props.Hospedeiro; delete inst.userData.bim.props['Deslocamento na parede']; }
     if (wall?.parent) {
-      wall.userData.bim.wall.openings = (wall.userData.bim.wall.openings || []).filter(o => o.id !== inst.uuid);
+      wall.userData.bim.wall.openings = (wall.userData.bim.wall.openings || []).filter(o => !isRef(inst, o.id));
       this._rebuild(wall);
     }
   }
 
   hostedOf(wall) {
     const ids = new Set((wall.userData.bim.wall?.openings || []).map(o => o.id));
-    return this.viewer.elements().filter(e => ids.has(e.uuid));
+    return this.viewer.elements().filter(e => ids.has(e.uuid) || ids.has(e.userData.bim?.guid));
   }
 
   /** Depois de trocar o tipo (espessura) da parede: atualiza o parâmetro espessuraParede e o vão dos hospedados. */
@@ -135,8 +175,8 @@ export class Hosting {
   _writeOpening(wall, inst) {
     const b = inst.userData.bim, o = b.opening || { width: 0, height: 0, sill: 0 };
     const w = wall.userData.bim.wall;
-    w.openings = (w.openings || []).filter(x => x.id !== inst.uuid);
-    w.openings.push({ id: inst.uuid, offset: b.host.offset, width: o.width, sill: o.sill, height: o.height });
+    w.openings = (w.openings || []).filter(x => !isRef(inst, x.id));
+    w.openings.push({ id: refOf(inst), offset: b.host.offset, width: o.width, sill: o.sill, height: o.height });
     this._rebuild(wall);
   }
 
@@ -144,6 +184,47 @@ export class Hosting {
     rebuildElement(wall);
     this.viewer._prepare2D(wall);
     this.viewer.changed();
+  }
+
+  /**
+   * Ao abrir o projeto: refaz vínculos parede ↔ porta/janela gravados com o uuid antigo (que muda a cada abertura).
+   * A instância solta é ligada ao vão da parede que fica no ponto dela (eixo + deslocamento gravado). Devolve
+   * quantos vínculos foram refeitos.
+   */
+  repair() {
+    const els = this.viewer.elements();
+    const walls = els.filter(e => e.userData.bim.wall?.openings?.length);
+    const hosted = els.filter(e => e.userData.bim.host);
+    let fixed = 0;
+    for (const inst of hosted) {
+      const b = inst.userData.bim;
+      const wall = this.viewer.findById(b.host.wallId);
+      const linked = wall?.userData.bim.wall && (wall.userData.bim.wall.openings || []).some(o => isRef(inst, o.id));
+      if (linked && b.host.wallId === refOf(wall)) continue;
+      // procura o vão (de uma parede) que fica onde a instância está
+      let best = null;
+      for (const w of wall ? [wall, ...walls] : walls) {
+        const ax = this.axisOf(w);
+        for (const o of w.userData.bim.wall.openings) {
+          if (els.some(e => e !== inst && isRef(e, o.id))) continue; // vão de outra instância
+          const p = this.pose(w, o.offset, b.host.flip, b.opening);
+          if (!p) continue;
+          const d = Math.hypot(inst.position.x - p.position[0], inst.position.y - p.position[1]) + Math.abs(inst.position.z - ax.base) * 0.1;
+          if (d < 0.05 && (!best || d < best.d)) best = { d, w, o };
+        }
+      }
+      if (!best) continue;
+      best.o.id = refOf(inst);
+      b.host.wallId = refOf(best.w);
+      fixed++;
+    }
+    // vãos ainda com uuid de instâncias que existem: troca pelo GUID
+    for (const w of walls) for (const o of w.userData.bim.wall.openings) {
+      const inst = els.find(e => isRef(e, o.id));
+      if (inst && o.id !== refOf(inst)) { o.id = refOf(inst); fixed++; }
+    }
+    if (fixed) this.viewer.changed();
+    return fixed;
   }
 
   _onRemove(obj) {

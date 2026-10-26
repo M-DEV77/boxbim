@@ -54,9 +54,13 @@ export class ProjectSession extends EventTarget {
         try { await this.createFrom(e); } catch (err) { console.warn('elemento não carregado', e.id, err); }
       }
     } finally { this.applying = false; }
+    // portas/janelas gravadas com o uuid antigo da parede: religa pelo GUID
+    const relinked = this.app.hosting?.repair() || 0;
+    if (relinked) console.info(`hospedagem: ${relinked} vínculo(s) parede ↔ porta/janela refeito(s)`);
     this.viewer.fit();
     this.connect();
     this.viewer.addEventListener('change', () => this.schedule());
+    if (relinked) this.schedule(); // grava os vínculos refeitos
     this.viewer.addEventListener('select', () => this.sendPresence());
     this.app.levels.addEventListener('change', () => { if (!this.applying) this.sendLevels(); });
     addEventListener('beforeunload', () => this.flush());

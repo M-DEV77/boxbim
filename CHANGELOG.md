@@ -6,12 +6,27 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.24.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.25.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.25.0] — 2026-10-26 · Paredes levam portas e janelas; marcadores de elevação arrastáveis
+
+### Corrigido
+- **Mover uma parede deixava as portas e janelas para trás** depois de reabrir o projeto: o vínculo parede ↔
+  porta/janela usava o identificador da sessão (que muda a cada abertura). Agora usa o GUID do elemento (gravado
+  no banco); ao abrir o projeto, os vínculos antigos são refeitos pela posição (a porta sobre o vão da parede) e
+  gravados.
+- Portas e janelas **acompanham a parede por qualquer caminho**: Mover/Girar, cota automática, pontas (grips),
+  aparar/estender, espelhar ou alteração de outra pessoa — ficam no mesmo deslocamento ao longo da parede.
+
+### Adicionado
+- **Arrastar os marcadores de elevação nas plantas** (botão esquerdo): muda a linha da elevação (encaixe de 5 cm),
+  com as linhas de profundidade e largura indo junto; grava no projeto ao soltar. Clique duplo continua abrindo a
+  elevação; o cursor vira ✥ sobre o marcador.
 
 ## [2.24.0] — 2026-10-26 · Mouse, revelar ocultos, cotas automáticas e elevações próprias
 

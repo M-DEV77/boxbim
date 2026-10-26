@@ -313,7 +313,7 @@ export async function copyElements(app, els, d, { level } = {}) {
   // hospedagem: a cópia da porta vai para a cópia da parede (se a parede foi copiada)
   for (const [el, { copy, host }] of map) {
     if (!host) continue;
-    const wall = list.find(x => x.uuid === host.wallId);
+    const wall = list.find(x => x.uuid === host.wallId || x.userData.bim.guid === host.wallId);
     const wcopy = wall && map.get(wall)?.copy;
     if (wcopy) { try { app.hosting.attach(copy, wcopy, { offset: host.offset, flip: host.flip }); } catch { /* fica solta */ } }
   }

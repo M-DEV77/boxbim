@@ -147,7 +147,10 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
   a peça anda (Ctrl+Z desfaz).
 - **Elevações** (Vistas › Gerenciar elevações, ⚙ no navegador ou o chip "Elevações…"): crie e nomeie elevações,
   com direção, linha (X, Y), **profundidade** e **largura**, e marque se ficam **visíveis** (no navegador, nos menus
-  e com o marcador nas plantas — clique duplo no marcador abre a elevação). Ficam gravadas no projeto.
+  e com o marcador nas plantas — clique duplo no marcador abre a elevação; **arraste o marcador** para mudar a
+  linha da elevação). Ficam gravadas no projeto.
+- **Paredes levam as portas e janelas**: mover a parede por qualquer caminho (Mover, cota, pontas, aparar,
+  espelhar…) leva junto o que ela hospeda, na mesma posição ao longo da parede.
 - **?** no canto da vista: ajuda do mouse e dos atalhos (aparece sozinha na primeira vez).
 
 ## Mover, girar e orbitar
@@ -388,4 +391,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.24.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.25.0</a>

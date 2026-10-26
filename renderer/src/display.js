@@ -4,10 +4,13 @@
 //   H / Shift+H ........... ocultar a seleção / mostrar tudo
 //   cursor ................ o nome do elemento sob o mouse aparece na barra de status
 //   ? na vista ............ ajuda do mouse (esquerdo gira, direito seleciona, Alt+direito gira, meio arrasta…)
-// E o gerenciador de ELEVAÇÕES (nome, direção, linha, profundidade, visível), gravado no projeto.
+// E o gerenciador de ELEVAÇÕES (nome, direção, linha, profundidade, visível), gravado no projeto. Nas plantas, os
+// marcadores das elevações se ARRASTAM (botão esquerdo) para mudar a linha da elevação; clique duplo abre a vista.
 import { h, modal, toast } from './ui.js';
 import { normalizeElevations, defaultElevations } from './views.js';
-import { fromUnit, toUnit, unitLabel } from './units.js';
+import { fromUnit, toUnit, unitLabel, fmtLen } from './units.js';
+
+const fmtM = m => fmtLen(m, { suffix: true });
 
 const store = (k, v) => { try { localStorage.setItem(k, v); } catch { /* sem armazenamento */ } };
 const load = k => { try { return localStorage.getItem(k); } catch { return null; } };
@@ -34,6 +37,7 @@ export class Display {
     });
     app.views.addEventListener('display', () => this.sync());
     app.views.addEventListener('activate', () => this.sync());
+    this.bindMarkerDrag();
     // clique duplo num marcador de elevação (nas plantas) abre a elevação
     v.renderer.domElement.addEventListener('dblclick', e => {
       const id = app.views.elevationAt(e.clientX, e.clientY);
@@ -51,6 +55,59 @@ export class Display {
       }
     });
     this.sync();
+  }
+
+  // ------------------------------------------------------------ arrastar marcadores de elevação (plantas)
+
+  bindMarkerDrag() {
+    const app = this.app, v = app.viewer, canvas = v.renderer.domElement;
+    let drag = null;
+    const hit = e => app.views.active.kind === 'plan' && !v.tool ? app.views.elevationAt(e.clientX, e.clientY) : null;
+    // captura: antes do OrbitControls (para não arrastar a vista junto)
+    canvas.addEventListener('pointerdown', e => {
+      if (e.button !== 0) return;
+      const id = hit(e);
+      if (!id) return;
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      const el = app.views.elevations({ all: true }).find(x => x.id === id);
+      const line = app.views.elevationLine(el);
+      const marker = v.annotations.children.find(o => o.userData.elevId === id && o.isMesh);
+      drag = { el, z: marker?.position.z ?? 0, start: { x: e.clientX, y: e.clientY }, o0: line.o.clone(), moved: false };
+      canvas.setPointerCapture(e.pointerId);
+    }, { capture: true });
+    canvas.addEventListener('pointermove', e => {
+      if (!drag) { if (!e.buttons) canvas.style.cursor = hit(e) ? 'move' : (v.hovered ? 'pointer' : ''); return; }
+      if (!drag.moved && Math.hypot(e.clientX - drag.start.x, e.clientY - drag.start.y) < 4) return;
+      drag.moved = true;
+      const p = this.groundPoint(e.clientX, e.clientY, drag.z);
+      if (!p) return;
+      const g = app.guides?.step ? Math.min(0.05, app.guides.step) : 0.05; // encaixe de 5 cm
+      drag.el.origem = [Math.round(p.x / g) * g, Math.round(p.y / g) * g].map(n => +n.toFixed(3));
+      v.setAnnotations(app.views._elevMarkers(drag.z));
+      app.status(`Elevação "${drag.el.nome}": linha em X ${fmtM(drag.el.origem[0])} · Y ${fmtM(drag.el.origem[1])} — solte para gravar.`);
+    }, { capture: true });
+    canvas.addEventListener('pointerup', e => {
+      if (!drag) return;
+      const d = drag;
+      drag = null;
+      e.stopImmediatePropagation();
+      if (!d.moved) return;
+      const list = app.views.elevations({ all: true }).map(x => (x.id === d.el.id ? d.el : x));
+      app.views.setElevations(list);
+      app.project?.send({ t: 'projeto', dados: { elevacoes: app.views.elevations({ all: true }) } });
+      app.status(`Elevação "${d.el.nome}" movida — clique duplo no marcador abre a vista.`);
+    }, { capture: true });
+  }
+
+  /** Ponto do plano horizontal z sob o cursor. */
+  groundPoint(x, y, z) {
+    const v = this.app.viewer, r = v.renderer.domElement.getBoundingClientRect();
+    v.raycaster.setFromCamera({ x: ((x - r.left) / r.width) * 2 - 1, y: -((y - r.top) / r.height) * 2 + 1 }, v.camera);
+    const ray = v.raycaster.ray, dz = ray.direction.z;
+    if (Math.abs(dz) < 1e-9) return null;
+    const t = (z - ray.origin.z) / dz;
+    return ray.origin.clone().addScaledVector(ray.direction, t);
   }
 
   // ------------------------------------------------------------ chips na vista
