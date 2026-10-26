@@ -207,8 +207,16 @@ button.mini { padding: 1px 7px; font-size: 11.5px; font-weight: normal; }
 .rbtn { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 58px; padding: 5px 2px 4px; background: transparent; border: 1px solid transparent; border-radius: 5px; font-size: 11px; line-height: 1.15; color: var(--text); text-align: center; }
 .rbtn:hover { background: var(--panel-2); border-color: var(--line); }
 .rbtn:active { background: var(--blue); }
-.rbtn svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-.rbtn .accent { stroke: var(--green-2); }
+/* ícones nas cores do ícone do BoxBim: traço claro, azul petróleo preenchido (.b), verde de destaque (.g/.gf) */
+.rbtn svg, .dd-ico svg, svg.ico24 { width: 24px; height: 24px; stroke: #dfe5ec; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+svg .b { fill: #26536e; stroke: #5ea6cf; }
+svg .g, .rbtn .accent { stroke: var(--green-2); }
+svg .gf { fill: var(--green); stroke: var(--green-2); }
+svg .t { fill: #7ee08f; stroke: none; font: 700 6.2px system-ui, sans-serif; text-anchor: middle; }
+.dd-ico { display: inline-flex; width: 20px; flex: none; }
+.dd-ico svg { width: 20px; height: 20px; }
+.rbtn.split .caret { font-size: 9px; line-height: 1; color: var(--muted); margin-top: -2px; padding: 1px 10px; border-radius: 3px; }
+.rbtn.split .caret:hover, .rbtn.split.open .caret { background: var(--line); color: var(--text); }
 .rbtn.drop::after { content: '▾'; font-size: 9px; color: var(--muted); margin-top: -2px; }
 .ribbon-toggle { padding: 0 8px; margin-bottom: 3px; font-size: 13px; line-height: 18px; background: transparent; }
 /* recolhida: só as abas ficam visíveis; clicar numa aba abre a faixa */
@@ -230,7 +238,8 @@ button.toggle.on { background: var(--green); border-color: var(--green); color: 
 .statusbar .status-right { display: flex; align-items: center; gap: 10px; }
 .statusbar button.toggle { padding: 0 8px; font-size: 11px; line-height: 18px; }
 .rbtn.on { background: var(--green); border-color: var(--green); color: #fff; }
-.rbtn.on .accent { stroke: #fff; }
+.rbtn.on .accent, .rbtn.on svg .g { stroke: #fff; }
+.rbtn.on svg .b { fill: #0f5a22; stroke: #bff0c8; }
 
 /* ---------- indicador de versão */
 .version-btn { background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 0 9px; font-size: 11px; line-height: 18px; color: var(--green-2); font-variant-numeric: tabular-nums; }

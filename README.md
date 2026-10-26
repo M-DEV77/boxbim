@@ -249,6 +249,12 @@ Um parâmetro chamado `espessuraParede` recebe a espessura da parede hospedeira 
 
 ## Menus, janelas e presets
 
+- **Ferramentas agrupadas**: as parecidas ficam num botão só — Abrir (abrir e importar IFC, DWG, DXF, FBX,
+  Collada, .rvt), Exportar (formatos e imagem), Laje e piso, Níveis, Eixo de trabalho, Editar linhas (aparar,
+  estender, canto), Offset (2D/3D), Sólido (extrudar, varrer), Vazio, Mover e girar, Copiar e espelhar, Ajustar
+  paredes, Vistas, Aparência (Render, Textura, materiais, texturas), Biblioteca, Revit e IA. O clique repete a
+  última usada (o botão mostra qual); a seta **▾** lista as outras. Os comandos soltos continuam no Personalizar.
+- Ícones nas cores do ícone do BoxBim: azul petróleo preenchido, verde de destaque; arquivos com a sigla.
 - Todas as abas da faixa são suas (nenhuma é fixa): **+** ao lado das abas (ou ▦ › Personalizar menus) cria,
   renomeia, reordena e apaga abas e grupos e escolhe os comandos e objetos de cada grupo.
 - **▦ Presets** (canto superior direito): cada preset guarda as abas e o arranjo das janelas (faixa e barras
@@ -360,4 +366,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.22.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.23.0</a>

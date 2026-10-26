@@ -14,7 +14,8 @@ flowchart LR
     MAIN["web/main.js<br/>inicia o App"] --> APP["app.js<br/>App: faixa, painéis, atalhos"]
     APP --> VIEWER["viewer.js<br/>cena three.js, seleção, cortes"]
     APP --> VIEWS["views.js / levels.js / levels-edit.js<br/>vistas, níveis, corte por nível"]
-    APP --> RIB["ribbon.js / toolbars.js<br/>comandos e presets"]
+    APP --> RIB["ribbon.js / toolbars.js<br/>comandos, famílias ▾ e presets"]
+    RIB --> ICONS["icons.js<br/>ícones nas cores da marca"]
     APP --> PANELS["panels.js<br/>Configurações, agentes, MCP"]
     APP --> CHAT["chat.js<br/>Chat IA (agentes)"]
     CHAT --> TOOLS["tools.js<br/>ferramentas do BoxBim p/ a IA"]
@@ -108,7 +109,8 @@ flowchart LR
 | 2026-10-26 | 2.19.1 | `edaed46` | Comandos novos (Ambientes, Materiais…) entram sozinhos nos presets de menus já gravados |
 | 2026-10-26 | 2.20.0 | `1783e1e` | Estilo de vista Textura (`viewstyle.js` + `RenderMode.enableTextures`): materiais com mapas sem céu/sol/sombras |
 | 2026-10-26 | 2.21.0 | `b751611` | Texturas procedurais próprias em camadas (`materials.js`, `texture-editor.js`), gravadas nos tipos do projeto; ferramentas do Chat IA `list_materials`, `create_texture`, `set_material` |
-| 2026-10-26 | 2.22.0 | este commit | Entrada com demonstração (`demo.html` + `pages/demo.js`): Casa Horizonte com materiais procedurais, céu e sol; login por cima depois de `BOXBIM_DEMO_MIN` min |
+| 2026-10-26 | 2.22.0 | `f9450ed` | Entrada com demonstração (`demo.html` + `pages/demo.js`): Casa Horizonte com materiais procedurais, céu e sol; login por cima depois de `BOXBIM_DEMO_MIN` min |
+| 2026-10-26 | 2.23.0 | este commit | Ferramentas parecidas em botões de família com ▾ (`ribbon.js`, presets convertidos em `toolbars.js`); ícones novos nas cores da marca (`icons.js`) |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.22.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.23.0</a>

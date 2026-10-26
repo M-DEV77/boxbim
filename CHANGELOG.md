@@ -6,12 +6,32 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.22.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.23.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.23.0] — 2026-10-26 · Ferramentas agrupadas e ícones novos
+
+### Mudado
+- **Ferramentas parecidas num botão só** (botão de família): o clique repete a última usada — o botão mostra o
+  ícone e o nome dela — e a seta **▾** abre a lista com as outras, cada uma com ícone e atalho. A faixa padrão
+  caiu de ~60 para ~25 botões:
+  Abrir (abrir/importar IFC, DWG, DXF, FBX, Collada, .rvt) · Exportar (IFC, DWG, FBX, Collada, glTF, .rvt, imagem) ·
+  Laje e piso · Níveis (novo, editar) · Eixo de trabalho (novo, plano do nível) · Editar linhas (aparar, estender,
+  canto) · Offset (2D, 3D) · Sólido (extrudar, varrer) · Vazio (cortar, tirar corte) · Mover e girar (e desfazer) ·
+  Copiar e espelhar · Ajustar paredes (junções, até o telhado) · Vistas (3D, plantas, forros, elevações) ·
+  Aparência (Render, estilo Textura, materiais, texturas) · Biblioteca (novo objeto, importar .bbo) · Revit · IA.
+- Os presets de menus gravados são convertidos uma vez: os comandos de uma mesma família viram o botão da família
+  e grupos que ficam vazios saem. Os comandos soltos continuam disponíveis em Personalizar menus.
+- **Ícones redesenhados** nas cores do ícone do BoxBim: formas em azul petróleo (#26536E), traço claro e
+  destaques no verde da marca (#169E2E); arquivos ganham o documento com a sigla (IFC, DWG, DXF, FBX, DAE, GLB,
+  RVT, BBO). Os menus suspensos mostram os ícones.
+
+### Adicionado
+- Comando **Estilo Textura** (na família Aparência).
 
 ## [2.22.0] — 2026-10-26 · Entrada com projeto de demonstração
 

@@ -49,6 +49,8 @@ export class Toolbars extends EventTarget {
       // versão 2: não há mais aba fixa — a aba Início vira comum, com os grupos que ela mostrava fixos
       if (p.dados.versao !== 2) { this.upgrade(p); changed = true; }
       for (const a of p.dados.abas) for (const g of a.grupos) changed = this.migrate(g) || changed;
+      // versão com famílias: ferramentas parecidas viram um botão só (uma vez por preset)
+      if (!p.dados.familias) { this.groupFamilies(p); p.dados.familias = 1; changed = true; }
       changed = this.addNewCommands(p) || changed;
     }
     if (changed) this.save().catch(() => {});
@@ -78,7 +80,9 @@ export class Toolbars extends EventTarget {
   addNewCommands(p) {
     const all = Object.keys(this.commands);
     const seen = new Set(p.dados.comandosVistos || all.filter(id => !NEW_COMMANDS.includes(id)));
-    const fresh = all.filter(id => !seen.has(id));
+    // famílias e os comandos de dentro delas não entram soltos (já estão no botão da família)
+    const inFamily = new Set(Object.values(this.commands).flatMap(c => c.family || []));
+    const fresh = all.filter(id => !seen.has(id) && !this.commands[id].family && !inFamily.has(id));
     const present = new Set(p.dados.abas.flatMap(a => a.grupos.flatMap(g => g.itens.filter(i => i.tipo === 'comando').map(i => i.id))));
     let changed = !p.dados.comandosVistos;
     for (const id of fresh) {
@@ -101,6 +105,27 @@ export class Toolbars extends EventTarget {
     }
     p.dados.comandosVistos = all;
     return changed;
+  }
+
+  /**
+   * Junta no preset os comandos de cada família num botão só: a primeira ocorrência de um comando da família vira o
+   * botão da família e as outras saem; grupos que ficam vazios saem também.
+   */
+  groupFamilies(p) {
+    const groups = p.dados.abas.flatMap(a => a.grupos);
+    for (const [fid, f] of Object.entries(this.commands)) {
+      if (!f.family || groups.some(g => g.itens.some(i => i.id === fid))) continue;
+      let placed = false;
+      for (const g of groups) {
+        g.itens = g.itens.flatMap(it => {
+          if (it.tipo !== 'comando' || !f.family.includes(it.id)) return [it];
+          if (placed) return [];
+          placed = true;
+          return [{ tipo: 'comando', id: fid }];
+        });
+      }
+    }
+    for (const a of p.dados.abas) a.grupos = a.grupos.filter(g => g.itens.length);
   }
 
   /** Comandos que saíram da faixa viram os objetos correspondentes; os que não existem mais saem. */
@@ -147,6 +172,7 @@ export class Toolbars extends EventTarget {
       if (it.tipo === 'comando') {
         const c = this.commands[it.id];
         if (!c) continue;
+        if (c.render) { out.push(c.render()); continue; } // botão de família (▾)
         const b = h('button', { class: `rbtn${c.drop ? ' drop' : ''}`, title: c.title || c.label.replace('\n', ' '), html: c.svg + `<span>${c.label.replace('\n', '<br>')}</span>` });
         b.addEventListener('click', () => c.action(b));
         if (c.bind) c.bind(b);

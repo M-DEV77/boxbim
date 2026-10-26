@@ -38,12 +38,13 @@ export function closeMenu() {
 document.addEventListener('pointerdown', e => { if (openMenu && !openMenu.el.contains(e.target) && e.target !== openMenu.anchor) closeMenu(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
 
-/** items: [{ label, hint, action }] ou '-' para separador */
+/** items: [{ label, hint, icon (svg), action }] ou '-' para separador */
 export function dropdown(anchor, items) {
   if (openMenu?.anchor === anchor) return closeMenu();
   closeMenu();
   const el = h('div', { class: 'dropdown' }, items.map(it => it === '-' ? h('hr') :
-    h('button', { disabled: it.disabled, onclick: () => { closeMenu(); it.action(); } }, it.label, it.hint ? h('span', { class: 'hint' }, it.hint) : null)));
+    h('button', { disabled: it.disabled, onclick: () => { closeMenu(); it.action(); } },
+      it.icon ? h('span', { class: 'dd-ico', html: it.icon }) : null, it.label, it.hint ? h('span', { class: 'hint' }, it.hint) : null)));
   const r = anchor.getBoundingClientRect();
   el.style.left = `${Math.min(r.left, innerWidth - 300)}px`;
   el.style.top = `${r.bottom + 4}px`;
