@@ -230,6 +230,13 @@ export class Toolbars extends EventTarget {
   // ------------------------------------------------------------ personalizar menus
 
   /** Abas (com nome) → grupos (com nome) → comandos e objetos escolhidos, na ordem da faixa. */
+  /** Ícone de um item da faixa (comando: o SVG dele; objeto: ícone, miniatura ou um genérico). */
+  itemIcon(tipo, id) {
+    if (tipo === 'comando') { const c = this.commands[id]; return c ? h('span', { class: 'tb-ico', html: c.svg }) : null; }
+    const o = this.app.objects.get(id);
+    return iconView(o?.icone, 'obj-icon tb-ico') || (o?.miniatura ? h('img', { class: 'obj-icon tb-ico', src: o.miniatura, alt: '' }) : h('span', { class: 'tb-ico tb-ico-obj' }, '▣'));
+  }
+
   customize() {
     const dados = structuredClone(this.active.dados);
     let tab = 0, grp = 0;
@@ -276,7 +283,7 @@ export class Toolbars extends EventTarget {
       const renderChosen = () => {
         chosen.replaceChildren(...(g.itens.length ? g.itens.map((it, i) => {
           const label = it.tipo === 'comando' ? this.commands[it.id]?.label.replace('\n', ' ') : this.app.objects.get(it.id)?.name;
-          return h('div', { class: 'tb-item' }, h('span', {}, label || `(${it.id})`),
+          return h('div', { class: 'tb-item' }, this.itemIcon(it.tipo, it.id), h('span', {}, label || `(${it.id})`),
             h('button', { class: 'mini', disabled: i === 0, onclick: () => { [g.itens[i - 1], g.itens[i]] = [g.itens[i], g.itens[i - 1]]; renderChosen(); } }, '◀'),
             h('button', { class: 'mini', disabled: i === g.itens.length - 1, onclick: () => { [g.itens[i + 1], g.itens[i]] = [g.itens[i], g.itens[i + 1]]; renderChosen(); } }, '▶'),
             h('button', { class: 'mini danger', onclick: () => { g.itens.splice(i, 1); renderGroup(); } }, '✕'));
@@ -299,9 +306,9 @@ export class Toolbars extends EventTarget {
         for (const c of Object.values(this.commands)) count[c.label] = (count[c.label] || 0) + 1;
         const nameOf = c => (count[c.label] > 1 && c.title ? c.title : c.label.replace('\n', ' '));
         const cmds = Object.entries(this.commands).filter(([, c]) => !q || c.label.toLowerCase().includes(q) || (c.title || '').toLowerCase().includes(q))
-          .map(([id, c]) => h('label', { class: 'tb-check', title: c.title || '' }, h('input', { type: 'checkbox', checked: has('comando', id), onchange: e => toggle('comando', id, e.target.checked) }), nameOf(c)));
+          .map(([id, c]) => h('label', { class: 'tb-check', title: c.title || '' }, h('input', { type: 'checkbox', checked: has('comando', id), onchange: e => toggle('comando', id, e.target.checked) }), this.itemIcon('comando', id), nameOf(c)));
         const objs = this.app.objects.items.filter(o => !o.broken && (!q || o.name.toLowerCase().includes(q)))
-          .map(o => h('label', { class: 'tb-check' }, h('input', { type: 'checkbox', checked: has('objeto', o.id), onchange: e => toggle('objeto', o.id, e.target.checked) }), iconView(o.icone, 'obj-icon'), o.name));
+          .map(o => h('label', { class: 'tb-check' }, h('input', { type: 'checkbox', checked: has('objeto', o.id), onchange: e => toggle('objeto', o.id, e.target.checked) }), this.itemIcon('objeto', o.id), o.name));
         lists.replaceChildren(
           h('div', {}, h('div', { class: 'section-title' }, 'Comandos'), h('div', { class: 'tb-list' }, cmds)),
           h('div', {}, h('div', { class: 'section-title' }, 'Objetos'), h('div', { class: 'tb-list' }, objs)));

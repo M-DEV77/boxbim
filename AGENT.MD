@@ -135,7 +135,8 @@ flowchart LR
 | 2026-10-26 | 2.31.0 | `f8c2e1b` | Hachura nos materiais (`hatch.js`: padrões, shader da tampa do corte em coordenadas do modelo, prévia no editor) |
 | 2026-10-26 | 2.32.0 | `8b83af2` | Renomear e duplicar vistas (`views.js`: `names`, `dups`, `dados.vistas`); servidor grava os dados do projeto um por vez (corrige perda de alterações seguidas) |
 | 2026-10-26 | 2.33.0 | `ad3d349` | Cotas como objeto (`dims.js`: `bim.cota`, estilos `dados.estilosCota`, ferramenta com encaixe, overlay SVG em mm de papel, propriedades) |
-| 2026-10-26 | 2.34.0 | este commit | Medidor do Chat IA (`chat-meter.js`: carregamento do modelo, contexto, tokens; `localModelInfo` consulta LM Studio/Ollama) |
+| 2026-10-26 | 2.34.0 | `99879f3` | Medidor do Chat IA (`chat-meter.js`: carregamento do modelo, contexto, tokens; `localModelInfo` consulta LM Studio/Ollama) |
+| 2026-10-26 | 2.34.1 | este commit | Ícones no Personalizar menus (`toolbars.itemIcon`) |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.34.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.34.1</a>

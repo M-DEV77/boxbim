@@ -6,12 +6,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.34.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.34.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.34.1] — 2026-10-26 · Ícones no Personalizar menus
+
+### Mudado
+- **Personalizar menus** mostra o ícone de cada item: nos comandos (o mesmo da faixa), nos objetos (ícone ou
+  miniatura do objeto; um genérico quando não há) e na lista "Na ordem da faixa" do grupo.
 
 ## [2.34.0] — 2026-10-26 · Medidor do Chat IA
 
