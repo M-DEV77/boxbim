@@ -12,6 +12,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { WebGLPathTracer, ProceduralEquirectTexture } from 'three-gpu-pathtracer';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { PATTERNS, materialProps, applyMaterial, createMaterial, boxUv, restoreUv } from './materials.js';
 
 const DEG = Math.PI / 180;
@@ -50,8 +51,9 @@ export class RenderMode extends EventTarget {
     this.mats = new Map();          // nome do material da biblioteca → material de render
     this.colorMats = new Map();     // cor/opacidade → material de render (malhas sem material da biblioteca)
     this.renderSet = new WeakSet();
-    app.viewer.addEventListener('change', () => { if (this.active) this.onModelChange(); });
-    app.types.addEventListener('change', () => { if (this.active) this.refreshMaterials(); });
+    this.texActive = false;          // estilo Textura: só os materiais, sem céu/sol/sombras
+    app.viewer.addEventListener('change', () => { if (this.active) this.onModelChange(); else if (this.texActive) this.applyMaterials(); });
+    app.types.addEventListener('change', () => { if (this.active || this.texActive) this.refreshMaterials(); });
   }
 
   get viewer() { return this.app.viewer; }
@@ -135,6 +137,35 @@ export class RenderMode extends EventTarget {
     v.model.traverse(o => { if (o.isMesh && o.material) [].concat(o.material).forEach(m => { m.needsUpdate = true; }); });
     this.app.renderProps();
     this.dispatchEvent(new Event('change'));
+  }
+
+  /**
+   * Estilo Textura: os mesmos materiais (todos os mapas, UVs em metros), mas com a luz e o fundo da vista e um
+   * ambiente de estúdio para os reflexos — leve para modelar e conferir os materiais antes do Render.
+   */
+  enableTextures() {
+    const v = this.viewer;
+    this.texActive = true;
+    this.texPrevEnv = v.scene.environment;
+    if (!this.studioEnv) {
+      const pmrem = new THREE.PMREMGenerator(v.renderer);
+      this.studioEnv = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+      pmrem.dispose();
+    }
+    v.scene.environment = this.studioEnv;
+    v.scene.environmentIntensity = 0.6;
+    this.applyMaterials();
+    this.app.renderProps();
+  }
+
+  disableTextures() {
+    const v = this.viewer;
+    this.texActive = false;
+    this.restoreMaterials();
+    v.scene.environment = this.texPrevEnv ?? null;
+    v.scene.environmentIntensity = 1;
+    v.model.traverse(o => { if (o.isMesh && o.material) [].concat(o.material).forEach(m => { m.needsUpdate = true; }); });
+    this.app.renderProps();
   }
 
   // ------------------------------------------------------------ quadro

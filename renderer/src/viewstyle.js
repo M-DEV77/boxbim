@@ -3,6 +3,7 @@
 //   projeto ...... desenho técnico: faces brancas, arestas pretas, fundo de papel, corte cinza nas plantas
 //   colorido ..... uma cor por categoria (paredes, lajes, pilares…), para entender o projeto rápido
 //   transparente . as mesmas cores, translúcidas, para ver o que está escondido
+//   textura ...... os materiais com cor, relevo e todos os mapas, na luz normal da vista (leve, para modelar)
 //   render ....... materiais reais em tempo real (céu, sol, sombras; path tracing) — o RenderMode
 // Cada vista guarda o próprio estilo (3D começa em colorido; plantas e elevações, em projeto).
 // As cores do colorido são do projeto (dados.cores) e editáveis.
@@ -13,6 +14,7 @@ export const STYLES = {
   projeto: { label: 'Projeto', icon: '✎', title: 'Desenho técnico: faces brancas, linhas pretas' },
   colorido: { label: 'Colorido', icon: '◧', title: 'Uma cor por categoria, para entender o projeto' },
   transparente: { label: 'Transparente', icon: '◌', title: 'Cores translúcidas: mostra o que está escondido' },
+  textura: { label: 'Textura', icon: '▦', title: 'Materiais com texturas e mapas, sem céu/sol/sombras (leve, antes do Render)' },
   render: { label: 'Render', icon: '☀', title: 'Materiais reais em tempo real (céu, sol, sombras, path tracing)' },
 };
 
@@ -28,6 +30,7 @@ export const COLOR_LABELS = {
   IfcBuildingElementProxy: 'Genéricos / caixas', IfcSanitaryTerminal: 'Louças', IfcLightFixture: 'Iluminação', outros: 'Outros',
 };
 
+const TEXTURED = new Set(['textura', 'render']); // estilos com os materiais do RenderMode
 const EDGE_DARK = 0x1d1d1d, EDGE_LIGHT = 0xc9d3df;
 
 export class ViewStyles extends EventTarget {
@@ -41,7 +44,7 @@ export class ViewStyles extends EventTarget {
     this.mats = new Map();
     this.styleSet = new WeakSet();
     app.views.addEventListener('activate', () => this.apply());
-    app.viewer.addEventListener('change', () => { if (this.current && this.current !== 'render') this.applyMaterials(); });
+    app.viewer.addEventListener('change', () => { if (this.current && !TEXTURED.has(this.current)) this.applyMaterials(); });
   }
 
   get viewer() { return this.app.viewer; }
@@ -67,7 +70,7 @@ export class ViewStyles extends EventTarget {
     this.colors = { ...DEFAULT_COLORS, ...(colors || {}) };
     for (const m of this.mats.values()) m.dispose();
     this.mats.clear();
-    if (this.current && this.current !== 'render') { this.restoreMaterials(); this.applyMaterials(true); }
+    if (this.current && !TEXTURED.has(this.current)) { this.restoreMaterials(); this.applyMaterials(true); }
   }
 
   /** Aplica o estilo da vista ativa (chamado a cada troca de vista). */
@@ -77,6 +80,7 @@ export class ViewStyles extends EventTarget {
     const rm = this.app.renderMode;
     // o render reconstrói fundo, luzes e materiais a cada vista; os outros estilos trocam só materiais e linhas
     if (rm?.active) rm.disable();
+    if (rm?.texActive) rm.disableTextures();
     this.restoreMaterials();
     this.current = style;
     const viewer = this.viewer;
@@ -85,6 +89,13 @@ export class ViewStyles extends EventTarget {
       viewer.capsEnabled = true;
       this.app.guides?.update(v, { hidden: true });
       rm.enable();
+    } else if (style === 'textura') {
+      const bg = v.kind !== '3d' ? 'paper' : 'dark';
+      viewer.setBackground(bg);
+      viewer.setEdges(true, v.kind !== '3d' ? EDGE_DARK : 0x2a2f36);
+      viewer.capsEnabled = true;
+      rm.enableTextures();
+      this.app.guides?.update(v, { paper: bg === 'paper', z: this.app.views.activeLevel()?.elevation ?? 0 });
     } else {
       const bg = style === 'projeto' || v.kind !== '3d' ? 'paper' : 'dark';
       viewer.setBackground(bg);
@@ -131,7 +142,7 @@ export class ViewStyles extends EventTarget {
   /** Troca o material das malhas pelo do estilo (o original fica em _styleBase para a volta). */
   applyMaterials(force = false) {
     const style = this.current;
-    if (!style || style === 'render') return;
+    if (!style || TEXTURED.has(style)) return;
     let changed = false;
     this.viewer.model.traverse(o => {
       if (!o.isMesh || o.userData.isEdge) return;

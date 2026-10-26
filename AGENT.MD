@@ -39,6 +39,7 @@ flowchart LR
     APP --> IO["io/*<br/>IFC, DXF, glTF, Collada…"]
     APP --> RENDER["render.js<br/>vista Render, path tracing"]
     RENDER --> MATS["materials.js<br/>padrões procedurais, mapas,<br/>UVs em metros, paralaxe"]
+    VIEWS --> RENDER
     APP --> MATED["material-editor.js<br/>editor com pré-visualização"]
     MATED --> MATS
     API["web/api.js<br/>window.boxbim (RPC)"] --> LOCALAI["web/local-ai.js<br/>IA e MCP locais pelo navegador"]
@@ -98,7 +99,8 @@ flowchart LR
 | 2026-10-26 | 2.17.0 | `2deab17` | Retirada a conexão com o Unreal Engine; na nuvem o app não consulta mais o Revit (403); CSP corrigido |
 | 2026-10-26 | 2.18.0 | `32edf3b` | Ambientes e camadas (`environments.js`); permissão por camada por participante, conferida no tempo real e no MCP |
 | 2026-10-26 | 2.19.0 | `7b77756` | Sistema de materiais com mapas procedurais (`materials.js`, `material-editor.js`): bump, normal, AO, deslocamento, rugosidade/brilho, metal, especular, opacidade, emissão |
-| 2026-10-26 | 2.19.1 | este commit | Comandos novos (Ambientes, Materiais…) entram sozinhos nos presets de menus já gravados |
+| 2026-10-26 | 2.19.1 | `edaed46` | Comandos novos (Ambientes, Materiais…) entram sozinhos nos presets de menus já gravados |
+| 2026-10-26 | 2.20.0 | este commit | Estilo de vista Textura (`viewstyle.js` + `RenderMode.enableTextures`): materiais com mapas sem céu/sol/sombras |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.19.1</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.20.0</a>

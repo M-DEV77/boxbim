@@ -83,4 +83,4 @@ Copie o volume `/data` (por exemplo, com o backup de volumes do Easypanel). O ar
 | `BOXBIM_CONNECT_SRC` | — | endereços extras que o navegador pode chamar (IA/MCP na rede interna) |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.19.1</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.20.0</a>

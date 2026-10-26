@@ -944,7 +944,7 @@ class App {
   /** Vista Render: materiais do elemento com cor, rugosidade, metal, textura, escala e vidro — ao vivo. */
   renderMaterialProps(root, o) {
     const rm = this.renderMode;
-    if (!rm?.active) return;
+    if (!rm?.active && !rm?.texActive) return;
     const names = rm.materialsOf(o);
     if (!names.length) return;
     root.append(h('h4', {}, 'Materiais (render)'));

@@ -294,6 +294,7 @@ Vistas 3D têm **Perspectiva/Ortogonal**. Grade e ponto base (0,0,0) aparecem em
 
 | Onde | O quê |
 |---|---|
+| Estilo **Textura** (qualquer vista) | os materiais com cor, relevo e todos os mapas na luz normal da vista, com linhas e grade — leve, para modelar e conferir os materiais antes do Render (Propriedades › Materiais funciona aqui também) |
 | Estilo **Render** (qualquer vista) | céu, sol (azimute/altura), sombras, oclusão ambiente, tonemapping; materiais PBR com texturas procedurais |
 | Propriedades › **Materiais (render)** | cor, rugosidade, metal, vidro, normal, deslocamento, padrão e escala do material, ao vivo (grava nos tipos do projeto); **Mapas…** abre o editor |
 | Vistas › **Materiais** (editor) | pré-visualização 3D e os mapas procedurais do padrão (concreto, reboco, tijolo, cerâmica, pastilha, madeira, ripado, metal, chapa perfurada, pedra, grama): **relevo (bump), normal, oclusão (AO), deslocamento** (paralaxe), **rugosidade/brilho**, **metal**, **especular** (intensidade e cor), **opacidade** (recorte de furos e vãos) e **emissão** (cor e intensidade) — cada mapa ligado/desligado e com intensidade |
@@ -353,4 +354,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.19.1</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.20.0</a>

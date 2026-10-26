@@ -6,12 +6,20 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.19.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.20.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.20.0] — 2026-10-26 · Estilo de vista Textura
+
+### Adicionado
+- **Textura**, novo estilo de vista (barra de estilos, entre Transparente e Render): os materiais com cor, relevo e
+  todos os mapas procedurais, na luz normal da vista e com linhas e grade — sem céu, sol, sombras nem
+  pós-processamento. Serve para modelar e conferir os materiais antes do Render; o painel Materiais das
+  Propriedades e o Editor de materiais atualizam a vista ao vivo.
 
 ## [2.19.1] — 2026-10-26 · Comandos novos aparecem na faixa
 
