@@ -5,7 +5,7 @@
 //     (se um conversor do servidor precisa gravar nele, grava num temporário e o navegador baixa em seguida).
 // O projeto aberto vai no cabeçalho X-Projeto (biblioteca de objetos e tipos do projeto).
 
-import { localChat, localModels, cancelLocal, isLocalUrl, localMcpTools, localMcpCall, forgetLocalMcp } from './local-ai.js';
+import { localChat, localModels, cancelLocal, isLocalUrl, localMcpTools, localMcpCall, forgetLocalMcp, localModelInfo } from './local-ai.js';
 
 const params = new URLSearchParams(location.search);
 export const projectId = params.get('projeto') || null;
@@ -153,6 +153,11 @@ const api = {
     chat: async req => { const p = await localProvider(req.providerId); return p ? localChat(p, req) : call('ai:chat', req); },
     cancel: id => (cancelLocal(id) ? Promise.resolve(true) : call('ai:cancel', id)),
     models: async id => { const p = await localProvider(id); return p ? localModels(p) : call('ai:models', id); },
+    /** Estado do modelo local (carregado? contexto?) — só provedores no computador de quem usa; senão null. */
+    modelInfo: async (id, model) => {
+      const p = (await call('settings:get')).providers?.[id];
+      return p && (p.local || isLocalUrl(p.baseUrl)) ? localModelInfo(p, model).catch(() => null) : null;
+    },
   },
   // servidores MCP do Chat IA: os do servidor por ele; os "no meu computador" pelo navegador
   mcp: {

@@ -30,6 +30,7 @@ flowchart LR
     ICONS --> TABLER["icons-tabler.js<br/>Tabler Icons (MIT), gerado"]
     APP --> PANELS["panels.js<br/>Configurações, agentes, MCP"]
     APP --> CHAT["chat.js<br/>Chat IA (agentes)"]
+    CHAT --> METER["chat-meter.js<br/>modelo, contexto e tokens"]
     CHAT --> TOOLS["tools.js<br/>ferramentas do BoxBim p/ a IA"]
     APP --> PROJ["project.js<br/>ProjectSession: carrega e sincroniza"]
     APP --> ENVS["environments.js<br/>ambientes, camadas, permissões"]
@@ -133,7 +134,8 @@ flowchart LR
 | 2026-10-26 | 2.30.0 | `1a9f6dd` | Escala por vista e pesos de linha (`drawing.js`); arestas e linhas de corte com espessura real (LineSegments2/LineMaterial; `viewer.updateSectionLines`) |
 | 2026-10-26 | 2.31.0 | `f8c2e1b` | Hachura nos materiais (`hatch.js`: padrões, shader da tampa do corte em coordenadas do modelo, prévia no editor) |
 | 2026-10-26 | 2.32.0 | `8b83af2` | Renomear e duplicar vistas (`views.js`: `names`, `dups`, `dados.vistas`); servidor grava os dados do projeto um por vez (corrige perda de alterações seguidas) |
-| 2026-10-26 | 2.33.0 | este commit | Cotas como objeto (`dims.js`: `bim.cota`, estilos `dados.estilosCota`, ferramenta com encaixe, overlay SVG em mm de papel, propriedades) |
+| 2026-10-26 | 2.33.0 | `ad3d349` | Cotas como objeto (`dims.js`: `bim.cota`, estilos `dados.estilosCota`, ferramenta com encaixe, overlay SVG em mm de papel, propriedades) |
+| 2026-10-26 | 2.34.0 | este commit | Medidor do Chat IA (`chat-meter.js`: carregamento do modelo, contexto, tokens; `localModelInfo` consulta LM Studio/Ollama) |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.33.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.34.0</a>

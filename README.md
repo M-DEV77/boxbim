@@ -374,6 +374,11 @@ Revit via IFC (vínculo, mantém categorias) ou DXF (geometria importada).
 
 ## IA
 
+- **Medidor do Chat IA** (faixa logo abaixo do cabeçalho do chat): barra do **modelo** (animada enquanto a IA
+  trabalha, com o tempo; com LM Studio/Ollama mostra se o modelo está carregado), barra de **contexto** (quanto da
+  janela do modelo a conversa ocupa: verde, âmbar, vermelho) e **tokens** da última chamada (↑ entrada, ↓ saída) e
+  o total da conversa. "Nova" zera.
+
 **⚙ Configurações › Provedores de IA**: Claude (Anthropic), OpenAI, Google Gemini, OpenRouter, Groq, DeepSeek,
 Mistral, xAI e locais — LM Studio (`:1234`), Ollama (`:11434`), llama.cpp `llama-server` (`:8080`) — além de
 qualquer servidor compatível com OpenAI. Só o administrador altera; as chaves ficam no servidor, cifradas
@@ -409,4 +414,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.33.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.34.0</a>

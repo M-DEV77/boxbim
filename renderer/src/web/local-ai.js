@@ -63,6 +63,31 @@ export async function localChat(p, req) {
   finally { clearTimeout(timer); controllers.delete(req.requestId); }
 }
 
+/**
+ * Estado do modelo num servidor local: LM Studio (/api/v0/models: carregado ou não, contexto máximo e o carregado) ou
+ * Ollama (/api/ps: modelos na memória). { estado: 'carregado'|'descarregado', contexto } ou null se não der para saber.
+ */
+export async function localModelInfo(p, model) {
+  const root = p.baseUrl.replace(/\/v1\/?$/, '').replace(/\/$/, '');
+  const get = async url => {
+    const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 2500);
+    try { const r = await fetch(url, { signal: ctrl.signal }); return r.ok ? r.json() : null; } catch { return null; } finally { clearTimeout(t); }
+  };
+  const lm = await get(`${root}/api/v0/models`);
+  if (Array.isArray(lm?.data)) {
+    const llms = lm.data.filter(m => m.type !== 'embeddings');
+    const m = llms.find(x => x.id === model) || llms.find(x => x.state === 'loaded') || llms[0];
+    if (!m) return null;
+    return { estado: m.state === 'loaded' ? 'carregado' : 'descarregado', contexto: m.loaded_context_length || m.max_context_length || null, modelo: m.id };
+  }
+  const ol = await get(`${root}/api/ps`);
+  if (Array.isArray(ol?.models)) {
+    const m = ol.models.find(x => x.name === model || x.model === model);
+    return { estado: m ? 'carregado' : 'descarregado', contexto: m?.context_length || null, modelo: model };
+  }
+  return null;
+}
+
 export function cancelLocal(id) { controllers.get(id)?.abort(); return controllers.has(id); }
 
 export async function localModels(p) {

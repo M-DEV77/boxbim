@@ -375,6 +375,7 @@ class App {
   async selectAgent(id) {
     await this.saveSettings({ activeAgent: id });
     $('#agent-select').value = id;
+    this.chat?.meter?.refreshModel();
     this.updateAgentLabel();
     this.panels.renderAgents();
   }

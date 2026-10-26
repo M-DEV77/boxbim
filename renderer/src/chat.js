@@ -1,6 +1,7 @@
 // Chat de IA: monta o prompt do agente (skills + memórias + contexto da cena) e roda o loop de ferramentas.
 import { $, h, esc, markdown, toast } from './ui.js';
 import { toolsFor, runTool, sceneSummary } from './tools.js';
+import { ChatMeter } from './chat-meter.js';
 
 const B = window.boxbim;
 
@@ -22,6 +23,7 @@ export class Chat {
     $('#chat-new').addEventListener('click', () => this.reset());
     $('#chat-save').addEventListener('click', () => this.saveMarkdown());
     $('#chat-remember').addEventListener('click', () => this.remember());
+    this.meter = new ChatMeter(app, this); // barras de modelo e contexto + tokens usados
     this.reset();
   }
 
@@ -30,6 +32,7 @@ export class Chat {
   reset() {
     this.stop();
     this.messages = [];
+    this.meter?.reset();
     this.el.innerHTML = '';
     this.info('Nova conversa. O agente pode consultar e modelar a cena, importar/exportar arquivos, falar com o Revit e guardar memórias em Markdown.');
   }
@@ -139,6 +142,7 @@ Responda em português do Brasil, de forma objetiva. Use as ferramentas em vez d
         if (this.stopped) break;
         this.el.append(typing); this.scroll();
         this.requestId = crypto.randomUUID();
+        this.meter.start([{ content: system }, ...this.messages]);
         const res = await B.ai.chat({
           requestId: this.requestId,
           providerId: agent.provider,
@@ -149,6 +153,7 @@ Responda em português do Brasil, de forma objetiva. Use as ferramentas em vez d
           tools: tools.map(({ name, description, parameters }) => ({ name, description, parameters })),
         });
         typing.remove();
+        this.meter.done(res.usage);
         this.messages.push({ role: 'assistant', content: res.content || '', tool_calls: res.tool_calls, raw: res.raw });
         this.renderAssistant(res, `${agent.name} · ${providerLabel}${agent.model ? ' · ' + agent.model : ''}`);
         if (!res.tool_calls?.length) break;
@@ -178,6 +183,7 @@ Responda em português do Brasil, de forma objetiva. Use as ferramentas em vez d
       }
     } catch (e) {
       typing.remove();
+      this.meter.fail();
       this.el.append(h('div', { class: 'msg error' }, e.message));
       // remove a última mensagem do usuário que falhou? Mantemos para permitir "tentar de novo"
     } finally {

@@ -6,12 +6,25 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.33.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.34.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.34.0] — 2026-10-26 · Medidor do Chat IA
+
+### Adicionado
+- **Medidor no Chat IA** (faixa logo abaixo do cabeçalho do chat):
+  - **Modelo**: barra de carregamento animada enquanto a IA trabalha, com o tempo decorrido; com LM Studio ou Ollama
+    mostra se o modelo está carregado na memória (e "carregando o modelo" na primeira chamada a um modelo
+    descarregado); depois, o tempo da última resposta.
+  - **Contexto**: quanto da janela de contexto do modelo a conversa ocupa — verde, âmbar a partir de 60%, vermelho a
+    partir de 85%. O limite vem do LM Studio/Ollama, do agente (`contexto`) ou de uma tabela por modelo (Claude,
+    GPT, Gemini, DeepSeek, Mistral, Grok, Llama, Qwen…).
+  - **Tokens**: os da última chamada (↑ entrada, ↓ saída) e o total da conversa, com o número de chamadas. "Nova"
+    zera.
 
 ## [2.33.0] — 2026-10-26 · Cotas como objeto
 
