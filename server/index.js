@@ -71,7 +71,16 @@ async function main() {
   app.use('/assets', express.static(path.join(__dirname, '..', 'assets')));
 
   // páginas: o editor e a lista de projetos exigem login
-  app.get('/', (req, res) => res.redirect('/projetos.html'));
+  // entrada: quem já tem sessão vai aos projetos; visitante vê a demonstração (o login cobre a tela depois de
+  // BOXBIM_DEMO_MIN minutos; BOXBIM_DEMO=0 desliga e manda direto ao login)
+  const demoOn = process.env.BOXBIM_DEMO !== '0';
+  app.get('/', async (req, res, next) => {
+    try {
+      if (await auth.userFromRequest(req)) return res.redirect('/projetos.html');
+      res.redirect(demoOn ? '/demo.html' : '/login.html');
+    } catch (e) { next(e); }
+  });
+  app.get('/api/demo', (req, res) => res.json({ ativo: demoOn, minutos: Math.max(0.1, Number(process.env.BOXBIM_DEMO_MIN) || 5) }));
   app.get(['/projetos.html', '/app.html', '/biblioteca.html'], auth.requireUser(true), (req, res, next) => next());
   app.use(express.static(ROOT, { index: false, extensions: ['html'] }));
 

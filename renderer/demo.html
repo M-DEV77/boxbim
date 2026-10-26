@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BoxBim — demonstração</title>
+  <link rel="icon" href="/assets/icon.svg">
+  <link rel="stylesheet" href="/pages.css">
+</head>
+<body class="demo">
+  <canvas id="demo-canvas"></canvas>
+
+  <header class="demo-top">
+    <div class="demo-brand"><img src="/assets/icon.svg" alt=""><div><strong>BoxBim</strong><span>Modelagem BIM no navegador, em equipe</span></div></div>
+    <div class="spacer"></div>
+    <span id="demo-timer" class="demo-timer" title="Tempo da demonstração"></span>
+    <button id="demo-entrar" class="primary" type="button">Entrar</button>
+  </header>
+
+  <section class="demo-card" id="demo-card">
+    <div class="demo-kicker">Projeto de demonstração</div>
+    <h2>Casa Horizonte</h2>
+    <p class="muted">Arraste para girar, role para aproximar. Tudo é gerado no navegador: geometria, materiais procedurais
+      (reboco, concreto, madeira, pedra, porcelanato, pastilha, água), céu e sol em tempo real.</p>
+    <div class="demo-chips"><span>Materiais procedurais</span><span>Equipe em tempo real</span><span>Chat IA + MCP</span><span>IFC · Revit · DXF</span></div>
+  </section>
+
+  <div id="demo-loading" class="demo-loading"><div class="demo-spin"></div><span>Gerando a casa e os materiais…</span></div>
+
+  <div id="demo-login" class="demo-login" hidden>
+    <main class="auth-card">
+      <button type="button" id="demo-fechar" class="ghost demo-fechar" title="Voltar à demonstração">✕</button>
+      <div class="auth-brand"><img src="/assets/icon.svg" alt=""><h1>BoxBim</h1></div>
+      <p class="muted" id="demo-login-msg">Modelagem BIM no navegador, em equipe.</p>
+      <div class="auth-tabs">
+        <button type="button" data-tab="login" class="active">Entrar</button>
+        <button type="button" data-tab="cadastro">Criar conta</button>
+      </div>
+      <form id="form-login">
+        <label>E-mail <input name="email" type="email" autocomplete="username" required></label>
+        <label>Senha <input name="senha" type="password" autocomplete="current-password" required></label>
+        <button class="primary" type="submit">Entrar</button>
+      </form>
+      <form id="form-cadastro" hidden>
+        <label>Nome <input name="nome" autocomplete="name" required></label>
+        <label>E-mail <input name="email" type="email" autocomplete="username" required></label>
+        <label>Senha <input name="senha" type="password" autocomplete="new-password" minlength="8" required></label>
+        <label>Confirmar senha <input name="senha2" type="password" autocomplete="new-password" minlength="8" required></label>
+        <label id="campo-codigo" hidden>Código de cadastro <input name="codigo" autocomplete="off" placeholder="peça ao administrador"></label>
+        <button class="primary" type="submit">Criar conta</button>
+      </form>
+      <p id="msg" class="msg" hidden></p>
+    </main>
+  </div>
+
+  <footer class="demo-credits"><a href="https://marceloolimpio.com.br/" target="_blank" rel="noopener">BoxHoney By Marcelo Olimpio – Eng. de software <span id="demo-versao"></span></a></footer>
+  <script src="/dist/demo.js"></script>
+  <script src="/dist/login.js"></script>
+</body>
+</html>

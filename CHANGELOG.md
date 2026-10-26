@@ -6,12 +6,27 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.21.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.22.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.22.0] — 2026-10-26 · Entrada com projeto de demonstração
+
+### Adicionado
+- **Demonstração na entrada** (`/demo.html`): quem abre o BoxBim sem estar logado vê a **Casa Horizonte** — casa
+  moderna de dois pavimentos com pano de vidro, parede de pedra, pavimento em balanço revestido de madeira,
+  piscina de pastilha com água animada, deck e jardim — montada no navegador com os materiais procedurais do
+  BoxBim (inclusive texturas próprias em camadas), céu físico, sol com sombras e oclusão ambiente. A câmera passeia
+  sozinha (arrastar/rolar assume; ela volta a girar depois de alguns segundos) e o sol desce até o entardecer,
+  acendendo as luzes de dentro.
+- O botão **Entrar** abre o login por cima a qualquer momento (com ✕ para voltar); depois de **5 minutos** o login
+  cobre a tela de vez. `BOXBIM_DEMO_MIN` muda o tempo; `BOXBIM_DEMO=0` desliga (o visitante vai direto ao login).
+
+### Mudado
+- `/` leva quem tem sessão aos projetos e o visitante à demonstração (antes, sempre aos projetos → login).
 
 ## [2.21.0] — 2026-10-26 · Texturas procedurais próprias (manual e pelo Chat IA)
 

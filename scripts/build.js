@@ -24,7 +24,7 @@ const opts = {
 };
 // executor isolado dos scripts de Objetos (Web Worker separado)
 const workerOpts = { ...opts, entryPoints: [path.join(root, 'renderer', 'src', 'objects', 'worker.js')], outfile: path.join(dist, 'object-worker.js'), external: [] };
-// páginas fora do editor (login, projetos, biblioteca)
+// páginas fora do editor (login, projetos, biblioteca, demonstração)
 const page = name => ({ ...opts, entryPoints: [path.join(root, 'renderer', 'src', 'pages', `${name}.js`)], outfile: path.join(dist, `${name}.js`) });
 const run = o => (watch ? esbuild.context(o).then(c => c.watch()) : esbuild.build(o));
-Promise.all([run(opts), run(workerOpts), run(page('login')), run(page('projetos')), run(page('biblioteca'))]).catch(() => process.exit(1));
+Promise.all([run(opts), run(workerOpts), run(page('login')), run(page('projetos')), run(page('biblioteca')), run(page('demo'))]).catch(() => process.exit(1));

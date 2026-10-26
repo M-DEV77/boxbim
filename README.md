@@ -34,6 +34,10 @@ cópia do banco em `<dados>/.servidor/backup-<data>/`; a próxima conta cadastra
 `--sim` o comando só mostra o que seria apagado.
 
 
+- **Entrada com demonstração**: quem abre o endereço sem estar logado vê a **Casa Horizonte** (`/demo.html`) — uma
+  casa montada no navegador com os materiais procedurais do BoxBim, céu e sol em tempo real e a câmera passeando;
+  o sol desce até o entardecer e as luzes de dentro acendem. O botão **Entrar** abre o login a qualquer momento;
+  depois de 5 minutos (`BOXBIM_DEMO_MIN`) o login cobre a tela. `BOXBIM_DEMO=0` desliga.
 - **Cadastro e login** em `/login.html`. A primeira conta é a **administradora** (chaves de IA e caminhos das
   ferramentas, em ⚙ Configurações).
 - **Projetos** (`/projetos.html`): meus e compartilhados comigo, com miniatura. Cada projeto tem um **dono**,
@@ -356,4 +360,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.21.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.22.0</a>

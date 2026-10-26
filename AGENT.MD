@@ -46,6 +46,7 @@ flowchart LR
     TEXED --> MATS
     MATED --> TEXED
     TOOLS --> MATS
+    DEMO["pages/demo.js (demo.html)<br/>Casa Horizonte para visitantes;<br/>login por cima após N min"] --> MATS
     API["web/api.js<br/>window.boxbim (RPC)"] --> LOCALAI["web/local-ai.js<br/>IA e MCP locais pelo navegador"]
     CHAT --> API
     PROJ --> API
@@ -55,6 +56,7 @@ flowchart LR
   subgraph SRV["Servidor (server/)"]
     IDX["index.js<br/>Express, CSP, rotas, estático"] --> AUTH["auth.js<br/>login, cadastro, sessão"]
     IDX --> PROJS["projects.js<br/>projetos, membros, access()"]
+    IDX -. "/ sem sessão → /demo.html; /api/demo (minutos)" .-> DEMO
     IDX --> RPC["rpc.js<br/>/api/rpc/&lt;canal&gt;"]
     IDX --> LIB["library.js<br/>biblioteca, ferramentas, presets"]
     IDX --> MCPS["mcp.js<br/>servidor MCP /mcp + tokens"]
@@ -105,7 +107,8 @@ flowchart LR
 | 2026-10-26 | 2.19.0 | `7b77756` | Sistema de materiais com mapas procedurais (`materials.js`, `material-editor.js`): bump, normal, AO, deslocamento, rugosidade/brilho, metal, especular, opacidade, emissão |
 | 2026-10-26 | 2.19.1 | `edaed46` | Comandos novos (Ambientes, Materiais…) entram sozinhos nos presets de menus já gravados |
 | 2026-10-26 | 2.20.0 | `1783e1e` | Estilo de vista Textura (`viewstyle.js` + `RenderMode.enableTextures`): materiais com mapas sem céu/sol/sombras |
-| 2026-10-26 | 2.21.0 | este commit | Texturas procedurais próprias em camadas (`materials.js`, `texture-editor.js`), gravadas nos tipos do projeto; ferramentas do Chat IA `list_materials`, `create_texture`, `set_material` |
+| 2026-10-26 | 2.21.0 | `b751611` | Texturas procedurais próprias em camadas (`materials.js`, `texture-editor.js`), gravadas nos tipos do projeto; ferramentas do Chat IA `list_materials`, `create_texture`, `set_material` |
+| 2026-10-26 | 2.22.0 | este commit | Entrada com demonstração (`demo.html` + `pages/demo.js`): Casa Horizonte com materiais procedurais, céu e sol; login por cima depois de `BOXBIM_DEMO_MIN` min |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.21.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.22.0</a>
