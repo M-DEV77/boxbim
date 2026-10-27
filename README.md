@@ -115,7 +115,8 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
 - **Piso das linhas** (contornos 2D fechados) e **piso do contorno da face** de um sólido.
 - **Corte por nível** (plano de corte e profundidade da vista) e **eixos de trabalho** que acompanham os níveis.
 - **Piso** (antes chamado Laje em toda a interface) por croqui 2D, linhas 2D, paredes (face externa/interna/eixo) ou face de sólido — contornos internos viram furos.
-- **Pontos do piso**: com um piso selecionado, arraste os pontos do contorno, use o **+** no meio de um lado para colocar
+- **Pontos do piso**: com um piso selecionado, a tela mostra o contorno e a **medida de cada lado** (clique nela para
+  digitar o comprimento), também nos **furos** (pontos, "+" e medidas); arraste os pontos do contorno, use o **+** no meio de um lado para colocar
   um ponto novo, clique num ponto para digitar a **altura** dele e use o botão direito para apagar. **＋ Ponto interno**
   coloca pontos de forma dentro do piso (rampas, caimentos, ralos): a superfície passa por todos os pontos e o piso
   inteiro acompanha, com a espessura de sempre. A tabela em Propriedades › Pontos do piso edita X, Y e altura.
@@ -433,4 +434,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.42.2</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.43.0</a>

@@ -585,7 +585,11 @@ table.budget tr.muted td { color: var(--muted); }
 .grip-label:hover { border-color: #2f9bff; }
 .grip-input { width: 70px; font-size: 12px; padding: 0 3px; }
 /* pontos do piso (floor-points.js) */
-.floor-outline { stroke: #2f9bff; stroke-width: 1.2; stroke-dasharray: 5 3; fill: none; }
+.floor-outline { stroke: #d9b45a; stroke-width: 2; fill: none; }
+.floor-outline.hole { stroke-width: 1.5; stroke-dasharray: 5 3; }
+.grip-point.floor-hole-pt { background: #1a1f27; border-color: #2f9bff; }
+.grip-label.floor-len { color: #dfe5ec; padding: 0 4px; font-weight: 500; }
+.grip-label.floor-len:hover { color: #ff9f1a; border-color: #ff9f1a; }
 .grip-point.floor-add { width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: #1a1f27; border-color: #2f9bff; cursor: copy; }
 .grip-point.floor-add::after { content: '+'; position: absolute; inset: -3px 0 0; text-align: center; font: 600 10px/10px system-ui; color: #6fb0d6; }
 .grip-point.floor-add:hover { background: #2f9bff; }

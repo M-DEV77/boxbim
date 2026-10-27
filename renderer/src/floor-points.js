@@ -6,10 +6,12 @@
 //   clicar num ponto ........... digita a ALTURA do ponto (deslocamento em relação ao topo do piso): o piso inclina
 //   botão direito no ponto ..... apaga o ponto (o contorno fica com pelo menos 3)
 //   ＋ Ponto interno ............ clique dentro do piso para colocar um ponto de forma (rampa, caimento, ralo…)
+//   medida de cada lado ........ aparece na tela (como no Editar piso); clique nela para digitar o comprimento
+//   furos ...................... pontos, "+" e medidas também nos furos (botão direito no último ponto apaga o furo)
 // Dados: slab.points (contorno), slab.alturas[i] (altura de cada ponto do contorno), slab.forma [[x, y, dz], …].
 import * as THREE from 'three';
 import { h, toast } from './ui.js';
-import { rebuildElement } from './elements.js';
+import { rebuildElement, slabShapeFn } from './elements.js';
 import { slopeConfig } from './slopes.js';
 import { fmtLen, fromUnit, toUnit, unitLabel, unitStep } from './units.js';
 
@@ -42,9 +44,12 @@ export class FloorPoints {
     const center = document.querySelector('.center');
     this.svg = svg('svg', { class: 'grips-svg' });
     this.outline = svg('path', { class: 'floor-outline' });
-    this.svg.append(this.outline);
+    this.holesPath = svg('path', { class: 'floor-outline hole' });
+    this.svg.append(this.outline, this.holesPath);
     this.labels = h('div');
-    this.box = h('div', { class: 'grips floor-grips', hidden: true }, this.svg, this.labels);
+    this.lens = h('div');       // medidas dos lados (clicáveis)
+    this.lenPool = [];
+    this.box = h('div', { class: 'grips floor-grips', hidden: true }, this.svg, this.lens, this.labels);
     this.tip = h('div', { class: 'draw-tip', hidden: true });
     this.marker = h('div', { class: 'snap-marker', hidden: true });
     center.append(this.box, this.tip, this.marker);
@@ -90,22 +95,39 @@ export class FloorPoints {
     this.handles = [];
     if (!this.el) { this.box.hidden = true; return; }
     const s = this.el.userData.bim.slab;
-    const add = (kind, i, cls, title) => {
+    const add = (kind, i, cls, title, r = 0) => {
       const dom = h('div', { class: `grip-point ${cls}`, title });
-      dom.addEventListener('pointerdown', e => this.startDrag(e, kind, i));
-      dom.addEventListener('contextmenu', e => { e.preventDefault(); e.stopPropagation(); this.remove(kind, i); });
+      dom.addEventListener('pointerdown', e => this.startDrag(e, kind, i, r));
+      dom.addEventListener('contextmenu', e => { e.preventDefault(); e.stopPropagation(); this.remove(kind, i, r); });
       this.box.append(dom);
-      this.handles.push({ dom, kind, i });
+      this.handles.push({ dom, kind, i, r });
     };
     s.points.forEach((_, i) => add('v', i, '', 'Ponto do contorno: arraste para mover · clique para a altura · botão direito apaga'));
     s.points.forEach((_, i) => add('m', i, 'floor-add', 'Arraste para colocar um ponto novo neste lado'));
     (s.forma || []).forEach((_, i) => add('f', i, 'floor-shape', 'Ponto de forma: arraste para mover · clique para a altura · botão direito apaga'));
+    (s.holes || []).forEach((hl, k) => {
+      hl.forEach((_, i) => add('h', i, 'floor-hole-pt', 'Ponto do furo: arraste para mover · botão direito apaga (com 3 pontos, apaga o furo)', k + 1));
+      hl.forEach((_, i) => add('hm', i, 'floor-add', 'Arraste para colocar um ponto novo neste lado do furo', k + 1));
+    });
   }
 
+  /** Pontos de um contorno: 0 = o externo, 1… = os furos. */
+  ring(s, r) { return r ? s.holes[r - 1] : s.points; }
+
+  /** Quantos pontos tem cada contorno (para saber quando refazer as alças). */
+  shapeKey(s) { return [s.points.length, (s.forma || []).length, ...(s.holes || []).map(hl => hl.length)].join(','); }
+
   /** Ponto no modelo de cada alça. */
-  world(kind, i, el = this.el) {
+  world(kind, i, el = this.el, r = 0) {
     const s = el.userData.bim.slab, al = s.alturas || [];
     let p, dz;
+    if (kind === 'h' || kind === 'hm') {
+      const ring = this.ring(s, r), a = ring[i], b = ring[(i + 1) % ring.length];
+      p = kind === 'h' ? a : [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+      const f = slabShapeFn(s);
+      dz = f ? f(p[0], p[1]) : 0;
+      return new THREE.Vector3(p[0], p[1], s.elevation + dz).applyMatrix4(el.matrixWorld);
+    }
     if (kind === 'v') { p = s.points[i]; dz = al[i] || 0; }
     else if (kind === 'f') { p = s.forma[i]; dz = p[2] || 0; }
     else {
@@ -128,32 +150,100 @@ export class FloorPoints {
     const show = el && el.parent && el.visible && !this.viewer.tool && !this.viewer.renderOverride;
     if (!show) { if (!this.box.hidden) this.box.hidden = true; return; }
     const s = el.userData.bim.slab;
-    if (this.handles.filter(x => x.kind === 'v').length !== s.points.length || this.handles.filter(x => x.kind === 'f').length !== (s.forma || []).length) this.rebuildHandles();
+    if (this._key !== this.shapeKey(s)) { this._key = this.shapeKey(s); this.rebuildHandles(); }
     el.updateMatrixWorld(true);
     this.box.hidden = false;
-    let d = '';
+    let d = '', dh = '';
     const labels = [];
+    const pts = new Map(); // tela de cada ponto dos contornos, para as medidas
     for (const hd of this.handles) {
-      const sc = this.screen(this.world(hd.kind, hd.i));
+      const sc = this.screen(this.world(hd.kind, hd.i, el, hd.r));
       hd.dom.hidden = sc.behind;
       hd.dom.style.transform = `translate(${sc.x}px, ${sc.y}px)`;
       if (hd.kind === 'v') d += `${hd.i ? 'L' : 'M'}${sc.x} ${sc.y}`;
+      if (hd.kind === 'h') dh += `${hd.i ? 'L' : (dh ? 'ZM' : 'M')}${sc.x} ${sc.y}`;
+      if (hd.kind === 'v' || hd.kind === 'h') pts.set(`${hd.r}:${hd.i}`, sc);
       const dz = hd.kind === 'v' ? s.alturas?.[hd.i] : hd.kind === 'f' ? s.forma[hd.i][2] : 0;
       if (dz && !sc.behind) labels.push(h('div', { class: 'floor-dz', style: `transform: translate(${sc.x + 9}px, ${sc.y - 20}px)` }, fmtDz(dz)));
     }
     this.outline.setAttribute('d', d ? `${d}Z` : '');
+    this.holesPath.setAttribute('d', dh ? `${dh}Z` : '');
     if (!this.typing) this.labels.replaceChildren(...labels);
+    this.updateLengths(s, pts);
+  }
+
+  /** Medida de cada lado (contorno e furos), do lado de fora do contorno (dentro do furo), alinhada com o lado. */
+  updateLengths(s, pts) {
+    let n = 0;
+    const rings = [s.points, ...(s.holes || [])];
+    rings.forEach((ring, r) => {
+      const scr = ring.map((_, i) => pts.get(`${r}:${i}`)).filter(Boolean);
+      if (scr.length !== ring.length) return;
+      const cx = scr.reduce((a, p) => a + p.x, 0) / scr.length, cy = scr.reduce((a, p) => a + p.y, 0) / scr.length;
+      ring.forEach((a, i) => {
+        const b = ring[(i + 1) % ring.length], A = scr[i], B = scr[(i + 1) % ring.length];
+        const Ls = Math.hypot(B.x - A.x, B.y - A.y);
+        if (A.behind || B.behind || Ls < 36) return;
+        let nx = -(B.y - A.y) / Ls, ny = (B.x - A.x) / Ls;
+        const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2;
+        const away = (mx - cx) * nx + (my - cy) * ny > 0;
+        if (r ? away : !away) { nx = -nx; ny = -ny; } // contorno: para fora · furo: para dentro do furo
+        let ang = Math.atan2(B.y - A.y, B.x - A.x) * 180 / Math.PI;
+        if (ang > 90) ang -= 180; else if (ang < -90) ang += 180;
+        const lab = this.lenPool[n] || (this.lenPool[n] = this.lenLabel());
+        if (!lab.isConnected) this.lens.append(lab);
+        lab._edge = { r, i };
+        if (!(this.typingLen && this.typingLen.lab === lab)) lab.textContent = fmtLen(Math.hypot(b[0] - a[0], b[1] - a[1]));
+        Object.assign(lab.style, { left: `${mx + nx * 13}px`, top: `${my + ny * 13}px`, transform: `translate(-50%, -50%) rotate(${ang}deg)` });
+        lab.hidden = false;
+        n++;
+      });
+    });
+    for (let k = n; k < this.lenPool.length; k++) if (!(this.typingLen && this.typingLen.lab === this.lenPool[k])) this.lenPool[k].hidden = true;
+  }
+
+  lenLabel() {
+    const lab = h('button', { class: 'grip-label floor-len', title: 'Clique para digitar o comprimento deste lado (a ponta final anda na direção do lado)' });
+    lab.addEventListener('pointerdown', e => e.stopPropagation());
+    lab.addEventListener('click', e => { e.stopPropagation(); if (lab._edge && !this.typingLen) this.typeLength(lab, lab._edge.r, lab._edge.i); });
+    return lab;
+  }
+
+  /** Digita o comprimento de um lado: a primeira ponta fica, a segunda anda na direção do lado. */
+  typeLength(lab, r, i) {
+    const el = this.el = this.live(this.el);
+    if (!el || this.typingLen) return;
+    const s = el.userData.bim.slab, ring = this.ring(s, r), a = ring[i], b = ring[(i + 1) % ring.length];
+    const L = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const input = h('input', { type: 'number', step: unitStep(), min: 0, value: toUnit(+L.toFixed(4)), class: 'grip-input', title: `Comprimento (${unitLabel()}). Enter confirma, Esc cancela.` });
+    this.typingLen = { lab };
+    lab.replaceChildren(input);
+    input.focus(); input.select();
+    const done = ok => {
+      if (!this.typingLen) return;
+      this.typingLen = null;
+      const v = fromUnit(input.value);
+      lab.textContent = fmtLen(L);
+      if (!ok || !(v > 0.005) || L < 1e-9) return;
+      const cur = this.live(el), cs = cur.userData.bim.slab, cr = this.ring(cs, r), p0 = cr[i];
+      cr[(i + 1) % cr.length] = [round6(p0[0] + (b[0] - a[0]) / L * v), round6(p0[1] + (b[1] - a[1]) / L * v)];
+      this.commit(cur);
+      this.app.status(`Lado com ${fmtLen(v, { suffix: true })}.`);
+    };
+    input.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') done(true); else if (e.key === 'Escape') done(false); });
+    input.addEventListener('blur', () => done(true));
+    input.addEventListener('click', e => e.stopPropagation());
   }
 
   // ------------------------------------------------------------ arrastar
 
-  startDrag(e, kind, i) {
+  startDrag(e, kind, i, r = 0) {
     if (e.button !== 0 || !this.el) return;
     e.preventDefault(); e.stopPropagation();
     const el = this.el = this.live(this.el), s = el.userData.bim.slab;
     el.updateMatrixWorld(true);
     const inv = el.matrixWorld.clone().invert();
-    const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(new THREE.Vector3(0, 0, 1).transformDirection(el.matrixWorld), this.world(kind, i));
+    const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(new THREE.Vector3(0, 0, 1).transformDirection(el.matrixWorld), this.world(kind, i, el, r));
     const toData = v => { const q = v.clone().applyMatrix4(inv); return [q.x, q.y]; };
     if (kind === 'm') {
       // "+" de um lado: entra um ponto novo no contorno (altura = média dos vizinhos) e já começa a arrastá-lo
@@ -161,11 +251,20 @@ export class FloorPoints {
       s.points.splice(i + 1, 0, [round6((a[0] + b[0]) / 2), round6((a[1] + b[1]) / 2)]);
       if (s.alturas) s.alturas.splice(i + 1, 0, round6(((s.alturas[i] || 0) + (s.alturas[(i + 1) % (s.points.length - 1)] || 0)) / 2));
       kind = 'v'; i += 1;
-      this.rebuildHandles();
+      this.rebuildHandles(); this._key = this.shapeKey(s);
       this.dirty = true;
     }
-    const prev = kind === 'v' ? s.points[(i - 1 + s.points.length) % s.points.length] : null;
-    this.drag = { kind, i, el, plane, toData, prev, start: [e.clientX, e.clientY], moved: !!this.dirty, snaps: this.snapCandidates(el) };
+    if (kind === 'hm') {
+      // "+" de um lado do furo: ponto novo no furo
+      const ring = this.ring(s, r), a = ring[i], b = ring[(i + 1) % ring.length];
+      ring.splice(i + 1, 0, [round6((a[0] + b[0]) / 2), round6((a[1] + b[1]) / 2)]);
+      kind = 'h'; i += 1;
+      this.rebuildHandles(); this._key = this.shapeKey(s);
+      this.dirty = true;
+    }
+    const ringOf = kind === 'v' ? s.points : kind === 'h' ? this.ring(s, r) : null;
+    const prev = ringOf ? ringOf[(i - 1 + ringOf.length) % ringOf.length] : null;
+    this.drag = { kind, i, r, el, plane, toData, prev, start: [e.clientX, e.clientY], moved: !!this.dirty, snaps: this.snapCandidates(el) };
     this.dirty = false;
     this.viewer.controls.enabled = false;
   }
@@ -207,11 +306,12 @@ export class FloorPoints {
     p = p.map(round6);
     const s = d.el.userData.bim.slab;
     if (d.kind === 'v') s.points[d.i] = p;
+    else if (d.kind === 'h') this.ring(s, d.r)[d.i] = p;
     else s.forma[d.i] = [p[0], p[1], s.forma[d.i][2] || 0];
     d.moved = true;
     this.rebuild(d.el, true);
     const pr = this.box.parentElement.getBoundingClientRect();
-    const sc = this.screen(this.world(d.kind, d.i));
+    const sc = this.screen(this.world(d.kind, d.i, d.el, d.r));
     this.marker.hidden = !snapped;
     if (snapped) Object.assign(this.marker.style, { left: `${sc.x}px`, top: `${sc.y}px` });
     this.tip.textContent = d.prev ? `${fmtLen(Math.hypot(p[0] - d.prev[0], p[1] - d.prev[1]), { suffix: true })}${snapped ? '  ◻ ponto' : ''}` : (snapped ? '◻ ponto' : 'ponto de forma');
@@ -232,7 +332,7 @@ export class FloorPoints {
       const cur = this.live(d.el);
       if (cur !== d.el) cur.userData.bim.slab = structuredClone(s);
       this.commit(cur);
-    } else if (d.kind !== 'm') this.typeHeight(d.kind, d.i);
+    } else if (d.kind === 'v' || d.kind === 'f') this.typeHeight(d.kind, d.i);
   }
 
   /** Refaz a geometria (live = durante o arraste: no máximo uma vez por quadro, sem esperar o script). */
@@ -265,11 +365,15 @@ export class FloorPoints {
     this.app.renderProps();
   }
 
-  remove(kind, i) {
+  remove(kind, i, r = 0) {
     const el = this.live(this.el);
-    if (!el || kind === 'm') return;
+    if (!el || kind === 'm' || kind === 'hm') return;
     const s = el.userData.bim.slab;
-    if (kind === 'v') {
+    if (kind === 'h') {
+      const ring = this.ring(s, r);
+      if (ring.length <= 3) { s.holes.splice(r - 1, 1); if (!s.holes.length) delete s.holes; this.app.status('Furo apagado.'); }
+      else ring.splice(i, 1);
+    } else if (kind === 'v') {
       if (s.points.length <= 3) { toast('O contorno do piso precisa de pelo menos 3 pontos.', 'error'); return; }
       s.points.splice(i, 1);
       s.alturas?.splice(i, 1);
