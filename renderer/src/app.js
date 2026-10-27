@@ -1224,7 +1224,7 @@ class App {
       h('button', { onclick: () => attachToRoof(this, [o]), title: 'Topo pela face de baixo do telhado acima' }, '⌂ Até o telhado')));
     if (b.slab) root.append(h('h4', {}, 'Piso'), h('div', { class: 'row-buttons' },
       h('button', { onclick: () => editFloor(this, o), title: 'Também com clique duplo no piso' }, 'Editar piso e linhas…')),
-      ...this.floorPoints.propsSection(o));
+      ...this.floorPoints.propsSection(o), ...this.floorPoints.slopeSection(o));
     this.renderTypeProps(root, o);
     this.renderObjectProps(root, o);
     this.renderMaterialProps(root, o);

@@ -250,7 +250,7 @@ export function slabShapeFn(s) {
  * Subdivide os triângulos (arestas até maxLen no plano XY) mantendo os grupos de material e todos os atributos.
  * Devolve uma geometria NÃO indexada.
  */
-function subdivide(geo, maxLen) {
+export function subdivide(geo, maxLen) {
   const g = geo.index ? geo.toNonIndexed() : geo;
   const names = Object.keys(g.attributes);
   const src = names.map(k => g.attributes[k]);

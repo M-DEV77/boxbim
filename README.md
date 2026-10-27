@@ -129,6 +129,10 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
   **Terreno dentro de terreno** (platô, talude, corte e aterro): o terreno menor corta o maior em toda a
   profundidade e desce até o fundo dele — onde a superfície do menor fica mais baixa é corte, onde fica mais alta
   é aterro (preenche a parte baixa).
+- **Talude** (opção do piso, em Propriedades › Talude): em volta do piso o terreno é **cortado** (onde está acima) ou
+  **aterrado** (onde está abaixo) até encontrar o piso na cota do topo. Corte e aterro têm cada um: liga/desliga,
+  **proporção V : H** das instâncias (trechos inclinados), **altura da instância** (0 = talude contínuo) e
+  **distância entre instâncias** (berma plana). Recalcula sozinho ao mover ou editar o piso ou o terreno.
 - **Copiar** (2D no plano do nível ou 3D sobre os sólidos), com repetições, para outro nível ou por distância.
 - **Telhado**: perfil desenhado num eixo de trabalho vertical, extrudado; tipos de telhado com camadas (telha, ripas, caibros…).
 - **Espelhar** por uma linha (2D ou 3D; vertical, horizontal ou perpendicular ao eixo de trabalho).
@@ -428,4 +432,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.40.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.41.0</a>

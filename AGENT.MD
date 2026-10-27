@@ -43,6 +43,8 @@ flowchart LR
     FPTS --> ELEM
     SLAB --> FEDIT["floor-edit.js<br/>Editar piso: linhas e furos em planta"]
     FEDIT --> FPTS
+    FPTS -->|"slab.talude"| SLOPES["slopes.js<br/>talude: corte e aterro com bermas"]
+    SLOPES --> CUTS
     FPTS -->|"slab.terreno"| CUTS["sketch/cuts.js<br/>vazios e pisos cortando o terreno (CSG)"]
     MODEL --> ROOF["roof-tool.js telhado"]
     MODEL --> WALLED["wall-edit.js editar parede / até o telhado"]
@@ -149,7 +151,8 @@ flowchart LR
 | 2026-10-27 | 2.38.0 | `e6a4ac0` | Laje vira Piso em toda a interface (camadas, tipos, IA/MCP) e migração única dos dados gravados |
 | 2026-10-27 | 2.39.0 | `6b4670a` | Opção Terreno no piso: só a superfície segue os pontos e os outros pisos cortam o terreno |
 | 2026-10-27 | 2.39.1 | `c108a4d` | Unidade do projeto (m/cm/mm) em todas as ferramentas: diálogos, propriedades, objetos, tipos e painéis abertos |
-| 2026-10-27 | 2.40.0 | este commit | Terreno cortado por terreno menor: corte em toda a profundidade e aterro até o fundo |
+| 2026-10-27 | 2.40.0 | `a9f0409` | Terreno cortado por terreno menor: corte em toda a profundidade e aterro até o fundo |
+| 2026-10-27 | 2.41.0 | este commit | Talude no piso: corte e aterro com proporção, altura das instâncias e distância entre elas |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.40.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.41.0</a>

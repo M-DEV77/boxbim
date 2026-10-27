@@ -10,6 +10,7 @@
 import * as THREE from 'three';
 import { h, toast } from './ui.js';
 import { rebuildElement } from './elements.js';
+import { slopeConfig } from './slopes.js';
 import { fmtLen, fromUnit, toUnit, unitLabel, unitStep } from './units.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -284,6 +285,39 @@ export class FloorPoints {
     if (on) s.terreno = true; else delete s.terreno;
     this.commit(el);
     this.app.status(on ? 'Terreno: só a superfície segue os pontos e os outros pisos cortam o terreno.' : 'Piso comum (não é mais terreno).');
+  }
+
+  /** Seção "Talude" nas propriedades do piso: corte e aterro, cada um com proporção, altura das instâncias e berma. */
+  slopeSection(el) {
+    const s = el.userData.bim.slab, cfg = slopeConfig(s);
+    const save = patch => {
+      const cur = this.live(el), cs = cur.userData.bim.slab;
+      cs.talude = { ...slopeConfig(cs), ...patch };
+      this.commit(cur);
+    };
+    const u = unitLabel();
+    const part = (key, title) => {
+      const c = cfg[key];
+      const set = (k, v) => save({ [key]: { ...c, [k]: v } });
+      const num = (val, onset, attrs = {}) => h('input', { type: 'number', step: 'any', value: val, style: 'width:100%', ...attrs, onchange: e => { const x = Number(e.target.value); if (Number.isFinite(x)) onset(x); } });
+      return h('table', { class: 'slope-table' },
+        h('tr', {}, h('td', { colspan: 2 }, h('label', { class: 'inline' },
+          h('input', { type: 'checkbox', checked: c.ativo, onchange: e => set('ativo', e.target.checked) }), h('strong', {}, title)))),
+        h('tr', { title: 'Proporção do trecho inclinado: vertical : horizontal (1 : 1,5 sobe 1 a cada 1,5)' }, h('td', {}, 'Proporção V : H'),
+          h('td', {}, h('div', { class: 'slope-ratio' }, num(c.v, x => x > 0 && set('v', x), { min: 0.01 }), h('span', {}, ':'), num(c.h, x => x > 0 && set('h', x), { min: 0.01 })))),
+        h('tr', { title: 'Altura de cada instância (trecho inclinado). 0 = um talude contínuo, sem bermas' }, h('td', {}, `Altura da instância (${u})`),
+          h('td', {}, num(toUnit(c.altura), x => set('altura', Math.max(0, fromUnit(x))), { min: 0, step: unitStep() }))),
+        h('tr', { title: 'Distância horizontal (berma, plana) entre uma instância e a próxima' }, h('td', {}, `Distância entre instâncias (${u})`),
+          h('td', {}, num(toUnit(c.berma), x => set('berma', Math.max(0, fromUnit(x))), { min: 0, step: unitStep() }))));
+    };
+    return [
+      h('h4', {}, 'Talude'),
+      h('label', { class: 'inline', title: 'O terreno em volta do piso é cortado ou aterrado em talude até encontrar o piso (na cota do topo dele)' },
+        h('input', { type: 'checkbox', checked: cfg.ativo, onchange: e => save({ ativo: e.target.checked }) }), 'Talude em volta do piso'),
+      cfg.ativo ? h('div', { class: 'small muted' }, 'Vale nos terrenos em volta: acima do piso o terreno é cortado, abaixo é aterrado.') : null,
+      cfg.ativo ? part('corte', 'Corte') : null,
+      cfg.ativo ? part('aterro', 'Aterro') : null,
+    ];
   }
 
   // ------------------------------------------------------------ altura de um ponto

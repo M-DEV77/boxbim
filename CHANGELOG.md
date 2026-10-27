@@ -6,12 +6,21 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.40.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.41.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.41.0] — 2026-10-27 · Talude de corte e aterro
+
+### Adicionado
+- Opção **Talude** no piso (Propriedades › Talude; dado `slab.talude`), com duas configurações, **Corte** e
+  **Aterro**, cada uma com liga/desliga, **proporção V : H** das instâncias, **altura da instância** e **distância
+  entre instâncias** (berma). Padrões: corte 1 : 1, aterro 1 : 1,5, instâncias de 3 m e bermas de 2 m.
+- slopes.js: a superfície dos terrenos em volta fica presa entre o perfil de aterro (embaixo) e o de corte (em
+  cima), medidos do contorno do piso, na cota do topo dele; aplicado pelo sistema de cortes antes das booleanas.
 
 ## [2.40.0] — 2026-10-27 · Terreno cortado por terreno (corte e aterro)
 

@@ -6,9 +6,11 @@
 // piso para cima (escavação), como o "building pad" do Revit. Também recalcula sozinho.
 // TERRENO dentro de TERRENO: o terreno menor (área do contorno) corta o maior em toda a profundidade e desce até o
 // fundo dele — onde a superfície do menor fica abaixo da do maior é corte; onde fica acima, aterro (preenche).
+// TALUDE: os pisos com talude ligado moldam a superfície dos terrenos em volta (slopes.js), antes dos cortes.
 import * as THREE from 'three';
 import { Brush, Evaluator, SUBTRACTION } from 'three-bvh-csg';
 import { normalizeGeometry } from './forms.js';
+import { applySlopes, slopeFloors, slopeSignature } from '../slopes.js';
 
 const evaluator = new Evaluator();
 evaluator.useGroups = false;
@@ -181,18 +183,21 @@ export class Cuts {
       const ids = el.userData.bim.cortes || [];
       const pads = this.padsFor(el);
       const deepen = this.hostBottom(el);
-      if (!ids.length && !pads.length && deepen === null) { if (el.userData._cutSig) this.restore(el); continue; }
+      // taludes dos pisos em volta (só nos terrenos)
+      const slopes = el.userData.bim.slab?.terreno ? slopeFloors(v.elements(), el) : [];
+      if (!ids.length && !pads.length && deepen === null && !slopes.length) { if (el.userData._cutSig) this.restore(el); continue; }
       const voids = ids.map(id => v.findById(id)).filter(Boolean);
-      const sig = this.signature(el, voids) + (pads.length ? `#${this.padSignature(pads)}` : '') + (deepen !== null ? `~${deepen.toFixed(5)}` : '');
+      const sig = this.signature(el, voids) + (pads.length ? `#${this.padSignature(pads)}` : '') + (deepen !== null ? `~${deepen.toFixed(5)}` : '')
+        + (slopes.length ? `^${slopeSignature(slopes)}` : '');
       if (!force && sig === el.userData._cutSig) continue;
       el.userData._cutSig = sig;
-      this.apply(el, voids, pads, deepen);
+      this.apply(el, voids, pads, deepen, slopes);
       changed = true;
     }
     if (changed) { v._prepare2D(v.model); v._bucketsDirty = true; }
   }
 
-  apply(el, voids, pads = [], deepen = null) {
+  apply(el, voids, pads = [], deepen = null, slopes = []) {
     const ownBottom = deepen !== null ? worldBox(el).min.z : null;
     const voidBrushes = [];
     for (const p of pads) { try { voidBrushes.push(this.padBrush(p)); } catch (e) { console.warn('terreno', p.name, e); } }
@@ -207,7 +212,8 @@ export class Cuts {
       const orig = m.userData._csgOrig || m.geometry;
       m.userData._csgOrig = orig;
       m.updateMatrixWorld(true);
-      const base = deepen !== null ? deepened(orig, m.matrixWorld, ownBottom, deepen) : orig;
+      let base = deepen !== null ? deepened(orig, m.matrixWorld, ownBottom, deepen) : orig;
+      if (slopes.length) base = applySlopes(base === orig ? orig.clone() : base, el, slopes);
       if (!voidBrushes.length) { m.geometry = base; this.refreshEdges(m); continue; }
       try {
         let a = new Brush(normalizeGeometry(base.clone()));
