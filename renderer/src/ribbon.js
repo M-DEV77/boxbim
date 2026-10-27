@@ -153,7 +153,7 @@ export function buildRibbon(app) {
     biblioteca: cmd('Biblioteca', 'library', () => app.openObjectLibrary(), { title: 'Biblioteca de Objetos: inserir, editar, exportar' }),
     novoObjeto: cmd('Novo\nobjeto', 'newObj', () => app.newObject(), { title: 'Criar um Objeto paramétrico em JavaScript' }),
     importarBbo: cmd('Importar\n.bbo', 'bbo', () => app.importObjects(), { title: 'Importar Objetos (.bbo) para a biblioteca' }),
-    tipos: cmd('Tipos e\ncamadas', 'wallLayers', () => app.openTypes('wall'), { title: 'Tipos com camadas e materiais (usados pelos objetos Parede, Laje, Pilar e Viga)' }),
+    tipos: cmd('Tipos e\ncamadas', 'wallLayers', () => app.openTypes('wall'), { id: 'tipos-com-camadas-e-materiais-usados-pelos-objetos-parede-laje-pilar-e-viga', title: 'Tipos com camadas e materiais (usados pelos objetos Parede, Piso, Pilar e Viga)' }),
     orcamento: cmd('Orçamento', 'budget', () => app.openBudget(), { id: 'orcamento', title: 'Quantidades e preços dos objetos do projeto' }),
 
     chat: cmd('Chat', 'chat', () => app.showTab('chat')),

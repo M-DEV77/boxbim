@@ -165,6 +165,52 @@ async function seedLibrary() {
   if (!(await db.Config.findByPk('tipos'))) {
     try { await db.Config.create({ chave: 'tipos', valor: JSON.parse(fs.readFileSync(store.dirs().tipos, 'utf8')) }); } catch { /* usa os de fábrica do app */ }
   }
+  await migrateFloorNames();
+}
+
+// "Laje" virou "Piso" (2.38.0): nomes de fábrica nos dados já gravados (camadas, tipos, elementos "Laje N").
+const FLOOR_NAMES = [
+  ['Laje maciça 12 + contrapiso + piso', 'Piso de concreto 12 + contrapiso + cerâmico'],
+  ['Laje maciça 10', 'Piso de concreto 10'],
+  ['Laje inclinada impermeabilizada', 'Concreto inclinado impermeabilizado'],
+  ['Laje de concreto', 'Concreto estrutural'],
+  ['Pisos e lajes', 'Pisos'],
+  ['Lajes estruturais', 'Pisos estruturais'],
+];
+const renameFloor = v => {
+  if (v === null || v === undefined) return v;
+  let s = JSON.stringify(v);
+  const before = s;
+  for (const [a, b] of FLOOR_NAMES) s = s.split(a).join(b);
+  // "Genérica 15" só no tipo de piso (a parede genérica continua feminina)
+  s = s.split('"id":"laje-generica-15","name":"Genérica 15"').join('"id":"laje-generica-15","name":"Genérico 15"')
+    .split('"typeId":"laje-generica-15","typeName":"Genérica 15"').join('"typeId":"laje-generica-15","typeName":"Genérico 15"');
+  return s === before ? v : JSON.parse(s);
+};
+
+/** Uma vez por servidor: renomeia o que ficou com "Laje" nos projetos, tipos e elementos. */
+async function migrateFloorNames() {
+  if (await db.Config.findByPk('migracao:piso')) return;
+  const cfg = await db.Config.findByPk('tipos');
+  if (cfg) { const v = renameFloor(cfg.valor); if (v !== cfg.valor) { cfg.valor = v; await cfg.save(); } }
+  for (const p of await db.Projeto.findAll()) {
+    const d = renameFloor(p.dados);
+    if (d !== p.dados) { p.dados = d; await p.save(); }
+  }
+  for (const el of await db.Elemento.findAll()) {
+    let d = renameFloor(el.dados);
+    const bim = d?.bim;
+    if (bim?.slab && /^Laje(\s+\d+)?$/.test(bim.name || '')) {
+      d = d === el.dados ? structuredClone(d) : d;
+      d.bim.name = d.bim.name.replace(/^Laje/, 'Piso');
+    }
+    if (d?.bim?.typeId === 'laje-generica-15' && d.bim.props?.Tipo === 'Genérica 15') {
+      d = d === el.dados ? structuredClone(d) : d;
+      d.bim.props.Tipo = 'Genérico 15';
+    }
+    if (d !== el.dados) { el.dados = d; await el.save(); }
+  }
+  await db.Config.create({ chave: 'migracao:piso', valor: { em: new Date().toISOString() } });
 }
 
 // ---------------------------------------------------------------- canais

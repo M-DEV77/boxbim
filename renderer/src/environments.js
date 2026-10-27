@@ -8,7 +8,7 @@
 import { h, modal, toast } from './ui.js';
 
 export const DRAWING_TYPES = {
-  IfcWall: 'Paredes', IfcSlab: 'Pisos e lajes', IfcRoof: 'Telhados', IfcColumn: 'Pilares', IfcBeam: 'Vigas',
+  IfcWall: 'Paredes', IfcSlab: 'Pisos', IfcRoof: 'Telhados', IfcColumn: 'Pilares', IfcBeam: 'Vigas',
   IfcDoor: 'Portas', IfcWindow: 'Janelas', IfcStair: 'Escadas', IfcRailing: 'Guarda-corpos', IfcFurniture: 'Mobiliário',
   IfcCovering: 'Revestimentos', IfcMember: 'Peças estruturais', IfcPlate: 'Chapas', IfcReinforcingBar: 'Armaduras',
   IfcFlowTerminal: 'Instalações (terminais)', IfcSanitaryTerminal: 'Louças e metais', IfcLightFixture: 'Iluminação',
@@ -18,12 +18,12 @@ export const DRAWING_TYPES = {
 /** Modelo inicial de ambientes (o administrador ajusta à vontade). */
 export const TEMPLATE = [
   { nome: 'Arquitetura', cor: '#2fd18a', camadas: [
-    { nome: 'Paredes', tipos: ['IfcWall'] }, { nome: 'Pisos e lajes', tipos: ['IfcSlab', 'IfcCovering'] },
+    { nome: 'Paredes', tipos: ['IfcWall'] }, { nome: 'Pisos', tipos: ['IfcSlab', 'IfcCovering'] },
     { nome: 'Esquadrias', tipos: ['IfcDoor', 'IfcWindow'] }, { nome: 'Mobiliário', tipos: ['IfcFurniture', 'IfcSanitaryTerminal', 'IfcLightFixture'] },
     { nome: 'Cobertura', tipos: ['IfcRoof'] }, { nome: 'Desenho 2D', tipos: ['IfcAnnotation', 'IfcGrid'] }] },
   { nome: 'Estrutura', cor: '#3aa0ff', camadas: [
     { nome: 'Pilares', tipos: ['IfcColumn'] }, { nome: 'Vigas', tipos: ['IfcBeam', 'IfcMember'] },
-    { nome: 'Lajes estruturais', tipos: [] }, { nome: 'Armaduras', tipos: ['IfcReinforcingBar'] }] },
+    { nome: 'Pisos estruturais', tipos: [] }, { nome: 'Armaduras', tipos: ['IfcReinforcingBar'] }] },
   { nome: 'Instalações', cor: '#ff9f1c', camadas: [{ nome: 'Hidráulica', tipos: ['IfcFlowTerminal', 'IfcSanitaryTerminal'] }, { nome: 'Elétrica', tipos: ['IfcLightFixture'] }] },
 ];
 

@@ -8,7 +8,7 @@ let typeLib = null;
 export function setTypeLibrary(lib) { typeLib = lib; }
 
 /**
- * Tipo do elemento: "type" (id ou nome) explícito; senão, se veio só uma espessura (parede/laje), elemento
+ * Tipo do elemento: "type" (id ou nome) explícito; senão, se veio só uma espessura (parede/piso), elemento
  * genérico com essa espessura; senão, o tipo ativo da categoria. type: "nenhum" força o genérico.
  */
 function typeSpec(cat, args) {

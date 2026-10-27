@@ -95,7 +95,7 @@ function summary(e) {
   const b = e.dados?.bim || {};
   const out = { id: e.id, tipo: b.type || e.tipo, nome: b.name || null, nivel: b.props?.Nivel || null };
   if (b.wall) Object.assign(out, { parede: { inicio: b.wall.start, fim: b.wall.end, altura: b.wall.height, espessura: b.wall.thickness, base: b.wall.base, tipo: b.typeName || null } });
-  if (b.slab) Object.assign(out, { laje: { pontos: b.slab.points, topo: b.slab.elevation, espessura: b.slab.thickness, furos: b.slab.holes?.length || 0 } });
+  if (b.slab) Object.assign(out, { piso: { pontos: b.slab.points, topo: b.slab.elevation, espessura: b.slab.thickness, furos: b.slab.holes?.length || 0 } });
   if (b.linha) Object.assign(out, { linha: { a: b.linha.a, b: b.linha.b, cota: b.linha.z, arco: !!b.linha.arco } });
   if (b.objectName && !b.sistema) out.objeto = b.objectName;
   if (b.camadaId) out.camada = b.camadaId;
@@ -112,13 +112,13 @@ const PT = { type: 'array', items: { type: 'number' }, minItems: 2, maxItems: 2 
 const TOOLS = [
   { name: 'listar_projetos', description: 'Lista os projetos BIM que o usuário pode abrir (id, nome, papel, número de elementos).', inputSchema: { type: 'object', properties: {} },
     readOnly: true },
-  { name: 'ler_projeto', description: 'Níveis (nome e cota em metros) e elementos do projeto, com o resumo de cada um (paredes: início/fim/altura; lajes: contorno; linhas 2D). Coordenadas em metros, Z para cima.',
+  { name: 'ler_projeto', description: 'Níveis (nome e cota em metros) e elementos do projeto, com o resumo de cada um (paredes: início/fim/altura; pisos: contorno; linhas 2D). Coordenadas em metros, Z para cima.',
     inputSchema: { type: 'object', properties: { ...P_PROJ, tipo: { type: 'string', description: 'filtra por tipo IFC (ex.: IfcWall, IfcSlab)' }, limite: { type: 'integer', description: 'máximo de elementos (padrão 200)' } }, required: ['projeto'] }, readOnly: true },
   { name: 'criar_nivel', description: 'Cria um nível (pavimento) no projeto.',
     inputSchema: { type: 'object', properties: { ...P_PROJ, nome: { type: 'string' }, cota: { type: 'number', description: 'cota em metros' } }, required: ['projeto', 'nome', 'cota'] } },
   { name: 'criar_parede', description: 'Cria uma parede reta do ponto inicio ao fim (em planta, metros), num nível. A face externa fica à esquerda do sentido inicio→fim. Altura padrão: até o nível de cima (ou 3 m).',
     inputSchema: { type: 'object', properties: { ...P_PROJ, inicio: PT, fim: PT, nivel: { type: 'string', description: 'nome ou id do nível (padrão: o mais baixo)' }, altura: { type: 'number' }, tipo: { type: 'string', description: 'tipo de parede (camadas), por nome ou id' }, espessura: { type: 'number', description: 'só sem tipo' } }, required: ['projeto', 'inicio', 'fim'] } },
-  { name: 'criar_laje', description: 'Cria um piso (laje) pelo contorno em planta (pontos [x, y] em metros), com o topo no nível (+ deslocamento). Furos opcionais.',
+  { name: 'criar_laje', description: 'Cria um piso pelo contorno em planta (pontos [x, y] em metros), com o topo no nível (+ deslocamento). Furos opcionais.',
     inputSchema: { type: 'object', properties: { ...P_PROJ, pontos: { type: 'array', items: PT, minItems: 3 }, furos: { type: 'array', items: { type: 'array', items: PT } }, nivel: { type: 'string' }, deslocamento: { type: 'number', description: 'topo em relação ao nível (m)' }, tipo: { type: 'string' } }, required: ['projeto', 'pontos'] } },
   { name: 'criar_linhas', description: 'Desenha linhas 2D (polilinha) no plano de um nível. fechar = true liga o último ponto ao primeiro.',
     inputSchema: { type: 'object', properties: { ...P_PROJ, pontos: { type: 'array', items: PT, minItems: 2 }, fechar: { type: 'boolean' }, nivel: { type: 'string' } }, required: ['projeto', 'pontos'] } },

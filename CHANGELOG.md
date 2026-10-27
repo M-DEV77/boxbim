@@ -6,12 +6,24 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.37.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.38.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.38.0] — 2026-10-27 · Laje vira Piso em tudo
+
+### Mudado
+- "Laje" passa a se chamar **Piso** em toda a interface: camada padrão **Pisos** (era "Pisos e lajes") e
+  **Pisos estruturais** (era "Lajes estruturais"), categoria dos tipos, estilo Colorido, categorias de objetos,
+  dica da faixa de Tipos e camadas, diálogo Piso das linhas, ferramentas da IA e do MCP (`ler_projeto` devolve
+  `piso`), skills de fábrica e o script do objeto Piso (revisão 4).
+- Tipos de fábrica: **Piso de concreto 12 + contrapiso + cerâmico**, **Piso de concreto 10**, **Genérico 15** e
+  a camada **Concreto estrutural**; o telhado de concreto virou **Concreto inclinado impermeabilizado** (ids iguais).
+- **Migração única no servidor** (chave `migracao:piso`): renomeia nos dados já gravados as camadas, os tipos
+  (biblioteca e projetos) e os elementos "Laje N" para "Piso N".
 
 ## [2.37.0] — 2026-10-27 · Editar piso
 

@@ -1,7 +1,7 @@
 // ESTILOS DE VISTA (em todas as vistas) e PROJEÇÃO das vistas 3D.
 //   arame ........ só as arestas, tudo vazado
 //   projeto ...... desenho técnico: faces brancas, arestas pretas, fundo de papel, corte cinza nas plantas
-//   colorido ..... uma cor por categoria (paredes, lajes, pilares…), para entender o projeto rápido
+//   colorido ..... uma cor por categoria (paredes, pisos, pilares…), para entender o projeto rápido
 //   transparente . as mesmas cores, translúcidas, para ver o que está escondido
 //   textura ...... os materiais com cor, relevo e todos os mapas, na luz normal da vista (leve, para modelar)
 //   render ....... materiais reais em tempo real (céu, sol, sombras; path tracing) — o RenderMode
@@ -25,7 +25,7 @@ export const DEFAULT_COLORS = {
   IfcSanitaryTerminal: '#7fb3d5', IfcLightFixture: '#f4d03f', IfcMember: '#7d6bb0', IfcPlate: '#95a5a6', outros: '#b0b6bf',
 };
 export const COLOR_LABELS = {
-  IfcWall: 'Paredes', IfcSlab: 'Lajes e pisos', IfcColumn: 'Pilares', IfcBeam: 'Vigas', IfcDoor: 'Portas', IfcWindow: 'Janelas',
+  IfcWall: 'Paredes', IfcSlab: 'Pisos', IfcColumn: 'Pilares', IfcBeam: 'Vigas', IfcDoor: 'Portas', IfcWindow: 'Janelas',
   IfcStair: 'Escadas', IfcRailing: 'Guarda-corpos', IfcRoof: 'Coberturas', IfcFurniture: 'Mobiliário', IfcCovering: 'Revestimentos',
   IfcBuildingElementProxy: 'Genéricos / caixas', IfcSanitaryTerminal: 'Louças', IfcLightFixture: 'Iluminação', outros: 'Outros',
 };

@@ -79,7 +79,7 @@ usuário pode querer mudar), use `min`/`max` realistas e `g.log` para conferênc
 # Tipos com camadas (paredes, pisos, pilares, vigas)
 - `list_types` mostra os tipos e camadas (material e espessura).
 - `add_wall`, `add_slab`, `add_column`, `add_beam` aceitam `type` (nome ou id). Sem `type`, usam o tipo ativo;
-  só com `thickness` (parede/laje), criam um elemento genérico.
+  só com `thickness` (parede/piso), criam um elemento genérico.
 - `set_element_type` troca o tipo de elementos existentes.
 - `save_type` cria/atualiza um tipo: parede da face **externa → interna**; piso **topo → fundo**;
   pilar/viga: a 1ª camada é o **núcleo** (espessura 0, dimensões da instância) e as demais revestem.

@@ -7,7 +7,7 @@ export const UNITS = ['un', 'm', 'm²', 'm³', 'kg', 'cj', 'h'];
 export const CATEGORY_LABELS = {
   IfcAnnotation: 'Desenho 2D',
   IfcFurniture: 'Mobiliário', IfcDoor: 'Portas', IfcWindow: 'Janelas', IfcStair: 'Escadas', IfcRailing: 'Guarda-corpos',
-  IfcColumn: 'Pilares', IfcBeam: 'Vigas', IfcSlab: 'Lajes e pisos', IfcWall: 'Paredes', IfcRoof: 'Coberturas',
+  IfcColumn: 'Pilares', IfcBeam: 'Vigas', IfcSlab: 'Pisos', IfcWall: 'Paredes', IfcRoof: 'Coberturas',
   IfcCovering: 'Revestimentos', IfcMember: 'Peças estruturais', IfcPlate: 'Chapas', IfcFlowTerminal: 'Terminais',
   IfcSanitaryTerminal: 'Louças e metais', IfcLightFixture: 'Iluminação', IfcBuildingElementProxy: 'Genéricos',
 };

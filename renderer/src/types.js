@@ -1,9 +1,9 @@
-// Biblioteca de TIPOS de sistema (paredes, pisos/lajes, pilares, vigas) com CAMADAS, e de MATERIAIS.
+// Biblioteca de TIPOS de sistema (paredes, pisos, pilares, vigas) com CAMADAS, e de MATERIAIS.
 // Fica em <pasta de dados>/tipos.json; os tipos de fábrica abaixo são usados enquanto o arquivo não existe.
 //
 // Camada: { name, material, thickness (m), function }
 //   parede: da face externa (esquerda do sentido de desenho) para a interna
-//   piso/laje: de cima para baixo (o topo fica na cota do nível)
+//   piso: de cima para baixo (o topo fica na cota do nível)
 //   telhado: de cima para baixo (a 1ª camada fica na linha do perfil desenhado; as outras descem)
 //   pilar/viga: a 1ª camada é o NÚCLEO (dimensões da instância); as seguintes revestem em volta
 import * as THREE from 'three';
@@ -14,7 +14,7 @@ const B = window.boxbim;
 
 export const CATEGORIES = {
   wall: { label: 'Paredes', ifc: 'IfcWall', order: 'externa → interna' },
-  slab: { label: 'Pisos e lajes', ifc: 'IfcSlab', order: 'topo → fundo' },
+  slab: { label: 'Pisos', ifc: 'IfcSlab', order: 'topo → fundo' },
   column: { label: 'Pilares', ifc: 'IfcColumn', order: 'núcleo → revestimentos' },
   beam: { label: 'Vigas', ifc: 'IfcBeam', order: 'núcleo → revestimentos' },
   roof: { label: 'Telhados', ifc: 'IfcRoof', order: 'topo → fundo' },
@@ -53,10 +53,10 @@ export const DEFAULT_TYPES = {
     { id: 'parede-generica-15', name: 'Genérica 15', layers: [L('Genérico', 'Genérico', 0.15, 'estrutura')] },
   ],
   slab: [
-    { id: 'laje-macica-12-acabada', name: 'Laje maciça 12 + contrapiso + piso', layers: [L('Piso cerâmico', 'Piso cerâmico', 0.01), L('Contrapiso', 'Contrapiso', 0.04, 'substrato'), L('Laje de concreto', 'Concreto', 0.12, 'estrutura'), L('Reboco do teto', 'Reboco', 0.015)] },
-    { id: 'laje-macica-10', name: 'Laje maciça 10', layers: [L('Concreto', 'Concreto', 0.10, 'estrutura')] },
+    { id: 'laje-macica-12-acabada', name: 'Piso de concreto 12 + contrapiso + cerâmico', layers: [L('Piso cerâmico', 'Piso cerâmico', 0.01), L('Contrapiso', 'Contrapiso', 0.04, 'substrato'), L('Concreto estrutural', 'Concreto', 0.12, 'estrutura'), L('Reboco do teto', 'Reboco', 0.015)] },
+    { id: 'laje-macica-10', name: 'Piso de concreto 10', layers: [L('Concreto', 'Concreto', 0.10, 'estrutura')] },
     { id: 'piso-terreo-impermeabilizado', name: 'Piso térreo impermeabilizado', layers: [L('Porcelanato', 'Porcelanato', 0.012), L('Contrapiso', 'Contrapiso', 0.05, 'substrato'), L('Impermeabilização', 'Impermeabilização', 0.005, 'membrana'), L('Lastro de concreto', 'Concreto', 0.08, 'estrutura')] },
-    { id: 'laje-generica-15', name: 'Genérica 15', layers: [L('Genérico', 'Genérico', 0.15, 'estrutura')] },
+    { id: 'laje-generica-15', name: 'Genérico 15', layers: [L('Genérico', 'Genérico', 0.15, 'estrutura')] },
   ],
   column: [
     { id: 'pilar-concreto-reboco', name: 'Concreto + reboco', layers: [L('Núcleo de concreto', 'Concreto', 0, 'núcleo'), L('Reboco', 'Reboco', 0.02)] },
@@ -72,7 +72,7 @@ export const DEFAULT_TYPES = {
     { id: 'telhado-ceramico', name: 'Telha cerâmica + madeiramento', layers: [L('Telha cerâmica', 'Telha cerâmica', 0.02), L('Ripas', 'Madeira', 0.025, 'substrato'), L('Caibros', 'Madeira', 0.05, 'estrutura')] },
     { id: 'telhado-sanduiche-50', name: 'Telha metálica sanduíche 50', layers: [L('Chapa de aço', 'Aço', 0.005), L('Isolamento', 'Isolamento térmico', 0.04, 'isolamento'), L('Chapa de aço', 'Aço', 0.005, 'estrutura')] },
     { id: 'telhado-fibrocimento', name: 'Fibrocimento 6 mm', layers: [L('Telha de fibrocimento', 'Fibrocimento', 0.006, 'estrutura')] },
-    { id: 'telhado-laje-impermeabilizada', name: 'Laje inclinada impermeabilizada', layers: [L('Impermeabilização', 'Impermeabilização', 0.005, 'membrana'), L('Laje de concreto', 'Concreto', 0.10, 'estrutura')] },
+    { id: 'telhado-laje-impermeabilizada', name: 'Concreto inclinado impermeabilizado', layers: [L('Impermeabilização', 'Impermeabilização', 0.005, 'membrana'), L('Concreto estrutural', 'Concreto', 0.10, 'estrutura')] },
     { id: 'telhado-generico-15', name: 'Genérico 15', layers: [L('Genérico', 'Genérico', 0.15, 'estrutura')] },
   ],
 };

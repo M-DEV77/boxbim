@@ -28,7 +28,7 @@ export const TOOLS = [
   { group: 'scene', name: 'get_selection', description: 'Retorna os elementos selecionados pelo usuário com suas propriedades.', parameters: { type: 'object', properties: {} } },
   { group: 'scene', name: 'add_wall', description: 'Cria uma parede reta num nível. Coordenadas em metros, Z para cima.',
     parameters: { type: 'object', properties: { start: xy, end: xy, level, type: typeRef, height: { type: 'number', description: 'Padrão: até o nível de cima' }, thickness: { type: 'number' }, base: { type: 'number', description: 'Deslocamento da base em relação ao nível' }, name: { type: 'string' } }, required: ['start', 'end'] } },
-  { group: 'scene', name: 'add_slab', description: 'Cria uma laje a partir de um contorno em planta. O topo fica no nível (+ "elevation" como deslocamento).',
+  { group: 'scene', name: 'add_slab', description: 'Cria um piso a partir de um contorno em planta. O topo fica no nível (+ "elevation" como deslocamento).',
     parameters: { type: 'object', properties: { points: { type: 'array', items: xy, description: 'Contorno [[x,y],…]' }, level, type: typeRef, thickness: { type: 'number' }, elevation: { type: 'number', description: 'Deslocamento do topo' }, name: { type: 'string' } }, required: ['points'] } },
   { group: 'scene', name: 'add_column', description: 'Cria um pilar retangular ou circular, do nível até o nível de cima.',
     parameters: { type: 'object', properties: { position: xy, level, type: typeRef, width: { type: 'number' }, depth: { type: 'number' }, height: { type: 'number' }, base: { type: 'number', description: 'Deslocamento da base' }, round: { type: 'boolean' }, name: { type: 'string' } }, required: ['position'] } },
@@ -47,7 +47,7 @@ export const TOOLS = [
   { group: 'scene', name: 'clear_scene', description: 'Remove todos os elementos do projeto.', confirm: true, parameters: { type: 'object', properties: {} } },
 
   // ---------------- tipos com camadas
-  { group: 'scene', name: 'list_types', description: 'Lista os tipos com camadas (paredes, pisos/lajes, pilares, vigas): camadas, materiais, espessuras e o tipo padrão.',
+  { group: 'scene', name: 'list_types', description: 'Lista os tipos com camadas (paredes, pisos, pilares, vigas): camadas, materiais, espessuras e o tipo padrão.',
     parameters: { type: 'object', properties: { category: { type: 'string', enum: ['wall', 'slab', 'column', 'beam'] } } } },
   // ---------------- materiais e texturas procedurais
   { group: 'scene', name: 'list_materials', description: 'Lista os materiais da biblioteca (cor e propriedades de render: padrão/textura, escala, rugosidade, metal, mapas…), os padrões de fábrica e as texturas procedurais próprias com as camadas.',
@@ -75,7 +75,7 @@ Exemplo (tijolo): [{gerador:"ladrilhos",colunas:2,linhas:3,junta:0.02,bisel:0.01
       material: { type: 'string' }, create: { type: 'boolean' }, color: { type: 'string', description: '#rrggbb' },
       render: { type: 'object', description: 'Propriedades de render a mudar (as outras ficam)' },
     }, required: ['material'] } },
-  { group: 'scene', name: 'set_element_type', description: 'Troca o tipo (camadas) de paredes, lajes, pilares ou vigas existentes. type vazio = genérico.',
+  { group: 'scene', name: 'set_element_type', description: 'Troca o tipo (camadas) de paredes, pisos, pilares ou vigas existentes. type vazio = genérico.',
     parameters: { type: 'object', properties: { ids: { type: 'array', items: { type: 'string' } }, type: { type: 'string' } }, required: ['ids'] } },
   { group: 'scene', name: 'save_type', description: 'Cria ou atualiza um tipo com camadas e o salva na biblioteca. Parede: externa→interna; piso: topo→fundo; pilar/viga: 1ª camada = núcleo (thickness 0).',
     parameters: { type: 'object', properties: {

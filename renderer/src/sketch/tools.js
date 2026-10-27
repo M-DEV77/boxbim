@@ -1021,8 +1021,8 @@ function bakeForm(el) {
 }
 
 /**
- * Pisos (lajes) a partir de linhas 2D horizontais: cada contorno fechado vira um piso com o topo na cota das linhas
- * (mais o deslocamento). typeId: tipo de laje (camadas); sem tipo, o padrão.
+ * Pisos a partir de linhas 2D horizontais: cada contorno fechado vira um piso com o topo na cota das linhas
+ * (mais o deslocamento). typeId: tipo de piso (camadas); sem tipo, o padrão.
  */
 export function createFloors(app, segs, z, { typeId, offset = 0 } = {}) {
   const { loops } = chainSegments(segs);
@@ -1055,7 +1055,7 @@ export async function floorFromSelection(app) {
   if (!loops.length) { toast('As linhas selecionadas não formam um contorno fechado.', 'error'); return; }
   const types = app.types.list('slab');
   const v = await formDialog('Piso das linhas', [
-    { key: 'type', label: 'Tipo de piso / laje', type: 'select', value: types[0]?.id || '', options: types.map(t => ({ value: t.id, label: `${t.name} (${fmtLen(app.types.thickness(t), { suffix: true })})` })) },
+    { key: 'type', label: 'Tipo de piso', type: 'select', value: types[0]?.id || '', options: types.map(t => ({ value: t.id, label: `${t.name} (${fmtLen(app.types.thickness(t), { suffix: true })})` })) },
     { key: 'offset', label: `Deslocamento do topo em relação às linhas (${unitLabel()})`, type: 'number', value: 0 },
     { key: 'apagar', label: 'Apagar as linhas usadas', type: 'checkbox', value: false },
   ], { ok: 'Criar piso' });

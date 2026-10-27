@@ -351,7 +351,7 @@ export class Panels {
       list,
       h('button', { onclick: add, disabled: !admin }, '+ Servidor MCP'),
       h('div', { class: 'section-title', style: 'margin-top:14px' }, 'BoxBim como servidor MCP'),
-      h('div', { class: 'small muted' }, 'Claude Desktop, Claude Code ou outro cliente MCP leem e modelam os SEUS projetos (com as suas permissões): listar projetos, ler níveis e elementos, criar níveis, paredes, lajes e linhas, mover e apagar — o resultado aparece ao vivo no BoxBim.'),
+      h('div', { class: 'small muted' }, 'Claude Desktop, Claude Code ou outro cliente MCP leem e modelam os SEUS projetos (com as suas permissões): listar projetos, ler níveis e elementos, criar níveis, paredes, pisos e linhas, mover e apagar — o resultado aparece ao vivo no BoxBim.'),
       h('label', {}, 'Endereço', h('input', { value: endpoint, readonly: true, onclick: e => e.target.select() })),
       h('div', { class: 'row-buttons' }, nameIn, h('button', { class: 'primary', onclick: create }, 'Gerar token')),
       shown,

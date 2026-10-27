@@ -1,4 +1,4 @@
-// Janela "Tipos e camadas": tipos de parede, piso/laje, pilar e viga com camadas de material, e a biblioteca
+// Janela "Tipos e camadas": tipos de parede, piso, pilar e viga com camadas de material, e a biblioteca
 // de materiais. Ao salvar, as instâncias no modelo são atualizadas (como a edição de tipos no Revit).
 import { h, modal, toast, confirmDialog } from './ui.js';
 import { CATEGORIES, FUNCTIONS } from './types.js';
