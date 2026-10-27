@@ -126,6 +126,9 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
   esboço ficam só na sua tela.
 - **Canto da faixa (Desenho › Canto) no piso**: clique dois lados do mesmo contorno do piso (ou de um furo) — vivo
   (os lados se encontram), raio ou chanfro, como nas linhas 2D; desfaz arredondamentos e chanfros com o vivo.
+- **Sobrepor** (Propriedades do piso): ligue e clique no piso **hospedeiro** na vista — o piso deita sobre ele e
+  **acompanha o relevo** (o fundo encosta na superfície do hospedeiro, com pontos de altura, taludes e cortes);
+  calçadas, revestimentos e pavimentos sobre terreno ou rampa. Recalcula sozinho quando o hospedeiro muda.
 - **Pontos de elevação**: **dois cliques com uma pausa** no piso (ou Propriedades › Pontos de elevação) — o clique
   simples só seleciona.
 - **Editar piso** (clique duplo no piso, Propriedades › Editar piso e linhas… ou faixa › Piso › Editar piso e linhas),
@@ -442,4 +445,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.46.1</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.47.0</a>

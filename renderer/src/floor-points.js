@@ -486,6 +486,56 @@ export class FloorPoints {
     return this.commit(el);
   }
 
+  // ------------------------------------------------------------ sobrepor (piso deitado sobre outro)
+
+  /** Seção "Sobrepor" nas propriedades: liga e escolhe o piso hospedeiro clicando nele na vista. */
+  overlaySection(el) {
+    const s = el.userData.bim.slab, host = s.sobrepor?.host ? this.viewer.findById(s.sobrepor.host) : null;
+    return [
+      h('h4', {}, 'Sobrepor'),
+      h('label', { class: 'inline', title: 'O piso deita sobre outro piso (o hospedeiro) e acompanha o relevo dele: o fundo encosta na superfície do hospedeiro' },
+        h('input', { type: 'checkbox', checked: !!s.sobrepor, onchange: e => (e.target.checked ? this.pickHost(el) : this.setHost(el, null)) }), 'Sobrepor a outro piso'),
+      s.sobrepor ? h('div', { class: 'row-buttons' },
+        h('span', { class: 'small' }, host ? `Hospedeiro: ${host.userData.bim.name || 'Piso'}` : (this.picking ? 'Clique no piso hospedeiro…' : 'Hospedeiro não encontrado')),
+        h('button', { onclick: () => this.pickHost(el), title: 'Clique no piso que vai receber este (na vista)' }, this.picking ? 'Clique na vista…' : 'Escolher hospedeiro')) : null,
+    ];
+  }
+
+  setHost(el, hostGuid) {
+    el = this.live(el);
+    const s = el.userData.bim.slab;
+    if (hostGuid) s.sobrepor = { host: hostGuid }; else delete s.sobrepor;
+    this.commit(el);
+  }
+
+  /** Próximo clique na vista escolhe o hospedeiro (o primeiro piso sob o cursor que não é este). Esc cancela. */
+  pickHost(el) {
+    el = this.live(el);
+    const guid = el.userData.bim.guid;
+    const cv = this.viewer.renderer.domElement;
+    this.picking = true;
+    const stop = () => { this.picking = false; cv.removeEventListener('pointerdown', down, true); document.removeEventListener('keydown', key, true); cv.style.cursor = ''; this.app.renderProps(); };
+    const key = e => { if (e.key === 'Escape') { e.stopPropagation(); stop(); this.app.status('Escolha do hospedeiro cancelada.'); } };
+    const down = e => {
+      if (e.button !== 0) return;
+      e.preventDefault(); e.stopPropagation();
+      const r = cv.getBoundingClientRect(), ray = new THREE.Raycaster();
+      ray.setFromCamera(new THREE.Vector2((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1), this.viewer.camera);
+      const owner = o => { while (o && !o.userData?.bim) o = o.parent; return o; };
+      const hit = ray.intersectObject(this.viewer.model, true).map(x => owner(x.object)).find(o => o?.visible && o.userData.bim.slab && o.userData.bim.guid !== guid);
+      if (!hit) { this.app.status('Clique sobre um piso (o hospedeiro).'); return; }
+      if (hit.userData.bim.slab.sobrepor?.host === guid) { toast('Esse piso já está sobreposto a este: escolha outro hospedeiro.', 'error'); return; }
+      stop();
+      this.setHost(el, hit.userData.bim.guid);
+      this.app.status(`Sobreposto a "${hit.userData.bim.name || 'Piso'}": acompanha o relevo dele.`);
+    };
+    cv.addEventListener('pointerdown', down, true);
+    document.addEventListener('keydown', key, true);
+    cv.style.cursor = 'crosshair';
+    this.app.status('Sobrepor · clique no piso hospedeiro na vista · Esc cancela.');
+    this.app.renderProps();
+  }
+
   /** Liga/desliga o modo Terreno do piso. */
   setTerrain(el, on) {
     el = this.live(el);

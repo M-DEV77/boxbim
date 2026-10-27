@@ -6,12 +6,22 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.46.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.47.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.47.0] — 2026-10-27 · Piso sobreposto
+
+### Adicionado
+- Opção **Sobrepor** no piso (Propriedades › Sobrepor; dado `slab.sobrepor.host`): ligue e clique no piso
+  **hospedeiro** na vista (Esc cancela). O piso deita sobre o hospedeiro e **acompanha o relevo** dele — o fundo
+  encosta na superfície de cima (a malha que está no modelo, com pontos de altura, taludes e cortes) e a espessura
+  fica na vertical. Recalcula sozinho quando o hospedeiro muda ou se move.
+- drape.js: superfície do hospedeiro por raio vertical acelerado (three-mesh-bvh); o sobreposto é feito depois
+  dos outros cortes e não escava o terreno.
 
 ## [2.46.1] — 2026-10-27 · Sem a Edição 2D nas propriedades do piso
 

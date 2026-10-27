@@ -47,6 +47,8 @@ flowchart LR
     FEDIT --> FPTS
     FPTS -->|"slab.talude"| SLOPES["slopes.js<br/>talude: corte e aterro com bermas"]
     SLOPES --> CUTS
+    FPTS -->|"slab.sobrepor"| DRAPE["drape.js<br/>piso sobreposto acompanha o hospedeiro"]
+    DRAPE --> CUTS
     FPTS -->|"slab.terreno"| CUTS["sketch/cuts.js<br/>vazios e pisos cortando o terreno (CSG)"]
     MODEL --> ROOF["roof-tool.js telhado"]
     MODEL --> WALLED["wall-edit.js editar parede / até o telhado"]
@@ -162,7 +164,8 @@ flowchart LR
 | 2026-10-27 | 2.44.0 | `9dbe8e0` | Edição 2D do contorno do piso: canto (raio, chanfro, vivo) e offset |
 | 2026-10-27 | 2.45.0 | `2a9ea14` | Contorno do piso com linhas 2D (clique duplo) e pontos de elevação com dois cliques pausados |
 | 2026-10-27 | 2.46.0 | `c141c7f` | Canto da faixa (vivo, raio, chanfro) direto nos lados do piso |
-| 2026-10-27 | 2.46.1 | este commit | Tirado o bloco Edição 2D do contorno das Propriedades do piso |
+| 2026-10-27 | 2.46.1 | `2d8b188` | Tirado o bloco Edição 2D do contorno das Propriedades do piso |
+| 2026-10-27 | 2.47.0 | este commit | Piso sobreposto: acompanha o relevo do piso hospedeiro (escolhido na vista) |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.46.1</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.47.0</a>

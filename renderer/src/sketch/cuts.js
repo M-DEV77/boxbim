@@ -7,10 +7,12 @@
 // TERRENO dentro de TERRENO: o terreno menor (área do contorno) corta o maior em toda a profundidade e desce até o
 // fundo dele — onde a superfície do menor fica abaixo da do maior é corte; onde fica acima, aterro (preenche).
 // TALUDE: os pisos com talude ligado moldam a superfície dos terrenos em volta (slopes.js), antes dos cortes.
+// SOBREPOR: piso com slab.sobrepor.host deita sobre o hospedeiro (drape.js) — por último, depois do hospedeiro pronto.
 import * as THREE from 'three';
 import { Brush, Evaluator, SUBTRACTION } from 'three-bvh-csg';
 import { normalizeGeometry } from './forms.js';
 import { applySlopes, slopeFloors, slopeSignature } from '../slopes.js';
+import { drapeGeometry, hostSignature } from '../drape.js';
 
 const evaluator = new Evaluator();
 evaluator.useGroups = false;
@@ -134,7 +136,7 @@ export class Cuts {
   padsFor(el) {
     if (!el.userData.bim.slab?.terreno) return [];
     const A = areaOf(el);
-    return this.viewer.elements().filter(o => o !== el && o.userData.bim.slab
+    return this.viewer.elements().filter(o => o !== el && o.userData.bim.slab && !o.userData.bim.slab.sobrepor?.host // o sobreposto não escava
       && (!o.userData.bim.slab.terreno || (areaOf(o) < A - 1e-6 && overlapXY(o, el))));
   }
 
@@ -179,25 +181,30 @@ export class Cuts {
   update(force = false) {
     const v = this.viewer;
     let changed = false;
-    for (const el of v.elements()) {
+    // os sobrepostos por último: o hospedeiro já tem a malha final (cortes, taludes) quando eles deitam sobre ele
+    const isOver = e => !!e.userData.bim.slab?.sobrepor?.host;
+    const all = v.elements();
+    for (const el of [...all.filter(e => !isOver(e)), ...all.filter(isOver)]) {
       const ids = el.userData.bim.cortes || [];
       const pads = this.padsFor(el);
       const deepen = this.hostBottom(el);
       // taludes dos pisos em volta (só nos terrenos)
       const slopes = el.userData.bim.slab?.terreno ? slopeFloors(v.elements(), el) : [];
-      if (!ids.length && !pads.length && deepen === null && !slopes.length) { if (el.userData._cutSig) this.restore(el); continue; }
+      const host = isOver(el) ? v.findById(el.userData.bim.slab.sobrepor.host) : null;
+      const drape = host && host !== el ? host : null;
+      if (!ids.length && !pads.length && deepen === null && !slopes.length && !drape) { if (el.userData._cutSig) this.restore(el); continue; }
       const voids = ids.map(id => v.findById(id)).filter(Boolean);
       const sig = this.signature(el, voids) + (pads.length ? `#${this.padSignature(pads)}` : '') + (deepen !== null ? `~${deepen.toFixed(5)}` : '')
-        + (slopes.length ? `^${slopeSignature(slopes)}` : '');
+        + (slopes.length ? `^${slopeSignature(slopes)}` : '') + (drape ? `@${hostSignature(drape)}:${JSON.stringify(el.userData.bim.slab)}` : '');
       if (!force && sig === el.userData._cutSig) continue;
       el.userData._cutSig = sig;
-      this.apply(el, voids, pads, deepen, slopes);
+      this.apply(el, voids, pads, deepen, slopes, drape);
       changed = true;
     }
     if (changed) { v._prepare2D(v.model); v._bucketsDirty = true; }
   }
 
-  apply(el, voids, pads = [], deepen = null, slopes = []) {
+  apply(el, voids, pads = [], deepen = null, slopes = [], drape = null) {
     const ownBottom = deepen !== null ? worldBox(el).min.z : null;
     const voidBrushes = [];
     for (const p of pads) { try { voidBrushes.push(this.padBrush(p)); } catch (e) { console.warn('terreno', p.name, e); } }
@@ -214,6 +221,7 @@ export class Cuts {
       m.updateMatrixWorld(true);
       let base = deepen !== null ? deepened(orig, m.matrixWorld, ownBottom, deepen) : orig;
       if (slopes.length) base = applySlopes(base === orig ? orig.clone() : base, el, slopes);
+      if (drape) base = drapeGeometry(base === orig ? orig.clone() : base, m.matrixWorld, el.userData.bim.slab, drape);
       if (!voidBrushes.length) { m.geometry = base; this.refreshEdges(m); continue; }
       try {
         let a = new Brush(normalizeGeometry(base.clone()));
