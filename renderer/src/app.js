@@ -30,6 +30,7 @@ import { RoofTool } from './roof-tool.js';
 import { CopyTool } from './copy-tool.js';
 import { MirrorTool } from './mirror-tool.js';
 import { editWall, attachToRoof } from './wall-edit.js';
+import { editFloor } from './floor-edit.js';
 import { TypeLibrary, CATEGORIES } from './types.js';
 import { openTypesEditor } from './types-ui.js';
 import { setTypeLibrary, setElementType, categoryOf } from './modeling.js';
@@ -145,11 +146,12 @@ class App {
     this.roofTool = new RoofTool(this);
     this.copyTool = new CopyTool(this);
     this.mirrorTool = new MirrorTool(this);
-    // clique duplo numa parede (sem ferramenta ativa): editar a parede e o perfil dela
+    // clique duplo numa parede (sem ferramenta ativa): editar a parede e o perfil dela; num piso: as linhas do piso
     this.viewer.renderer.domElement.addEventListener('dblclick', e => {
       if (this.viewer.tool) return;
       const obj = this.viewer.pickAt(e.clientX, e.clientY);
       if (obj?.userData.bim?.wall) { this.viewer.select([obj]); editWall(this, obj); }
+      else if (obj?.userData.bim?.slab) { this.viewer.select([obj]); editFloor(this, obj); }
     });
     const syncOrtho = () => $('#ortho-btn').classList.toggle('on', this.wallTool.ortho);
     this.wallTool.addEventListener('ortho', syncOrtho);
@@ -1199,7 +1201,9 @@ class App {
     if (b.wall) root.append(h('h4', {}, 'Parede'), h('div', { class: 'row-buttons' },
       h('button', { onclick: () => editWall(this, o), title: 'Também com clique duplo na parede' }, 'Editar parede e perfil…'),
       h('button', { onclick: () => attachToRoof(this, [o]), title: 'Topo pela face de baixo do telhado acima' }, '⌂ Até o telhado')));
-    if (b.slab) root.append(...this.floorPoints.propsSection(o));
+    if (b.slab) root.append(h('h4', {}, 'Piso'), h('div', { class: 'row-buttons' },
+      h('button', { onclick: () => editFloor(this, o), title: 'Também com clique duplo no piso' }, 'Editar piso e linhas…')),
+      ...this.floorPoints.propsSection(o));
     this.renderTypeProps(root, o);
     this.renderObjectProps(root, o);
     this.renderMaterialProps(root, o);

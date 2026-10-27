@@ -6,12 +6,22 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.36.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.37.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.37.0] — 2026-10-27 · Editar piso
+
+### Adicionado
+- **Editar piso** depois de feito, no estilo do Editar parede: clique duplo no piso, botão **Editar piso e linhas…**
+  em Propriedades ou faixa › Piso › Editar piso e linhas. Diálogo com nome, tipo (ou genérico), cota do topo e um
+  editor 2D em planta das **linhas do piso**: arrastar pontos (grade de 1 cm, Shift trava 0°/90°), clique duplo num
+  lado acrescenta um ponto, botão direito ou Delete tira, clique num lado mostra a medida e muda o comprimento,
+  X/Y do ponto selecionado, medidas de cada lado, área, **＋ Furo**, **Apagar furo** e **Retângulo**.
+  As alturas dos pontos (Pontos do piso) acompanham os pontos acrescentados e tirados.
 
 ## [2.36.0] — 2026-10-27 · Piso com pontos editáveis
 

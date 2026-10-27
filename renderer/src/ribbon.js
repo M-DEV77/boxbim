@@ -1,7 +1,8 @@
 // Barra de ferramentas superior (faixa de opções no estilo do Revit), recolhível.
 // Ferramentas parecidas ficam juntas num BOTÃO DE FAMÍLIA: o clique repete a última usada (o botão mostra qual) e
 // a seta ▾ abre a lista com as outras. Os comandos continuam existindo um a um (presets e Personalizar menus).
-import { $, h, dropdown } from './ui.js';
+import { $, h, dropdown, toast } from './ui.js';
+import { editFloor } from './floor-edit.js';
 import { importFromRevit, sendToRevit } from './io/formats.js';
 import { fmtElev } from './levels.js';
 
@@ -102,6 +103,7 @@ export function buildRibbon(app) {
     ambientes: cmd('Ambientes', 'layers', () => app.envs.openManager(), { id: 'ambientes', title: 'Ambientes e camadas do projeto (administrador): nomes, camadas e os desenhos de cada uma' }),
     telhado: cmd('Telhado', 'roof', () => app.roofTool.start(), { id: 'telhado', title: 'Telhado: desenhe o perfil num eixo de trabalho vertical e extrude; tipo com camadas (telha, ripas, caibros…)' }),
     laje: cmd('Piso', 'slab', () => app.slabTool.start(), { id: 'laje-contorno', title: 'Piso: contorno por croqui 2D, linhas 2D, paredes (face externa/interna/eixo) ou face de sólido; contornos internos viram furos', menu: 'Piso por contorno' }),
+    editarPiso: cmd('Editar\npiso', 'slab', () => { const o = [...app.viewer.selected].find(x => x.userData.bim?.slab); if (o) editFloor(app, o); else toast('Selecione um piso (ou dê clique duplo nele).', 'error'); }, { id: 'editar-piso', title: 'Editar o piso selecionado: nome, tipo, cota do topo e as linhas do contorno e dos furos (como Editar parede)', menu: 'Editar piso e linhas' }),
     pontosPiso: cmd('Pontos do\npiso', 'floorPoints', () => app.floorPoints.start(), { id: 'pontos-piso', title: 'Pontos do piso selecionado: arrastar, colocar no meio dos lados (+), apagar (botão direito), altura de cada ponto e pontos internos de forma (rampas, caimentos)', menu: 'Editar pontos do piso' }),
     pisoLinhas: cmd('Piso das\nlinhas', 'floorLines', () => app.floorFromLines(), { id: 'piso-linhas', title: 'Piso a partir das linhas 2D selecionadas — contornos fechados horizontais, ex.: tiradas das quinas dos sólidos' }),
     ortho: cmd('Orto', 'ortho', () => app.wallTool.toggleOrtho(), { id: 'ortho', title: 'ORTO: trava o ângulo em 0°/90° (F8)', bind: bindOrtho }),
@@ -167,7 +169,7 @@ export function buildRibbon(app) {
       fam('f-exportar', 'Exportar', 'export', [C.expIfc, C.expDwg, C.expFbx, C.expDae, C.expGlb, C.salvarRvt, C.captura], { title: 'Exportar o projeto ou a imagem da vista' })),
     group('Modelar',
       button(C.inserir),
-      fam('f-laje', 'Piso', 'slab', [C.laje, C.pontosPiso, C.pisoLinhas]),
+      fam('f-laje', 'Piso', 'slab', [C.laje, C.editarPiso, C.pontosPiso, C.pisoLinhas]),
       button(C.telhado),
       fam('f-niveis', 'Níveis', 'level', [C.nivel, C.editarNiveis]),
       button(C.ortho),

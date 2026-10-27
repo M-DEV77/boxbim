@@ -664,6 +664,15 @@ table.budget tr.muted td { color: var(--muted); }
 .wp-opening { fill: #11161b; stroke: #7f8c99; stroke-dasharray: 3 2; }
 .wp-pt { fill: #2f9bff; stroke: #fff; stroke-width: 1.5; cursor: move; }
 .wp-pt:hover, .wp-pt.on { fill: #ff9f1a; }
+.fe-hole { fill: #11161b; stroke: #d9b45a; stroke-width: 1.5; stroke-dasharray: 5 3; }
+.fe-edge { stroke: transparent; stroke-width: 10; cursor: pointer; }
+.fe-edge:hover { stroke: rgba(47, 155, 255, .35); }
+.fe-edge.on { stroke: rgba(255, 159, 26, .55); }
+.fe-len { fill: #c9d3dd; font-size: 11px; text-anchor: middle; cursor: pointer; paint-order: stroke; stroke: #11161b; stroke-width: 3px; font-variant-numeric: tabular-nums; }
+.fe-len.on { fill: #ff9f1a; }
+.fe-forma { fill: #1fbf3b; pointer-events: none; }
+.wp-pt.fe-hole-pt { fill: #11161b; stroke: #2f9bff; }
+.fe-sel { margin: 4px 0; min-height: 44px; }
 
 /* Configurações › MCP */
 .mcp-snippet { background: #0f1318; border: 1px solid var(--line); border-radius: 5px; padding: 6px 8px; font-size: 11px; white-space: pre-wrap; word-break: break-all; margin: 4px 0; user-select: all; }

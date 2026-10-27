@@ -41,6 +41,8 @@ flowchart LR
     MODEL --> SLAB["slab-tool.js piso"]
     SLAB --> FPTS["floor-points.js<br/>pontos e alturas do piso"]
     FPTS --> ELEM
+    SLAB --> FEDIT["floor-edit.js<br/>Editar piso: linhas e furos em planta"]
+    FEDIT --> FPTS
     MODEL --> ROOF["roof-tool.js telhado"]
     MODEL --> WALLED["wall-edit.js editar parede / até o telhado"]
     MODEL --> COPY["copy-tool.js / mirror-tool.js<br/>copiar, espelhar"]
@@ -141,7 +143,8 @@ flowchart LR
 | 2026-10-26 | 2.34.1 | `fc4dab8` | Ícones no Personalizar menus (`toolbars.itemIcon`) |
 | 2026-10-27 | 2.35.0 | `bd12f5c` | Ferramenta Terreno (não publicada; retirada na 2.35.1) |
 | 2026-10-27 | 2.35.1 | `f71b82c` | Retirada a ferramenta Terreno (revert da 2.35.0) |
-| 2026-10-27 | 2.36.0 | este commit | Laje vira Piso; pontos do piso (arrastar, inserir, apagar, altura, pontos internos de forma) |
+| 2026-10-27 | 2.36.0 | `e539b2c` | Laje vira Piso; pontos do piso (arrastar, inserir, apagar, altura, pontos internos de forma) |
+| 2026-10-27 | 2.37.0 | este commit | Editar piso (clique duplo): linhas do contorno e furos num editor em planta, como a parede |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.36.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.37.0</a>
