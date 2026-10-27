@@ -186,6 +186,7 @@ function slabParts(s, layers) {
 // slab.alturas[i] = deslocamento vertical (m) do ponto i do contorno; slab.forma = [[x, y, dz], …] pontos internos.
 // A superfície passa pelos pontos (triângulos de Delaunay, interpolação linear); o piso inteiro (todas as camadas)
 // sobe/desce junto, mantendo a espessura na vertical — como "Editar forma" do piso no Revit.
+// slab.terreno: só a superfície se desloca (o fundo fica plano) e os outros pisos cortam o terreno (sketch/cuts.js).
 
 /** Pontos de controle [x, y, dz] do piso, ou null se ele é plano. */
 export function slabControlPoints(s) {
@@ -292,7 +293,16 @@ export function applySlabShape(geo, s) {
   const size = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
   const out = subdivide(geo, Math.max(size / 24, 0.15));
   const pos = out.attributes.position;
-  for (let i = 0; i < pos.count; i++) pos.setZ(i, pos.getZ(i) + f(pos.getX(i), pos.getY(i)));
+  if (s.terreno) {
+    // TERRENO: só a superfície acompanha os pontos; o fundo fica plano (abaixo do ponto mais baixo) e as camadas
+    // de dentro se esticam na proporção
+    const top = s.elevation, zb0 = top - (s.thickness || 0.15);
+    const zb = zb0 + Math.min(0, ...slabControlPoints(s).map(p => p[2]));
+    for (let i = 0; i < pos.count; i++) {
+      const t = Math.min(1, Math.max(0, (pos.getZ(i) - zb0) / (top - zb0 || 1)));
+      pos.setZ(i, zb + t * (top + f(pos.getX(i), pos.getY(i)) - zb));
+    }
+  } else for (let i = 0; i < pos.count; i++) pos.setZ(i, pos.getZ(i) + f(pos.getX(i), pos.getY(i)));
   pos.needsUpdate = true;
   out.computeVertexNormals();
   out.computeBoundingBox(); out.computeBoundingSphere();

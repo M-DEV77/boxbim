@@ -6,12 +6,22 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.38.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.39.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.39.0] — 2026-10-27 · Piso como terreno
+
+### Adicionado
+- Opção **Terreno** no piso (Propriedades › Pontos do piso e diálogo Editar piso; dado `slab.terreno`):
+  - só a **superfície** segue os pontos de altura; o fundo fica plano (abaixo do ponto mais baixo) e as camadas
+    de dentro se esticam na proporção;
+  - os **outros pisos cortam o terreno** (booleana three-bvh-csg, no mesmo sistema do Cortar com vazio): sai o
+    volume do contorno de cada piso, do fundo dele para cima; recalcula sozinho ao mover ou editar os pisos.
+  - Propriedade **Terreno** aparece no piso.
 
 ## [2.38.0] — 2026-10-27 · Laje vira Piso em tudo
 

@@ -2,6 +2,8 @@
 // vazios (operação booleana, three-bvh-csg). O corte acompanha: mover o vazio ou a peça, mudar a forma, refazer
 // uma parede pelo script — tudo recalcula sozinho (assinatura das matrizes e das geometrias).
 // A geometria original de cada malha fica em userData._csgOrig (tirar o corte devolve a peça inteira).
+// TERRENO (piso com slab.terreno): os outros pisos cortam o terreno — sai o volume do contorno deles, do fundo do
+// piso para cima (escavação), como o "building pad" do Revit. Também recalcula sozinho.
 import * as THREE from 'three';
 import { Brush, Evaluator, SUBTRACTION } from 'three-bvh-csg';
 import { normalizeGeometry } from './forms.js';
@@ -88,25 +90,53 @@ export class Cuts {
     return parts.join('|');
   }
 
+  /** Pisos (não terreno) que cortam um terreno. */
+  padsFor(el) {
+    if (!el.userData.bim.slab?.terreno) return [];
+    return this.viewer.elements().filter(o => o !== el && o.userData.bim.slab && !o.userData.bim.slab.terreno);
+  }
+
+  padSignature(pads) {
+    return pads.map(p => { p.updateMatrixWorld(true); return `${p.userData.bim.guid}:${p.matrixWorld.elements.map(x => x.toFixed(5)).join(',')}:${JSON.stringify(p.userData.bim.slab)}`; }).join('|');
+  }
+
+  /** Volume que o piso tira do terreno: o contorno dele, do ponto mais baixo do piso para cima. */
+  padBrush(pad) {
+    pad.updateMatrixWorld(true);
+    const s = pad.userData.bim.slab;
+    let pts = s.points.map(([x, y]) => new THREE.Vector3(x, y, 0).applyMatrix4(pad.matrixWorld)).map(p => new THREE.Vector2(p.x, p.y));
+    if (THREE.ShapeUtils.isClockWise(pts)) pts = pts.reverse();
+    const box = new THREE.Box3();
+    pad.traverse(o => { if (o.isMesh && !o.userData.isEdge && o.geometry) { const g = o.userData._csgOrig || o.geometry; g.computeBoundingBox(); box.union(g.boundingBox.clone().applyMatrix4(o.matrixWorld)); } });
+    const z0 = Number.isFinite(box.min.z) ? box.min.z : s.elevation - s.thickness;
+    const geo = new THREE.ExtrudeGeometry(new THREE.Shape(pts), { depth: 1000, bevelEnabled: false });
+    geo.translate(0, 0, z0);
+    const b = new Brush(normalizeGeometry(geo));
+    b.updateMatrixWorld(true);
+    return b;
+  }
+
   /** Recalcula os cortes que mudaram. */
   update(force = false) {
     const v = this.viewer;
     let changed = false;
     for (const el of v.elements()) {
-      const ids = el.userData.bim.cortes;
-      if (!ids?.length) { if (el.userData._cutSig) this.restore(el); continue; }
+      const ids = el.userData.bim.cortes || [];
+      const pads = this.padsFor(el);
+      if (!ids.length && !pads.length) { if (el.userData._cutSig) this.restore(el); continue; }
       const voids = ids.map(id => v.findById(id)).filter(Boolean);
-      const sig = this.signature(el, voids);
+      const sig = this.signature(el, voids) + (pads.length ? `#${this.padSignature(pads)}` : '');
       if (!force && sig === el.userData._cutSig) continue;
       el.userData._cutSig = sig;
-      this.apply(el, voids);
+      this.apply(el, voids, pads);
       changed = true;
     }
     if (changed) { v._prepare2D(v.model); v._bucketsDirty = true; }
   }
 
-  apply(el, voids) {
+  apply(el, voids, pads = []) {
     const voidBrushes = [];
+    for (const p of pads) { try { voidBrushes.push(this.padBrush(p)); } catch (e) { console.warn('terreno', p.name, e); } }
     for (const vd of voids) for (const m of meshesOf(vd)) {
       m.updateMatrixWorld(true);
       const b = new Brush(normalizeGeometry(m.geometry.clone()));

@@ -257,6 +257,7 @@ export class FloorPoints {
     P.Area = +(polyArea(s.points) - holes).toFixed(3);
     if (s.alturas || s.forma) P.Forma = `${(s.alturas || []).filter(v => v).length + (s.forma || []).length} ponto(s) com altura`;
     else delete P.Forma;
+    if (s.terreno) P.Terreno = 'sim (só a superfície segue os pontos; cortado pelos outros pisos)'; else delete P.Terreno;
     try { await this.rebuild(el); } catch (err) { toast(err.message, 'error'); }
     this.viewer._prepare2D(el);
     this.viewer.changed();
@@ -274,6 +275,15 @@ export class FloorPoints {
     } else s.forma.splice(i, 1);
     this.rebuildHandles();
     this.commit(el);
+  }
+
+  /** Liga/desliga o modo Terreno do piso. */
+  setTerrain(el, on) {
+    el = this.live(el);
+    const s = el.userData.bim.slab;
+    if (on) s.terreno = true; else delete s.terreno;
+    this.commit(el);
+    this.app.status(on ? 'Terreno: só a superfície segue os pontos e os outros pisos cortam o terreno.' : 'Piso comum (não é mais terreno).');
   }
 
   // ------------------------------------------------------------ altura de um ponto
@@ -392,6 +402,8 @@ export class FloorPoints {
     const u = unitLabel();
     return [
       h('h4', {}, 'Pontos do piso'),
+      h('label', { class: 'inline', title: 'Terreno: só a superfície se desloca com os pontos (o fundo fica plano) e os outros pisos cortam o terreno' },
+        h('input', { type: 'checkbox', checked: !!s.terreno, onchange: e => this.setTerrain(el, e.target.checked) }), 'Terreno'),
       h('div', { class: 'small muted' }, 'Arraste os pontos na vista; o "+" no meio de um lado coloca um ponto novo; clique num ponto para a altura; botão direito apaga.'),
       h('div', { class: 'floor-points-table' }, h('table', {},
         h('tr', {}, h('th', {}, '#'), h('th', {}, `X (${u})`), h('th', {}, `Y (${u})`), h('th', {}, `Altura (${u})`), h('th', {}, '')),

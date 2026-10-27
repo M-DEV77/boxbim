@@ -26,6 +26,7 @@ export function editFloor(app, el) {
   const typeSel = h('select', {}, h('option', { value: '', selected: !b.typeId }, 'Genérico (sem tipo)'),
     types.map(t => h('option', { value: t.id, selected: t.id === b.typeId }, `${t.name} (${fmtLen(app.types.thickness(t), { suffix: true })})`)));
   const topIn = h('input', { type: 'number', step: 'any', value: toUnit(s.elevation), title: 'Cota do topo do piso (absoluta)' });
+  const terrIn = h('input', { type: 'checkbox', checked: !!s.terreno });
   const info = h('div', { class: 'small muted' });
   const selBox = h('div', { class: 'form grid2 fe-sel' });
 
@@ -186,7 +187,8 @@ export function editFloor(app, el) {
       h('div', { class: 'form grid2' },
         h('label', {}, 'Nome', name),
         h('label', {}, 'Tipo (camadas)', typeSel),
-        h('label', {}, `Topo (${unitLabel()}, cota absoluta)`, topIn)),
+        h('label', {}, `Topo (${unitLabel()}, cota absoluta)`, topIn),
+        h('label', { class: 'inline', title: 'Só a superfície se desloca com os pontos (o fundo fica plano) e os outros pisos cortam o terreno' }, terrIn, 'Terreno')),
       h('h4', {}, 'Linhas do piso (planta)'), tools, box, selBox, info),
     actions: [
       { label: 'Cancelar' },
@@ -204,6 +206,7 @@ export function editFloor(app, el) {
         s.points = rings[0].map(p => [r4(p[0]), r4(p[1])]);
         if (rings.length > 1) s.holes = rings.slice(1).map(hl => hl.map(p => [r4(p[0]), r4(p[1])])); else delete s.holes;
         if (alt.some(x => x)) s.alturas = alt.map(r4); else delete s.alturas;
+        if (terrIn.checked) s.terreno = true; else delete s.terreno;
         if (b.props) {
           b.props.Cota = s.elevation;
           const lvl = app.levels.ofElement(t);

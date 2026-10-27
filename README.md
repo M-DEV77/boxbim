@@ -123,6 +123,9 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
   como o Editar parede: nome, tipo, cota do topo e as **linhas do piso** num editor em planta — arrastar pontos
   (Shift trava 0°/90°), clique duplo num lado acrescenta, botão direito/Delete tira, clique num lado mostra e muda o
   comprimento, X/Y do ponto selecionado, **＋ Furo** / **Apagar furo** e **Retângulo**. As alturas dos pontos acompanham.
+- **Terreno** (opção do piso, em Propriedades › Pontos do piso ou no Editar piso): só a **superfície** se desloca com os
+  pontos (o fundo fica plano, abaixo do ponto mais baixo) e os **outros pisos cortam o terreno** — sai o volume do
+  contorno deles, do fundo do piso para cima (escavação). O corte acompanha quando o piso se move ou muda.
 - **Copiar** (2D no plano do nível ou 3D sobre os sólidos), com repetições, para outro nível ou por distância.
 - **Telhado**: perfil desenhado num eixo de trabalho vertical, extrudado; tipos de telhado com camadas (telha, ripas, caibros…).
 - **Espelhar** por uma linha (2D ou 3D; vertical, horizontal ou perpendicular ao eixo de trabalho).
@@ -422,4 +425,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.38.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.39.0</a>
