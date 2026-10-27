@@ -120,6 +120,12 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
   um ponto novo, clique num ponto para digitar a **altura** dele e use o botão direito para apagar. **＋ Ponto interno**
   coloca pontos de forma dentro do piso (rampas, caimentos, ralos): a superfície passa por todos os pontos e o piso
   inteiro acompanha, com a espessura de sempre. A tabela em Propriedades › Pontos do piso edita X, Y e altura.
+- **Clique duplo no piso** (ou faixa › Piso › Editar contorno): o contorno e os furos viram **linhas 2D** e o piso some
+  enquanto isso — edite com as ferramentas 2D da faixa (Linha, Aparar, Estender, Canto, Offset, Mover…) e
+  **✔ Concluir** (Enter) refaz o piso com os contornos fechados; **✖ Cancelar** (Esc) volta como estava. As linhas do
+  esboço ficam só na sua tela.
+- **Pontos de elevação**: **dois cliques com uma pausa** no piso (ou Propriedades › Pontos de elevação) — o clique
+  simples só seleciona.
 - **Edição 2D do contorno** (Propriedades do piso): **Canto** com raio ou chanfro (clique nos cantos do piso na vista)
   ou vivo (clique no "+" do lado: os vizinhos se estendem até se encontrar), e **Offset** do contorno.
 - **Editar piso** (clique duplo no piso, Propriedades › Editar piso e linhas… ou faixa › Piso › Editar piso e linhas),
@@ -436,4 +442,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.44.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.45.0</a>

@@ -41,6 +41,8 @@ flowchart LR
     MODEL --> SLAB["slab-tool.js piso"]
     SLAB --> FPTS["floor-points.js<br/>pontos e alturas do piso"]
     FPTS --> ELEM
+    SLAB --> FSK["floor-sketch.js<br/>contorno do piso como linhas 2D (clique duplo)"]
+    FSK --> FPTS
     SLAB --> FEDIT["floor-edit.js<br/>Editar piso: linhas e furos em planta"]
     FEDIT --> FPTS
     FPTS -->|"slab.talude"| SLOPES["slopes.js<br/>talude: corte e aterro com bermas"]
@@ -157,7 +159,8 @@ flowchart LR
 | 2026-10-27 | 2.42.1 | `cc6033a` | Talude sai da aresta do piso (cota real com as alturas dos pontos); malha fina só perto da aresta |
 | 2026-10-27 | 2.42.2 | `bc72fc9` | Talude encontra a aresta de cima do piso sem serrilhado (perfil continua para dentro do piso) |
 | 2026-10-27 | 2.43.0 | `f472c02` | Edição do piso na tela: medidas dos lados clicáveis e furos com pontos, "+" e medidas |
-| 2026-10-27 | 2.44.0 | este commit | Edição 2D do contorno do piso: canto (raio, chanfro, vivo) e offset |
+| 2026-10-27 | 2.44.0 | `9dbe8e0` | Edição 2D do contorno do piso: canto (raio, chanfro, vivo) e offset |
+| 2026-10-27 | 2.45.0 | este commit | Contorno do piso com linhas 2D (clique duplo) e pontos de elevação com dois cliques pausados |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.44.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.45.0</a>

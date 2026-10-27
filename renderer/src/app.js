@@ -9,6 +9,7 @@ import { WorkPlanes } from './workplanes.js';
 import { Environments } from './environments.js';
 import { Grips } from './grips.js';
 import { FloorPoints } from './floor-points.js';
+import { FloorSketch } from './floor-sketch.js';
 import { SmartDims } from './smart-dims.js';
 import { icon } from './icons.js';
 import { Display } from './display.js';
@@ -106,6 +107,7 @@ class App {
     this.envs.addEventListener('change', () => { this.renderBrowser(); if (this.viewer.selected.size) this.renderProps(); });
     this.grips = new Grips(this);
     this.floorPoints = new FloorPoints(this);
+    this.floorSketch = new FloorSketch(this);
     this.smartDims = new SmartDims(this); // cotas até as peças paralelas da seleção
     // widget de eixos (orbitar em X/Y/Z) no canto da vista 3D
     const axes = new AxisWidget({ getCamera: () => this.viewer.camera, getControls: () => this.viewer.controls });
@@ -146,12 +148,13 @@ class App {
     this.roofTool = new RoofTool(this);
     this.copyTool = new CopyTool(this);
     this.mirrorTool = new MirrorTool(this);
-    // clique duplo numa parede (sem ferramenta ativa): editar a parede e o perfil dela; num piso: as linhas do piso
+    // clique duplo numa parede (sem ferramenta ativa): editar a parede e o perfil dela; num piso: o contorno vira
+    // linhas 2D (editar com as ferramentas 2D)
     this.viewer.renderer.domElement.addEventListener('dblclick', e => {
       if (this.viewer.tool) return;
       const obj = this.viewer.pickAt(e.clientX, e.clientY);
       if (obj?.userData.bim?.wall) { this.viewer.select([obj]); editWall(this, obj); }
-      else if (obj?.userData.bim?.slab) { this.viewer.select([obj]); editFloor(this, obj); }
+      else if (obj?.userData.bim?.slab) { this.floorPoints.cancelSlowClick(); this.floorSketch.start(obj); }
     });
     const syncOrtho = () => $('#ortho-btn').classList.toggle('on', this.wallTool.ortho);
     this.wallTool.addEventListener('ortho', syncOrtho);
@@ -1223,7 +1226,9 @@ class App {
       h('button', { onclick: () => editWall(this, o), title: 'Também com clique duplo na parede' }, 'Editar parede e perfil…'),
       h('button', { onclick: () => attachToRoof(this, [o]), title: 'Topo pela face de baixo do telhado acima' }, '⌂ Até o telhado')));
     if (b.slab) root.append(h('h4', {}, 'Piso'), h('div', { class: 'row-buttons' },
-      h('button', { onclick: () => editFloor(this, o), title: 'Também com clique duplo no piso' }, 'Editar piso e linhas…')),
+      h('button', { onclick: () => this.floorSketch.start(o), title: 'O contorno vira linhas 2D para editar com as ferramentas 2D (também com clique duplo no piso)' }, 'Editar contorno (linhas 2D)'),
+      h('button', { onclick: () => editFloor(this, o), title: 'Nome, tipo, cota do topo e contorno num diálogo' }, 'Diálogo do piso…'),
+      h('button', { onclick: () => this.floorPoints.showPoints(o), title: 'Pontos de elevação na vista (também com dois cliques pausados no piso)' }, 'Pontos de elevação')),
       ...this.floorPoints.propsSection(o), ...this.floorPoints.slopeSection(o));
     this.renderTypeProps(root, o);
     this.renderObjectProps(root, o);

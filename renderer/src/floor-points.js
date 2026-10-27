@@ -1,5 +1,6 @@
-// PONTOS DO PISO: com um piso selecionado, aparecem os pontos do contorno e os pontos de forma (como "Editar forma"
-// do piso no Revit).
+// PONTOS DO PISO (pontos de elevação): com o piso selecionado, DOIS CLIQUES COM UMA PAUSA no piso (ou Propriedades ›
+// Pontos de elevação) mostram os pontos do contorno e os de forma (como "Editar forma" do piso no Revit). O clique
+// duplo rápido edita o contorno com linhas 2D (floor-sketch.js).
 //   arrastar um ponto ......... move o ponto (snap nos pontos de outros pisos e nas pontas de paredes/linhas; ORTO/F8
 //                               ou Shift trava 0°/90° em relação ao ponto anterior)
 //   arrastar o "+" de um lado .. coloca um ponto novo no contorno
@@ -121,9 +122,38 @@ export class FloorPoints {
     this.corner = { mode: 'raio', value: 1 };
     this.offsetValue = 0.5;
     this._esc2d = e => { if (e.key === 'Escape' && this.tool2d) { e.stopPropagation(); this.stopTool2d(); } };
+    this.pointsFor = null; // GUID do piso com os pontos de elevação à mostra
+    // dois cliques com uma pausa no piso já selecionado: mostra os pontos (o clique duplo rápido cancela)
+    const cv = app.viewer.renderer.domElement;
+    cv.addEventListener('pointerdown', e => {
+      if (e.button !== 0) return;
+      this._down = { x: e.clientX, y: e.clientY, sel: this.el ? this.el.userData.bim.guid : null };
+    });
+    cv.addEventListener('click', e => {
+      const d = this._down;
+      this._down = null;
+      if (!d || !d.sel || this.viewer.tool || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 4) return;
+      const obj = this.viewer.pickAt(e.clientX, e.clientY);
+      if (obj?.userData.bim?.guid !== d.sel || !obj.userData.bim.slab) return;
+      this.cancelSlowClick();
+      this._slow = setTimeout(() => { this._slow = 0; this.showPoints(obj); }, 320);
+    });
+    cv.addEventListener('dblclick', () => this.cancelSlowClick());
   }
 
   get viewer() { return this.app.viewer; }
+
+  cancelSlowClick() { if (this._slow) { clearTimeout(this._slow); this._slow = 0; } }
+
+  /** Mostra os pontos de elevação do piso na vista. */
+  showPoints(el) {
+    el = this.live(el);
+    if (!el?.userData.bim?.slab) return;
+    if (!this.viewer.selected.has(el)) this.viewer.select([el]);
+    this.pointsFor = el.userData.bim.guid;
+    this.refresh();
+    this.app.status('Pontos de elevação do piso · arraste os pontos · clique num ponto para a altura · "+" coloca ponto · botão direito apaga.');
+  }
 
   /** O elemento pode ter sido refeito pela sincronização (outro objeto, mesmo GUID): usa o que está no modelo. */
   live(el) {
@@ -139,6 +169,7 @@ export class FloorPoints {
       return;
     }
     this.app.showTab?.('props');
+    this.pointsFor = sel[0].userData.bim.guid;
     this.startPlacing();
   }
 
@@ -146,6 +177,7 @@ export class FloorPoints {
     const sel = [...this.viewer.selected];
     const el = sel.length === 1 && sel[0].userData.bim?.slab ? sel[0] : null;
     if (el !== this.el && !(el && this.el && el.userData.bim.guid === this.el.userData.bim.guid)) { this.stopPlacing(); this.cancelType(); this.stopTool2d(); }
+    if (!el || el.userData.bim.guid !== this.pointsFor) this.pointsFor = null; // outro piso (ou nada): esconde os pontos
     this.el = el;
     this.rebuildHandles();
     this.update();
@@ -209,7 +241,8 @@ export class FloorPoints {
   /** A cada quadro: os pontos acompanham a câmera. */
   update() {
     const el = this.el;
-    const show = el && el.parent && el.visible && !this.viewer.tool && !this.viewer.renderOverride;
+    const show = el && el.parent && el.visible && !this.viewer.tool && !this.viewer.renderOverride
+      && (this.pointsFor === el.userData.bim.guid || this.tool2d || this.placing);
     if (!show) { if (!this.box.hidden) this.box.hidden = true; return; }
     const s = el.userData.bim.slab;
     if (this._key !== this.shapeKey(s)) { this._key = this.shapeKey(s); this.rebuildHandles(); }
@@ -449,6 +482,7 @@ export class FloorPoints {
 
   startTool2d(el) {
     this.el = this.live(el);
+    this.pointsFor = this.el.userData.bim.guid;
     this.tool2d = { ...this.corner };
     document.addEventListener('keydown', this._esc2d, true);
     this.app.status(this.tool2d.mode === 'vivo'

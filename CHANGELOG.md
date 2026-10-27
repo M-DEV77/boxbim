@@ -6,12 +6,26 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.44.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.45.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.45.0] — 2026-10-27 · Contorno do piso com linhas 2D
+
+### Adicionado
+- **Clique duplo no piso** (ou faixa › Piso › Editar contorno, ou Propriedades): o contorno e os furos viram
+  **linhas 2D** na cota do topo e o piso some enquanto isso; as ferramentas 2D da faixa trabalham nelas (Linha,
+  Aparar, Estender, Canto com raio/chanfro, Offset, Mover, Copiar…). **✔ Concluir** (Enter) refaz o piso com os
+  contornos fechados (o maior é o piso, os de dentro são furos; arcos viram pontos) e **✖ Cancelar** (Esc) volta
+  como estava. Pontos que já existiam mantêm a altura; os novos seguem a superfície do piso.
+- As linhas do esboço ficam só na tela de quem edita (não vão para o servidor).
+
+### Mudado
+- Os **pontos de elevação** do piso aparecem com **dois cliques com uma pausa** no piso (ou Propriedades › Pontos de
+  elevação); o clique simples só seleciona. O diálogo do piso continua em Propriedades › Diálogo do piso.
 
 ## [2.44.0] — 2026-10-27 · Ferramentas 2D na edição do piso
 

@@ -179,6 +179,7 @@ export class ProjectSession extends EventTarget {
     const seen = new Set();
     const step = [];
     for (const el of this.viewer.elements()) {
+      if (this.app.floorSketch?.isTemp(el)) continue; // linhas do esboço do contorno do piso: só nesta tela
       const b = el.userData.bim;
       if (!b.guid) b.guid = crypto.randomUUID();
       if (seen.has(b.guid)) b.guid = crypto.randomUUID(); // cópia com o mesmo GUID: vira outro elemento
