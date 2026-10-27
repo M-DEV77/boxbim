@@ -1,4 +1,4 @@
-// OBJETOS DE SISTEMA: Parede, Laje, Pilar, Viga e Caixa são objetos da biblioteca (.bbo, com "sistema") como os
+// OBJETOS DE SISTEMA: Parede, Piso (laje), Pilar, Viga e Caixa são objetos da biblioteca (.bbo, com "sistema") como os
 // demais, editáveis no editor de Objetos. Os elementos continuam guardando os dados de modelagem (eixo da parede,
 // contorno da laje, tipo com camadas, vãos…) em userData.bim; daqui sai a geometria, rodando o script do objeto:
 //   - parâmetros "dirigidos" (comprimento, altura, espessura…) vêm desses dados;
@@ -8,7 +8,7 @@
 // "assadas" nas coordenadas do modelo, como a geometria nativa — o resto do app (hospedagem, IFC, plantas) não muda.
 import * as THREE from 'three';
 import { coerceParams } from './params.js';
-import { wallProfiles, wallOutline, rebuildElement, applyWallMiter, roofFrame, roofBands } from '../elements.js';
+import { wallProfiles, wallOutline, rebuildElement, applyWallMiter, applySlabShape, roofFrame, roofBands } from '../elements.js';
 import { toast } from '../ui.js';
 
 const len2 = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]);
@@ -189,6 +189,7 @@ export class SystemObjects {
       for (const m of meshes) {
         m.geometry.applyMatrix4(frame);
         if (b.wall || b.beam) applyWallMiter(m.geometry, b.wall || b.beam); // cantos em meia-esquadria
+        if (b.slab) m.geometry = applySlabShape(m.geometry, b.slab); // pontos de altura do piso
         m.geometry.computeBoundingBox();
         m.geometry.computeBoundingSphere();
         const li = m.userData.part?.layer;

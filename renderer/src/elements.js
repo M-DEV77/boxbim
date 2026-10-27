@@ -172,14 +172,132 @@ export function wallOutline(w, zb, ops) {
 /** Altura máxima do perfil próprio (ou a altura da parede). */
 export const wallTop = w => (w.perfil?.length ? Math.max(...w.perfil.map(p => p[1])) : w.height);
 
-/** Laje/piso: camadas empilhadas de cima (cota do topo) para baixo. */
+/** Piso (laje): camadas empilhadas de cima (cota do topo) para baixo. */
 function slabParts(s, layers) {
   let top = s.elevation;
   return layers.map(l => {
-    const part = { geo: prism(s.points, top - l.thickness, top, s.holes || []), layer: l };
+    const part = { geo: applySlabShape(prism(s.points, top - l.thickness, top, s.holes || []), s), layer: l };
     top -= l.thickness;
     return part;
   });
+}
+
+// ---------------------------------------------------------------- piso com PONTOS de altura (forma do piso)
+// slab.alturas[i] = deslocamento vertical (m) do ponto i do contorno; slab.forma = [[x, y, dz], …] pontos internos.
+// A superfície passa pelos pontos (triângulos de Delaunay, interpolação linear); o piso inteiro (todas as camadas)
+// sobe/desce junto, mantendo a espessura na vertical — como "Editar forma" do piso no Revit.
+
+/** Pontos de controle [x, y, dz] do piso, ou null se ele é plano. */
+export function slabControlPoints(s) {
+  const al = s.alturas || [], forma = s.forma || [];
+  if (!al.some(v => v) && !forma.some(p => p[2])) return null;
+  return [...s.points.map((p, i) => [p[0], p[1], al[i] || 0]), ...forma.map(p => [p[0], p[1], p[2] || 0])];
+}
+
+/** Triangulação de Delaunay (Bowyer–Watson; poucos pontos) → lista de triângulos [i, j, k]. */
+function delaunay(pts) {
+  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+  const minX = Math.min(...xs), minY = Math.min(...ys), d = Math.max(Math.max(...xs) - minX, Math.max(...ys) - minY, 1e-3) * 20;
+  const cx = minX + d / 40, cy = minY + d / 40;
+  const P = [...pts.map(p => [p[0], p[1]]), [cx - d, cy - d], [cx + d, cy - d], [cx, cy + d]];
+  const n = pts.length;
+  const circ = (a, b, c) => {
+    const [ax, ay] = P[a], [bx, by] = P[b], [qx, qy] = P[c];
+    const D = 2 * (ax * (by - qy) + bx * (qy - ay) + qx * (ay - by));
+    if (Math.abs(D) < 1e-12) return { x: 0, y: 0, r: Infinity };
+    const a2 = ax * ax + ay * ay, b2 = bx * bx + by * by, c2 = qx * qx + qy * qy;
+    const x = (a2 * (by - qy) + b2 * (qy - ay) + c2 * (ay - by)) / D, y = (a2 * (qx - bx) + b2 * (ax - qx) + c2 * (bx - ax)) / D;
+    return { x, y, r: (x - ax) ** 2 + (y - ay) ** 2 };
+  };
+  let tris = [{ v: [n, n + 1, n + 2], c: circ(n, n + 1, n + 2) }];
+  for (let i = 0; i < n; i++) {
+    const [px, py] = P[i];
+    if (P.slice(0, i).some(q => Math.abs(q[0] - px) < 1e-9 && Math.abs(q[1] - py) < 1e-9)) continue; // repetido
+    const bad = tris.filter(t => (px - t.c.x) ** 2 + (py - t.c.y) ** 2 < t.c.r - 1e-12);
+    const edges = new Map();
+    for (const t of bad) for (let k = 0; k < 3; k++) {
+      const a = t.v[k], b = t.v[(k + 1) % 3], key = a < b ? `${a},${b}` : `${b},${a}`;
+      edges.set(key, edges.has(key) ? null : [a, b]);
+    }
+    tris = tris.filter(t => !bad.includes(t));
+    for (const e of edges.values()) if (e) tris.push({ v: [e[0], e[1], i], c: circ(e[0], e[1], i) });
+  }
+  return tris.filter(t => t.v.every(v => v < n)).map(t => t.v);
+}
+
+/** Função (x, y) → deslocamento vertical do piso, ou null se ele é plano. */
+export function slabShapeFn(s) {
+  const cp = slabControlPoints(s);
+  if (!cp) return null;
+  const tris = delaunay(cp);
+  return (x, y) => {
+    for (const [a, b, c] of tris) {
+      const [ax, ay, az] = cp[a], [bx, by, bz] = cp[b], [qx, qy, qz] = cp[c];
+      const D = (by - qy) * (ax - qx) + (qx - bx) * (ay - qy);
+      if (Math.abs(D) < 1e-14) continue;
+      const l1 = ((by - qy) * (x - qx) + (qx - bx) * (y - qy)) / D, l2 = ((qy - ay) * (x - qx) + (ax - qx) * (y - qy)) / D, l3 = 1 - l1 - l2;
+      if (l1 >= -1e-7 && l2 >= -1e-7 && l3 >= -1e-7) return l1 * az + l2 * bz + l3 * qz;
+    }
+    // fora da triangulação (borda de piso côncavo, arredondamentos): o ponto de controle mais perto
+    let best = Infinity, z = 0;
+    for (const p of cp) { const dd = (p[0] - x) ** 2 + (p[1] - y) ** 2; if (dd < best) { best = dd; z = p[2]; } }
+    return z;
+  };
+}
+
+/**
+ * Subdivide os triângulos (arestas até maxLen no plano XY) mantendo os grupos de material e todos os atributos.
+ * Devolve uma geometria NÃO indexada.
+ */
+function subdivide(geo, maxLen) {
+  const g = geo.index ? geo.toNonIndexed() : geo;
+  const names = Object.keys(g.attributes);
+  const src = names.map(k => g.attributes[k]);
+  const count = g.attributes.position.count;
+  const groups = g.groups.length ? g.groups : [{ start: 0, count, materialIndex: 0 }];
+  const out = names.map(() => []), outGroups = [];
+  const vert = i => src.map(a => Array.from({ length: a.itemSize }, (_, k) => a.array[i * a.itemSize + k]));
+  const mid = (u, v) => u.map((arr, j) => arr.map((x, k) => (x + v[j][k]) / 2));
+  const pi = names.indexOf('position');
+  const lenXY = (u, v) => Math.hypot(u[pi][0] - v[pi][0], u[pi][1] - v[pi][1]);
+  let written = 0;
+  const emit = (a, b, c) => { for (const t of [a, b, c]) t.forEach((arr, j) => out[j].push(...arr)); written += 3; };
+  const split = (a, b, c, depth) => {
+    const ab = lenXY(a, b), bc = lenXY(b, c), ca = lenXY(c, a), m = Math.max(ab, bc, ca);
+    if (m <= maxLen || depth > 10) return emit(a, b, c);
+    if (m === ab) { const p = mid(a, b); split(a, p, c, depth + 1); split(p, b, c, depth + 1); }
+    else if (m === bc) { const p = mid(b, c); split(a, b, p, depth + 1); split(a, p, c, depth + 1); }
+    else { const p = mid(c, a); split(a, b, p, depth + 1); split(p, b, c, depth + 1); }
+  };
+  for (const gr of groups) {
+    const start = written;
+    const end = Math.min(gr.start + gr.count, count);
+    for (let i = gr.start; i + 2 < end; i += 3) split(vert(i), vert(i + 1), vert(i + 2), 0);
+    outGroups.push({ start, count: written - start, materialIndex: gr.materialIndex });
+  }
+  const res = new THREE.BufferGeometry();
+  names.forEach((k, j) => res.setAttribute(k, new THREE.Float32BufferAttribute(out[j], src[j].itemSize)));
+  if (g.groups.length) for (const gr of outGroups) res.addGroup(gr.start, gr.count, gr.materialIndex);
+  return res;
+}
+
+/**
+ * Aplica os pontos de altura do piso na geometria (já nas coordenadas do modelo, X/Y como os pontos do contorno).
+ * Devolve a geometria nova (ou a mesma, se o piso é plano).
+ */
+export function applySlabShape(geo, s) {
+  const f = slabShapeFn(s);
+  if (!f) return geo;
+  const xs = s.points.map(p => p[0]), ys = s.points.map(p => p[1]);
+  const size = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
+  const out = subdivide(geo, Math.max(size / 24, 0.15));
+  const pos = out.attributes.position;
+  for (let i = 0; i < pos.count; i++) pos.setZ(i, pos.getZ(i) + f(pos.getX(i), pos.getY(i)));
+  pos.needsUpdate = true;
+  out.computeVertexNormals();
+  out.computeBoundingBox(); out.computeBoundingSphere();
+  if (out !== geo) geo.dispose();
+  return out;
 }
 
 // ---------------------------------------------------------------- telhado (por extrusão de perfil)
@@ -365,7 +483,7 @@ export function createSlab({ points = [[0, 0], [5, 0], [5, 5], [0, 5]], holes = 
   const slab = { points: points.map(p => [...p]), elevation, thickness: totalThickness(ls), ...(holes?.length ? { holes: holes.map(hl => hl.map(p => [...p])) } : {}) };
   const ar = pts => Math.abs(THREE.ShapeUtils.area(pts.map(p => new THREE.Vector2(...p))));
   const area = +(ar(points) - (holes || []).reduce((s, hl) => s + ar(hl), 0)).toFixed(3);
-  return layeredElement('IfcSlab', name || 'Laje',
+  return layeredElement('IfcSlab', name || 'Piso',
     { Espessura: slab.thickness, Cota: elevation, Area: area, ...typeProps(ls, typeName) },
     { slab, layers: layers || null, typeId, typeName }, slabParts(slab, ls));
 }

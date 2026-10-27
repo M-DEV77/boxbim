@@ -22,6 +22,7 @@ export const ICONS = {
   layers: '<path class="b" d="M12 3l9 4.8-9 4.8-9-4.8z"/><path class="g" d="M3 12.2l9 4.8 9-4.8M3 16.4l9 4.8 9-4.8"/>',
   roof: '<path class="b" d="M5 11.5v9h14v-9"/><path class="g" d="M1.8 13L12 4.5 22.2 13"/><path d="M10 20.5v-5h4v5"/>',
   slab: '<path class="b" d="M2.5 12l9.5-5 9.5 5-9.5 5z"/><path class="g" d="M2.5 12v2.6l9.5 5 9.5-5V12"/>',
+  floorPoints: '<path class="b" d="M3 14l9-4.8 9 4.8-9 4.8z"/><path class="g" d="M12 9.2V4" stroke-dasharray="2 1.6"/><circle class="gf" cx="3" cy="14" r="1.6"/><circle class="gf" cx="21" cy="14" r="1.6"/><circle class="gf" cx="12" cy="18.8" r="1.6"/><circle class="gf" cx="12" cy="4" r="1.9"/>',
   floorLines: '<path d="M3 13l9-4.8 9 4.8-9 4.8z" stroke-dasharray="2.4 1.8"/><path class="g" d="M3 13v2.4l9 4.8 9-4.8V13"/><circle class="gf" cx="12" cy="8.2" r="1.4"/>',
   level: '<path class="g" d="M2.5 8h13M2.5 16h13" stroke-dasharray="3 2"/><path class="b" d="M16 8l3-3 3 3-3 3z"/><path class="b" d="M16 16l3-3 3 3-3 3z"/>',
   levelEdit: '<path class="g" d="M2.5 8h11M2.5 16h11" stroke-dasharray="3 2"/><path class="b" d="M14.5 18.5l1-3.5 5.5-5.5 2.5 2.5-5.5 5.5z"/>',

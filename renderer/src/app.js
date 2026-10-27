@@ -8,6 +8,7 @@ import { LevelEditor } from './levels-edit.js';
 import { WorkPlanes } from './workplanes.js';
 import { Environments } from './environments.js';
 import { Grips } from './grips.js';
+import { FloorPoints } from './floor-points.js';
 import { SmartDims } from './smart-dims.js';
 import { icon } from './icons.js';
 import { Display } from './display.js';
@@ -103,6 +104,7 @@ class App {
     this.viewer.onAdd = el => this.envs.onAdd(el);
     this.envs.addEventListener('change', () => { this.renderBrowser(); if (this.viewer.selected.size) this.renderProps(); });
     this.grips = new Grips(this);
+    this.floorPoints = new FloorPoints(this);
     this.smartDims = new SmartDims(this); // cotas até as peças paralelas da seleção
     // widget de eixos (orbitar em X/Y/Z) no canto da vista 3D
     const axes = new AxisWidget({ getCamera: () => this.viewer.camera, getControls: () => this.viewer.controls });
@@ -689,7 +691,7 @@ class App {
         { key: 'height', label: 'Altura (m) — padrão até o nível de cima', type: 'number', value: defH }, { key: 'thickness', label: 'Espessura (m)', type: 'number', value: 0.15 },
         { key: 'base', label: 'Deslocamento da base (m)', type: 'number', value: 0 }],
         v => ['wall', { level: v.level, start: [v.x0, v.y0], end: [v.x1, v.y1], height: v.height, thickness: v.thickness, base: v.base }]],
-      slab: ['Laje retangular', [levelField,
+      slab: ['Piso retangular', [levelField,
         { key: 'x', label: 'Canto X (m)', type: 'number', value: 0 }, { key: 'y', label: 'Canto Y (m)', type: 'number', value: 0 },
         { key: 'w', label: 'Largura X (m)', type: 'number', value: 6 }, { key: 'd', label: 'Profundidade Y (m)', type: 'number', value: 4 },
         { key: 'thickness', label: 'Espessura (m)', type: 'number', value: 0.12 }, { key: 'elevation', label: 'Deslocamento do topo (m)', type: 'number', value: 0 }],
@@ -1197,6 +1199,7 @@ class App {
     if (b.wall) root.append(h('h4', {}, 'Parede'), h('div', { class: 'row-buttons' },
       h('button', { onclick: () => editWall(this, o), title: 'Também com clique duplo na parede' }, 'Editar parede e perfil…'),
       h('button', { onclick: () => attachToRoof(this, [o]), title: 'Topo pela face de baixo do telhado acima' }, '⌂ Até o telhado')));
+    if (b.slab) root.append(...this.floorPoints.propsSection(o));
     this.renderTypeProps(root, o);
     this.renderObjectProps(root, o);
     this.renderMaterialProps(root, o);

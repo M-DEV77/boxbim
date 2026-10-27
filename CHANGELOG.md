@@ -6,12 +6,28 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.35.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.36.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.36.0] — 2026-10-27 · Piso com pontos editáveis
+
+### Adicionado
+- **Pontos do piso** (faixa › Piso › Editar pontos do piso, e Propriedades de um piso selecionado):
+  - arrastar os pontos do contorno (snap nos pontos de outros pisos e nas pontas de paredes e linhas; ORTO/Shift);
+  - **+** no meio de cada lado coloca um ponto novo; botão direito apaga (o contorno fica com pelo menos 3);
+  - clique num ponto para digitar a **altura** (deslocamento do topo); **＋ Ponto interno** coloca pontos de forma;
+  - a superfície passa pelos pontos (triangulação de Delaunay, interpolação linear) e todas as camadas acompanham;
+  - tabela X / Y / altura em Propriedades e o botão **Piso plano** para zerar.
+  - Dados novos no elemento: `slab.alturas` (uma por ponto do contorno) e `slab.forma` (`[[x, y, dz], …]`).
+
+### Mudado
+- O objeto **Laje** passou a se chamar **Piso** (biblioteca, faixa, ferramenta, nome dos elementos novos, MCP).
+  O id continua `laje`, então projetos e presets antigos seguem funcionando; a revisão 3 do objeto de fábrica
+  atualiza a biblioteca geral e as cópias dos projetos que ninguém editou.
 
 ## [2.35.1] — 2026-10-27 · Sem a ferramenta Terreno
 

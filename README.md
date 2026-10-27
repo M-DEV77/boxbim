@@ -114,7 +114,11 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
 - **Junções em T** paradas na face da outra parede; **Ajustar junções** refaz tudo no projeto.
 - **Piso das linhas** (contornos 2D fechados) e **piso do contorno da face** de um sólido.
 - **Corte por nível** (plano de corte e profundidade da vista) e **eixos de trabalho** que acompanham os níveis.
-- **Laje** por croqui 2D, linhas 2D, paredes (face externa/interna/eixo) ou face de sólido — contornos internos viram furos.
+- **Piso** (o antigo objeto Laje) por croqui 2D, linhas 2D, paredes (face externa/interna/eixo) ou face de sólido — contornos internos viram furos.
+- **Pontos do piso**: com um piso selecionado, arraste os pontos do contorno, use o **+** no meio de um lado para colocar
+  um ponto novo, clique num ponto para digitar a **altura** dele e use o botão direito para apagar. **＋ Ponto interno**
+  coloca pontos de forma dentro do piso (rampas, caimentos, ralos): a superfície passa por todos os pontos e o piso
+  inteiro acompanha, com a espessura de sempre. A tabela em Propriedades › Pontos do piso edita X, Y e altura.
 - **Copiar** (2D no plano do nível ou 3D sobre os sólidos), com repetições, para outro nível ou por distância.
 - **Telhado**: perfil desenhado num eixo de trabalho vertical, extrudado; tipos de telhado com camadas (telha, ripas, caibros…).
 - **Espelhar** por uma linha (2D ou 3D; vertical, horizontal ou perpendicular ao eixo de trabalho).
@@ -242,10 +246,10 @@ O script roda isolado (Web Worker sem rede e sem acesso a arquivos ou ao app), c
 Objetos ficam em `Documentos\BoxBim\objetos\*.bbo` e podem ser **exportados/importados** entre projetos.
 O agente de IA também programa objetos (`save_object`) — veja a skill *objetos-parametricos*.
 
-## Objetos de sistema (Parede, Laje, Pilar, Viga, Caixa)
+## Objetos de sistema (Parede, Piso, Pilar, Viga, Caixa)
 
 As ferramentas da faixa **Modelar** criam elementos cuja geometria vem de objetos da biblioteca — **Parede**,
-**Laje**, **Pilar**, **Viga** e **Caixa** — editáveis no editor de Objetos como qualquer outro. O elemento guarda
+**Piso** (id `laje`), **Pilar**, **Viga** e **Caixa** — editáveis no editor de Objetos como qualquer outro. O elemento guarda
 os dados de modelagem (eixo, contorno, tipo com camadas, vãos) e o script recebe:
 
 | Em `p` | O quê |
@@ -253,7 +257,7 @@ os dados de modelagem (eixo, contorno, tipo com camadas, vãos) e o script receb
 | parâmetros dirigidos | `comprimento`, `altura`, `espessura`, `largura`, `profundidade`, `circular`… do elemento |
 | `p.camadas` | `[{ nome, material, espessura, funcao }]` do tipo (vazio = genérico) |
 | `p.perfis` | parede: elevação `[{ contorno, furos }]` já com os vãos de portas e janelas |
-| `p.pontos` | laje: contorno em planta |
+| `p.pontos` | piso: contorno em planta (as alturas dos pontos são aplicadas depois do script) |
 
 Parâmetros novos que você acrescentar (ex.: um capitel no Pilar) ficam por instância no painel Propriedades.
 Salvar o objeto atualiza todos os elementos do tipo. Orto e Nível não são objetos.
@@ -292,7 +296,7 @@ Um parâmetro chamado `espessuraParede` recebe a espessura da parede hospedeira 
 ## Menus, janelas e presets
 
 - **Ferramentas agrupadas**: as parecidas ficam num botão só — Abrir (abrir e importar IFC, DWG, DXF, FBX,
-  Collada, .rvt), Exportar (formatos e imagem), Laje e piso, Níveis, Eixo de trabalho, Editar linhas (aparar,
+  Collada, .rvt), Exportar (formatos e imagem), Piso (contorno, pontos, piso das linhas), Níveis, Eixo de trabalho, Editar linhas (aparar,
   estender, canto), Offset (2D/3D), Sólido (extrudar, varrer), Vazio, Mover e girar, Copiar e espelhar, Ajustar
   paredes, Vistas, Aparência (Render, Textura, materiais, texturas), Biblioteca, Revit e IA. O clique repete a
   última usada (o botão mostra qual); a seta **▾** lista as outras. Os comandos soltos continuam no Personalizar.
@@ -340,7 +344,7 @@ Vistas 3D têm **Perspectiva/Ortogonal**. Grade e ponto base (0,0,0) aparecem em
   quantidade e total do elemento selecionado.
 - **Biblioteca com miniaturas** no editor e em `/biblioteca.html`.
 - **Ferramentas do usuário** (aba Minhas › Personalizar ferramentas): grupos com nome, com comandos e objetos
-  escolhidos; aparecem no começo da aba Início. Parede, Laje, Pilar, Viga e Caixa são objetos — ficam no
+  escolhidos; aparecem no começo da aba Início. Parede, Piso, Pilar, Viga e Caixa são objetos — ficam no
   conjunto "Elementos" criado no primeiro acesso.
 
 ## Render (materiais em tempo real)
@@ -414,4 +418,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.35.1</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.36.0</a>

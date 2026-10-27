@@ -1,14 +1,14 @@
 {
   "format": "boxbim-objeto",
   "version": 1,
-  "revision": 2,
+  "revision": 3,
   "author": "BoxBim",
   "created": "2026-10-22",
   "id": "laje",
-  "name": "Laje",
+  "name": "Piso",
   "category": "IfcSlab",
   "sistema": "laje",
-  "description": "Laje/piso criada pela ferramenta Laje. Contorno em planta; camadas empilhadas do topo para baixo.",
+  "description": "Piso (laje) criado pela ferramenta Piso. Contorno em planta; camadas empilhadas do topo para baixo. Os pontos com altura (Pontos do piso) inclinam a superfície depois do script.",
   "parameters": [
     {
       "name": "espessura",

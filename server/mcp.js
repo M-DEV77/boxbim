@@ -118,7 +118,7 @@ const TOOLS = [
     inputSchema: { type: 'object', properties: { ...P_PROJ, nome: { type: 'string' }, cota: { type: 'number', description: 'cota em metros' } }, required: ['projeto', 'nome', 'cota'] } },
   { name: 'criar_parede', description: 'Cria uma parede reta do ponto inicio ao fim (em planta, metros), num nível. A face externa fica à esquerda do sentido inicio→fim. Altura padrão: até o nível de cima (ou 3 m).',
     inputSchema: { type: 'object', properties: { ...P_PROJ, inicio: PT, fim: PT, nivel: { type: 'string', description: 'nome ou id do nível (padrão: o mais baixo)' }, altura: { type: 'number' }, tipo: { type: 'string', description: 'tipo de parede (camadas), por nome ou id' }, espessura: { type: 'number', description: 'só sem tipo' } }, required: ['projeto', 'inicio', 'fim'] } },
-  { name: 'criar_laje', description: 'Cria uma laje/piso pelo contorno em planta (pontos [x, y] em metros), com o topo no nível (+ deslocamento). Furos opcionais.',
+  { name: 'criar_laje', description: 'Cria um piso (laje) pelo contorno em planta (pontos [x, y] em metros), com o topo no nível (+ deslocamento). Furos opcionais.',
     inputSchema: { type: 'object', properties: { ...P_PROJ, pontos: { type: 'array', items: PT, minItems: 3 }, furos: { type: 'array', items: { type: 'array', items: PT } }, nivel: { type: 'string' }, deslocamento: { type: 'number', description: 'topo em relação ao nível (m)' }, tipo: { type: 'string' } }, required: ['projeto', 'pontos'] } },
   { name: 'criar_linhas', description: 'Desenha linhas 2D (polilinha) no plano de um nível. fechar = true liga o último ponto ao primeiro.',
     inputSchema: { type: 'object', properties: { ...P_PROJ, pontos: { type: 'array', items: PT, minItems: 2 }, fechar: { type: 'boolean' }, nivel: { type: 'string' } }, required: ['projeto', 'pontos'] } },
@@ -217,7 +217,7 @@ const HANDLERS = {
     const top = r6(lvl.cota + (Number(a.deslocamento) || 0));
     const guid = uuid();
     const slab = { points: a.pontos.map(q => q.map(r6)), elevation: top, thickness: spec?.thickness || 0.15, ...(a.furos?.length ? { holes: a.furos.map(f => f.map(q => q.map(r6))) } : {}) };
-    const bim = { type: 'IfcSlab', name: 'Laje', guid, levelId: lvl.id, sistema: 'laje', camadaId: camadaFor(ctx, p, a.camada), slab, layers: spec?.layers || null, typeId: spec?.typeId || null, typeName: spec?.typeName || null, props: { Nivel: lvl.nome, Cota: top } };
+    const bim = { type: 'IfcSlab', name: 'Piso', guid, levelId: lvl.id, sistema: 'laje', camadaId: camadaFor(ctx, p, a.camada), slab, layers: spec?.layers || null, typeId: spec?.typeId || null, typeName: spec?.typeName || null, props: { Nivel: lvl.nome, Cota: top } };
     await upsert(ctx, p, [{ id: guid, tipo: 'IfcSlab', dados: { bim, matriz: IDENT } }]);
     return { criado: summary({ id: guid, dados: { bim } }) };
   },

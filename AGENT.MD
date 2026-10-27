@@ -38,14 +38,16 @@ flowchart LR
     PROJ --> ENVS
     APP --> MODEL["Ferramentas de modelagem"]
     MODEL --> DRAW["draw.js parede"]
-    MODEL --> SLAB["slab-tool.js laje"]
+    MODEL --> SLAB["slab-tool.js piso"]
+    SLAB --> FPTS["floor-points.js<br/>pontos e alturas do piso"]
+    FPTS --> ELEM
     MODEL --> ROOF["roof-tool.js telhado"]
     MODEL --> WALLED["wall-edit.js editar parede / até o telhado"]
     MODEL --> COPY["copy-tool.js / mirror-tool.js<br/>copiar, espelhar"]
     MODEL --> SK["sketch/*<br/>linhas 2D, aparar, canto, offset,<br/>extrudar, varrer, vazios, lineares"]
     MODEL --> WP["workplanes.js eixos de trabalho"]
     MODEL --> TRANS["transform.js / grips.js<br/>mover, girar, pontos"]
-    VIEWER --> ELEM["elements.js<br/>geometria nativa: parede, laje, pilar,<br/>viga, caixa, telhado (camadas, esquadria)"]
+    VIEWER --> ELEM["elements.js<br/>geometria nativa: parede, piso, pilar,<br/>viga, caixa, telhado (camadas, esquadria,<br/>pontos de altura do piso)"]
     ELEM --> SYS["objects/system.js<br/>objetos de sistema (scripts .bbo)"]
     SYS --> OBJ["objects/objects.js<br/>biblioteca, buildParts, vazios"]
     OBJ --> WORKER["objects/worker.js<br/>executa o script do objeto (sandbox)"]
@@ -138,7 +140,8 @@ flowchart LR
 | 2026-10-26 | 2.34.0 | `99879f3` | Medidor do Chat IA (`chat-meter.js`: carregamento do modelo, contexto, tokens; `localModelInfo` consulta LM Studio/Ollama) |
 | 2026-10-26 | 2.34.1 | `fc4dab8` | Ícones no Personalizar menus (`toolbars.itemIcon`) |
 | 2026-10-27 | 2.35.0 | `bd12f5c` | Ferramenta Terreno (não publicada; retirada na 2.35.1) |
-| 2026-10-27 | 2.35.1 | este commit | Retirada a ferramenta Terreno (revert da 2.35.0) |
+| 2026-10-27 | 2.35.1 | `f71b82c` | Retirada a ferramenta Terreno (revert da 2.35.0) |
+| 2026-10-27 | 2.36.0 | este commit | Laje vira Piso; pontos do piso (arrastar, inserir, apagar, altura, pontos internos de forma) |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.35.1</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.36.0</a>

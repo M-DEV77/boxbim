@@ -152,7 +152,13 @@ async function seedLibrary() {
         const cur = await db.Objeto.findByPk(id);
         // de fábrica: entra se não existe ou se a revisão é mais nova e ninguém editou
         if (!cur) await db.Objeto.create({ id, nome: def.name, categoria: def.category, sistema: def.sistema || null, definicao: { ...def, id } });
-        else if (d.includes('defaults') && !cur.definicao?.updated && (def.revision || 1) > (cur.definicao?.revision || 1)) { cur.definicao = { ...def, id }; await cur.save(); }
+        else if (d.includes('defaults') && !cur.definicao?.updated && (def.revision || 1) > (cur.definicao?.revision || 1)) { cur.definicao = { ...def, id }; cur.nome = def.name; cur.categoria = def.category; await cur.save(); }
+        // cópias nos projetos que ninguém editou acompanham a revisão de fábrica (ex.: Laje → Piso)
+        if (d.includes('defaults')) {
+          for (const p of await db.ObjetoProjeto.findAll({ where: { objetoId: id } })) {
+            if (!p.definicao?.updated && (def.revision || 1) > (p.definicao?.revision || 1)) { p.definicao = { ...def, id }; await p.save(); }
+          }
+        }
       } catch { /* inválido: ignora */ }
     }
   }

@@ -39,7 +39,7 @@ export class SlabTool {
 
   start() {
     if (this.active) return;
-    if (this.app.views.active.kind === 'elevation') { toast('Para criar lajes, abra uma planta ou a Vista 3D.', 'error'); return; }
+    if (this.app.views.active.kind === 'elevation') { toast('Para criar pisos, abra uma planta ou a Vista 3D.', 'error'); return; }
     for (const t of [this.app.wallTool, this.app.sketchTool, this.app.placeTool]) if (t?.active) t.stop();
     this.level = this.app.views.activeLevel() || this.app.levels.list[0];
     this.active = true;
@@ -89,7 +89,7 @@ export class SlabTool {
       paredes: 'Paredes: clique numa parede — entra o contorno das paredes ligadas, na face escolhida.',
       solido: 'Sólido: clique na face horizontal de um sólido (topo, base) — entra o contorno dela.',
     }[this.mode];
-    this.app.status(`Laje · ${t} Depois: ✔ Concluir (contornos internos viram furos) · Esc sai.`);
+    this.app.status(`Piso · ${t} Depois: ✔ Concluir (contornos internos viram furos) · Esc sai.`);
   }
 
   // ------------------------------------------------------------ painel da direita
@@ -109,11 +109,11 @@ export class SlabTool {
     const offIn = h('input', { type: 'number', step: 'any', value: toUnit(this.offset), onchange: e => { this.offset = fromUnit(e.target.value) || 0; } });
     this.shapeRow = h('div', {}, seg({ linha: 'Polilinha', retangulo: 'Retângulo' }, () => this.shape, k => { this.shape = k; store('boxbim.lajeForma', k); this.pts = []; this.redraw(); }));
     this.faceRow = h('div', {}, seg(FACES, () => this.face, k => { this.face = k; store('boxbim.lajeFace', k); }));
-    this.atFaceRow = h('label', { class: 'inline', title: 'O topo da laje fica na cota da face clicada (senão, no nível + deslocamento)' },
+    this.atFaceRow = h('label', { class: 'inline', title: 'O topo do piso fica na cota da face clicada (senão, no nível + deslocamento)' },
       h('input', { type: 'checkbox', checked: this.atFace, onchange: e => { this.atFace = e.target.checked; } }), 'Topo na cota da face do sólido');
     this.count = h('div', { class: 'small muted' });
     this.panel = h('div', { class: 'tool-panel' },
-      h('div', { class: 'tool-panel-head' }, h('strong', {}, '▱ Laje'), h('span', { class: 'spacer' }),
+      h('div', { class: 'tool-panel-head' }, h('strong', {}, '▱ Piso'), h('span', { class: 'spacer' }),
         h('button', { onclick: () => this.stop(), title: 'Sai sem criar (Esc)' }, 'Sair')),
       h('h4', {}, 'Contorno a partir de'), seg(MODES, () => this.mode, k => { this.mode = k; store('boxbim.lajeModo', k); this.pts = []; this.redraw(); this.help(); }),
       this.shapeRow, this.faceRow, this.atFaceRow,
@@ -121,12 +121,12 @@ export class SlabTool {
         h('button', { onclick: () => this.undo(), title: 'Tira o último trecho adicionado (Backspace)' }, '↶ Desfazer'),
         h('button', { onclick: () => { this.groups = []; this.pts = []; this.faceZ = null; this.redraw(); } }, 'Limpar')),
       this.count,
-      h('h4', {}, 'Laje'),
+      h('h4', {}, 'Piso'),
       h('div', { class: 'form' },
         h('label', {}, 'Nível', this.levelSel),
         h('label', {}, 'Tipo', typeSel, this.thick),
         h('label', {}, `Deslocamento do topo (${unitLabel()})`, offIn)),
-      h('button', { class: 'primary', onclick: () => this.finish(), title: 'Cria a laje com os contornos fechados (Enter com o croqui parado)' }, '✔ Concluir laje'));
+      h('button', { class: 'primary', onclick: () => this.finish(), title: 'Cria o piso com os contornos fechados (Enter com o croqui parado)' }, '✔ Concluir piso'));
     this._sidebarWasCollapsed = document.querySelector('.layout')?.classList.contains('right-collapsed');
     if (this._sidebarWasCollapsed) this.app.setSidebar('right', false, false);
     this.app.showTab('props');
@@ -376,7 +376,7 @@ export class SlabTool {
 
   finish() {
     const segs = this.allSegs();
-    if (!segs.length) { toast('Monte o contorno da laje primeiro (croqui, linhas, paredes ou sólido).', 'error'); return; }
+    if (!segs.length) { toast('Monte o contorno do piso primeiro (croqui, linhas, paredes ou sólido).', 'error'); return; }
     const { loops, chains } = chainSegments(segs);
     if (!loops.length) { toast(`O contorno não fechou (${chains.length} trecho(s) aberto(s)): as pontas precisam se encontrar.`, 'error'); return; }
     // topo: na cota da face do sólido (se veio de um e a opção está marcada) ou no nível; mais o deslocamento
@@ -392,7 +392,7 @@ export class SlabTool {
           holes: furos.map(hl => hl.map(p => [+p[0].toFixed(6), +p[1].toFixed(6)])),
           elevation: +(top - level.elevation).toFixed(6), ...(this.typeId ? { type: this.typeId } : {}),
         }, this.app.levels);
-        el.userData.bim.name = el.name = `Laje ${this.viewer.elements().filter(x => x.userData.bim.slab).length + 1}`;
+        el.userData.bim.name = el.name = `Piso ${this.viewer.elements().filter(x => x.userData.bim.slab).length + 1}`;
         this.viewer.add(el);
         made.push(el);
       } catch (err) { toast(err.message, 'error'); }
@@ -402,6 +402,6 @@ export class SlabTool {
     this.groups = []; this.pts = []; this.faceZ = null;
     this.redraw(); this.sync();
     this.app.refreshTree?.();
-    this.app.status(`${made.length} laje(s) criada(s) com o topo em ${fmtElev(top)}${holes ? ` e ${holes} furo(s)` : ''}. Monte outro contorno ou Sair.`);
+    this.app.status(`${made.length} piso(s) criado(s) com o topo em ${fmtElev(top)}${holes ? ` e ${holes} furo(s)` : ''}. Monte outro contorno ou Sair.`);
   }
 }
