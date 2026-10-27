@@ -8,6 +8,8 @@
 //   ＋ Ponto interno ............ clique dentro do piso para colocar um ponto de forma (rampa, caimento, ralo…)
 //   medida de cada lado ........ aparece na tela (como no Editar piso); clique nela para digitar o comprimento
 //   furos ...................... pontos, "+" e medidas também nos furos (botão direito no último ponto apaga o furo)
+//   Edição 2D (Propriedades) ... Canto com raio ou chanfro (clique no ponto), canto vivo (clique no "+" do lado) e
+//                                Offset do contorno — como as ferramentas 2D, direto no piso
 // Dados: slab.points (contorno), slab.alturas[i] (altura de cada ponto do contorno), slab.forma [[x, y, dz], …].
 import * as THREE from 'three';
 import { h, toast } from './ui.js';
@@ -34,6 +36,62 @@ function inside([x, y], poly) {
 
 const polyArea = pts => Math.abs(pts.reduce((s, p, i) => { const q = pts[(i + 1) % pts.length]; return s + p[0] * q[1] - q[0] * p[1]; }, 0) / 2);
 
+
+// ---------------------------------------------------------------- edição 2D do contorno (canto e offset)
+
+const sub2 = (a, b) => [a[0] - b[0], a[1] - b[1]];
+const len2 = v => Math.hypot(v[0], v[1]);
+const signedArea = pts => pts.reduce((s, p, i) => { const q = pts[(i + 1) % pts.length]; return s + p[0] * q[1] - q[0] * p[1]; }, 0) / 2;
+
+/** Pontos que substituem o vértice P (entre A e B) num canto de RAIO (arco) ou CHANFRO. null se não cabe. */
+function cornerPoints(A, P, B, mode, value) {
+  const u1 = sub2(A, P), u2 = sub2(B, P), l1 = len2(u1), l2 = len2(u2);
+  if (l1 < 1e-9 || l2 < 1e-9) return null;
+  u1[0] /= l1; u1[1] /= l1; u2[0] /= l2; u2[1] /= l2;
+  const cos = Math.max(-1, Math.min(1, u1[0] * u2[0] + u1[1] * u2[1])), th = Math.acos(cos);
+  if (th < 1e-3 || Math.PI - th < 1e-3) return null; // lados alinhados: não há canto
+  const t = mode === 'chanfro' ? value : value / Math.tan(th / 2); // recuo em cada lado
+  if (!(t > 1e-6) || t > l1 + 1e-9 || t > l2 + 1e-9) return null;
+  const T1 = [P[0] + u1[0] * t, P[1] + u1[1] * t], T2 = [P[0] + u2[0] * t, P[1] + u2[1] * t];
+  if (mode === 'chanfro') return [T1, T2];
+  // arco de T1 a T2 com centro na bissetriz
+  const bis = [u1[0] + u2[0], u1[1] + u2[1]], lb = len2(bis);
+  const dc = value / Math.sin(th / 2), C = [P[0] + bis[0] / lb * dc, P[1] + bis[1] / lb * dc];
+  const a1 = Math.atan2(T1[1] - C[1], T1[0] - C[0]);
+  let da = Math.atan2(T2[1] - C[1], T2[0] - C[0]) - a1;
+  while (da > Math.PI) da -= 2 * Math.PI;
+  while (da < -Math.PI) da += 2 * Math.PI;
+  const n = Math.max(2, Math.ceil(Math.abs(da) / (Math.PI / 16)));
+  return Array.from({ length: n + 1 }, (_, k) => [C[0] + value * Math.cos(a1 + da * k / n), C[1] + value * Math.sin(a1 + da * k / n)]);
+}
+
+/** Canto VIVO num lado (i → i+1): os lados vizinhos se estendem até se encontrar e o lado some. null se paralelos. */
+function sharpEdge(ring, i) {
+  const n = ring.length;
+  const A = ring[(i - 1 + n) % n], P = ring[i], Q = ring[(i + 1) % n], B = ring[(i + 2) % n];
+  const d1 = sub2(P, A), d2 = sub2(Q, B), den = d1[0] * d2[1] - d1[1] * d2[0];
+  if (Math.abs(den) < 1e-12) return null;
+  const w = sub2(B, A), t = (w[0] * d2[1] - w[1] * d2[0]) / den;
+  return [A[0] + d1[0] * t, A[1] + d1[1] * t];
+}
+
+/** Contorno fechado deslocado de d (positivo = para fora), cantos em esquadria. */
+function offsetRing(ring, d) {
+  const n = ring.length, ccw = signedArea(ring) > 0;
+  const lines = ring.map((a, i) => {
+    const b = ring[(i + 1) % n], v = sub2(b, a), L = len2(v) || 1;
+    let nx = v[1] / L, ny = -v[0] / L; // à direita do sentido
+    if (!ccw) { nx = -nx; ny = -ny; }   // "para fora" depende do sentido do contorno
+    return [[a[0] + nx * d, a[1] + ny * d], [b[0] + nx * d, b[1] + ny * d]];
+  });
+  return lines.map((l, i) => {
+    const p = lines[(i - 1 + n) % n], d1 = sub2(p[1], p[0]), d2 = sub2(l[1], l[0]), den = d1[0] * d2[1] - d1[1] * d2[0];
+    if (Math.abs(den) < 1e-12) return l[0];
+    const w = sub2(l[0], p[0]), t = (w[0] * d2[1] - w[1] * d2[0]) / den;
+    return [p[0][0] + d1[0] * t, p[0][1] + d1[1] * t];
+  });
+}
+
 export class FloorPoints {
   constructor(app) {
     this.app = app;
@@ -59,6 +117,10 @@ export class FloorPoints {
     addEventListener('pointerup', e => this.endDrag(e));
     this._place = e => this.placeAt(e);
     this._esc = e => { if (e.key === 'Escape' && this.placing) { e.stopPropagation(); this.stopPlacing(); } };
+    this.tool2d = null; // { mode: 'raio' | 'chanfro' | 'vivo', value } — próximo clique num ponto/lado aplica
+    this.corner = { mode: 'raio', value: 1 };
+    this.offsetValue = 0.5;
+    this._esc2d = e => { if (e.key === 'Escape' && this.tool2d) { e.stopPropagation(); this.stopTool2d(); } };
   }
 
   get viewer() { return this.app.viewer; }
@@ -83,7 +145,7 @@ export class FloorPoints {
   refresh() {
     const sel = [...this.viewer.selected];
     const el = sel.length === 1 && sel[0].userData.bim?.slab ? sel[0] : null;
-    if (el !== this.el) { this.stopPlacing(); this.cancelType(); }
+    if (el !== this.el && !(el && this.el && el.userData.bim.guid === this.el.userData.bim.guid)) { this.stopPlacing(); this.cancelType(); this.stopTool2d(); }
     this.el = el;
     this.rebuildHandles();
     this.update();
@@ -240,6 +302,7 @@ export class FloorPoints {
   startDrag(e, kind, i, r = 0) {
     if (e.button !== 0 || !this.el) return;
     e.preventDefault(); e.stopPropagation();
+    if (this.tool2d) { this.apply2d(kind, i, r); return; }
     const el = this.el = this.live(this.el), s = el.userData.bim.slab;
     el.updateMatrixWorld(true);
     const inv = el.matrixWorld.clone().invert();
@@ -380,6 +443,61 @@ export class FloorPoints {
     } else s.forma.splice(i, 1);
     this.rebuildHandles();
     this.commit(el);
+  }
+
+  // ------------------------------------------------------------ edição 2D (canto e offset)
+
+  startTool2d(el) {
+    this.el = this.live(el);
+    this.tool2d = { ...this.corner };
+    document.addEventListener('keydown', this._esc2d, true);
+    this.app.status(this.tool2d.mode === 'vivo'
+      ? 'Canto vivo · clique no "+" de um lado do piso: os lados vizinhos se estendem até se encontrar · Esc termina.'
+      : `Canto ${this.tool2d.mode === 'raio' ? `com raio ${fmtLen(this.tool2d.value, { suffix: true })}` : `chanfrado ${fmtLen(this.tool2d.value, { suffix: true })}`} · clique nos pontos (cantos) do piso · Esc termina.`);
+    this.app.renderProps();
+  }
+
+  stopTool2d() {
+    if (!this.tool2d) return;
+    this.tool2d = null;
+    document.removeEventListener('keydown', this._esc2d, true);
+    this.app.status('Pronto.');
+    if (this.el) this.app.renderProps();
+  }
+
+  /** Aplica o canto no ponto (raio/chanfro) ou no lado (vivo) clicado. */
+  apply2d(kind, i, r) {
+    const el = this.el = this.live(this.el), s = el.userData.bim.slab, t = this.tool2d;
+    const ring = this.ring(s, r), n = ring.length, outer = !r;
+    if (t.mode === 'vivo') {
+      if (kind !== 'm' && kind !== 'hm') { toast('Canto vivo: clique no "+" do lado que deve sumir.', 'error'); return; }
+      if (n <= 3) { toast('O contorno precisa de pelo menos 3 pontos.', 'error'); return; }
+      const X = sharpEdge(ring, i);
+      if (!X) { toast('Os lados vizinhos são paralelos: não se encontram.', 'error'); return; }
+      const j = (i + 1) % n;
+      ring[i] = X.map(round6);
+      ring.splice(j, 1);
+      if (outer && s.alturas) { s.alturas[i] = round6(((s.alturas[i] || 0) + (s.alturas[j] || 0)) / 2); s.alturas.splice(j, 1); }
+    } else {
+      if (kind !== 'v' && kind !== 'h') { toast('Canto: clique num ponto (canto) do piso.', 'error'); return; }
+      const pts = cornerPoints(ring[(i - 1 + n) % n], ring[i], ring[(i + 1) % n], t.mode, t.value);
+      if (!pts) { toast(`Não cabe: ${t.mode === 'raio' ? 'raio' : 'chanfro'} de ${fmtLen(t.value, { suffix: true })} é maior que os lados (ou os lados estão alinhados).`, 'error'); return; }
+      ring.splice(i, 1, ...pts.map(p => p.map(round6)));
+      if (outer && s.alturas) s.alturas.splice(i, 1, ...pts.map(() => s.alturas[i] || 0));
+    }
+    this.rebuildHandles(); this._key = this.shapeKey(s);
+    this.commit(el);
+  }
+
+  /** Offset do contorno externo (positivo = para fora). */
+  offsetOutline(el, d) {
+    el = this.live(el);
+    const s = el.userData.bim.slab;
+    const out = offsetRing(s.points, d);
+    if (Math.abs(signedArea(out)) < 1e-4 || Math.sign(signedArea(out)) !== Math.sign(signedArea(s.points))) { toast('O offset para dentro é maior que o piso.', 'error'); return; }
+    s.points = out.map(p => p.map(round6));
+    this.commit(el);
+    this.app.status(`Offset de ${fmtLen(d, { suffix: true })} no contorno do piso.`);
   }
 
   /** Liga/desliga o modo Terreno do piso. */
@@ -554,6 +672,29 @@ export class FloorPoints {
         h('button', { class: this.placing ? 'on' : '', onclick: () => { this.el = el; this.placing ? this.stopPlacing() : this.startPlacing(); },
           title: 'Clique dentro do piso para colocar um ponto de forma e digite a altura dele' }, this.placing ? '✔ Terminar pontos' : '＋ Ponto interno'),
         h('button', { onclick: () => { delete s.alturas; delete s.forma; this.commit(el); }, title: 'Volta o piso a plano (tira as alturas e os pontos internos)' }, 'Piso plano')),
+      ...this.tools2dSection(el),
+    ];
+  }
+
+  /** Bloco "Edição 2D do contorno": canto (raio, chanfro, vivo) e offset. */
+  tools2dSection(el) {
+    const u = unitLabel(), c = this.corner, active = this.tool2d;
+    const modes = { raio: 'Raio', chanfro: 'Chanfro', vivo: 'Vivo' };
+    const seg = h('div', { class: 'seg-btns' }, Object.entries(modes).map(([k, l]) => h('button', { class: c.mode === k ? 'on' : '',
+      onclick: () => { c.mode = k; if (this.tool2d) this.startTool2d(el); else this.app.renderProps(); } }, l)));
+    const val = h('input', { type: 'number', min: 0, step: unitStep(), value: toUnit(c.value), disabled: c.mode === 'vivo', style: 'width:80px',
+      title: c.mode === 'raio' ? `Raio (${u})` : `Recuo do chanfro em cada lado (${u})`,
+      onchange: e => { const x = fromUnit(e.target.value); if (x > 0) { c.value = x; if (this.tool2d) this.startTool2d(el); } } });
+    const off = h('input', { type: 'number', step: unitStep(), value: toUnit(this.offsetValue), style: 'width:80px', title: `Distância (${u}); negativo = para dentro`,
+      onchange: e => { const x = fromUnit(e.target.value); if (Number.isFinite(x)) this.offsetValue = x; } });
+    return [
+      h('h4', {}, 'Edição 2D do contorno'),
+      h('div', { class: 'small muted' }, active ? (active.mode === 'vivo' ? 'Clique no "+" de um lado (o lado some e os vizinhos se encontram). Esc termina.' : 'Clique nos pontos (cantos) do piso na vista. Esc termina.')
+        : 'Canto: escolha raio, chanfro ou vivo e clique em "Canto"; depois clique nos cantos do piso (vivo: no "+" do lado).'),
+      h('div', { class: 'row-buttons' }, seg, val,
+        h('button', { class: active ? 'on' : '', title: 'Liga o canto: os próximos cliques nos cantos do piso aplicam', onclick: () => (active ? this.stopTool2d() : this.startTool2d(el)) }, active ? '✔ Terminar canto' : '⌜ Canto')),
+      h('div', { class: 'row-buttons' }, h('span', { class: 'small' }, `Offset (${u})`), off,
+        h('button', { title: 'Desloca o contorno externo do piso (positivo = para fora)', onclick: () => this.offsetOutline(el, this.offsetValue) }, 'Aplicar offset')),
     ];
   }
 }

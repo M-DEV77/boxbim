@@ -6,12 +6,23 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.43.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.44.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.44.0] — 2026-10-27 · Ferramentas 2D na edição do piso
+
+### Adicionado
+- **Edição 2D do contorno** em Propriedades do piso, usada direto na vista:
+  - **Canto** com **raio** (arco) ou **chanfro**: clique nos cantos do piso (contorno e furos); fica ligado para
+    vários cantos até Esc ou "Terminar canto";
+  - **Canto vivo**: clique no "+" de um lado — os lados vizinhos se estendem até se encontrar e o lado some
+    (desfaz um chanfro);
+  - **Offset** do contorno externo (positivo para fora, negativo para dentro).
+  As alturas dos pontos acompanham os pontos novos.
 
 ## [2.43.0] — 2026-10-27 · Edição do piso na tela
 

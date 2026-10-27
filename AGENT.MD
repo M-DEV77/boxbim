@@ -156,7 +156,8 @@ flowchart LR
 | 2026-10-27 | 2.42.0 | `b6c7c46` | Suavizar o talude: raio nas quinas do perfil e no encontro com o terreno |
 | 2026-10-27 | 2.42.1 | `cc6033a` | Talude sai da aresta do piso (cota real com as alturas dos pontos); malha fina só perto da aresta |
 | 2026-10-27 | 2.42.2 | `bc72fc9` | Talude encontra a aresta de cima do piso sem serrilhado (perfil continua para dentro do piso) |
-| 2026-10-27 | 2.43.0 | este commit | Edição do piso na tela: medidas dos lados clicáveis e furos com pontos, "+" e medidas |
+| 2026-10-27 | 2.43.0 | `f472c02` | Edição do piso na tela: medidas dos lados clicáveis e furos com pontos, "+" e medidas |
+| 2026-10-27 | 2.44.0 | este commit | Edição 2D do contorno do piso: canto (raio, chanfro, vivo) e offset |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.43.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.44.0</a>
