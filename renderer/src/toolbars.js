@@ -14,7 +14,7 @@ export const HOME = 'Início'; // nome da aba que os presets antigos tinham fixa
 const START_GROUPS = ['Arquivo', 'Modelar', 'Desenho', 'Modificar', 'Vistas'];
 const SKETCH_OBJECTS = ['linha', 'retangulo', 'circulo'];
 // comandos que chegaram depois que os presets passaram a lembrar os comandos vistos (entram nos presets antigos)
-const NEW_COMMANDS = ['ambientes', 'materiais', 'texturas', 'cota'];
+const NEW_COMMANDS = ['ambientes', 'materiais', 'texturas', 'cota', 'terreno'];
 
 // comandos que viraram Objetos (presets antigos são convertidos)
 const AS_OBJECT = { laje: 'laje', pilar: 'pilar', viga: 'viga', caixa: 'caixa', 'parede-coord': 'parede', 'desenhar-parede': 'parede', linha: 'linha', retangulo: 'retangulo', circulo: 'circulo' };

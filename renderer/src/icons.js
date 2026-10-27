@@ -49,6 +49,8 @@ export const ICONS = {
 
   dim: '<path class="g" d="M3 6v12M21 6v12"/><path d="M3 12h18"/><path class="b" d="M6.5 10l-3.5 2 3.5 2zM17.5 10l3.5 2-3.5 2z"/><path class="g" d="M9 8.5h6"/>',
 
+  terrain: '<path class="b" d="M2 19l5.5-8 3.5 4.5 3.5-6.5L22 19z"/><path class="g" d="M3.5 21.5c3-1.4 5.5-1.4 8.5 0s5.5 1.4 8.5 0" /><circle class="gf" cx="18" cy="5.5" r="1.6"/>',
+
   // ---------------- modificar
   move: '<path d="M12 3v18M3 12h18"/><path class="g" d="M12 3l-2.8 2.8M12 3l2.8 2.8M12 21l-2.8-2.8M12 21l2.8-2.8M3 12l2.8-2.8M3 12l2.8 2.8M21 12l-2.8-2.8M21 12l-2.8 2.8"/><rect class="b" x="9.6" y="9.6" width="4.8" height="4.8"/>',
   rotate: '<path d="M20 12a8 8 0 1 1-2.4-5.7"/><path class="g" d="M20 3.8v5h-5"/><path class="b" d="M9 9h6v6H9z" transform="rotate(20 12 12)"/>',

@@ -22,12 +22,12 @@ export const DEFAULT_COLORS = {
   IfcWall: '#e8b04a', IfcWallStandardCase: '#e8b04a', IfcSlab: '#9aa5b1', IfcColumn: '#3d8bd9', IfcBeam: '#8e5cd9',
   IfcDoor: '#b8733a', IfcWindow: '#47c4e0', IfcStair: '#d9604a', IfcRailing: '#7a7f87', IfcRoof: '#c0504d',
   IfcFurniture: '#4caf6a', IfcFurnishingElement: '#4caf6a', IfcCovering: '#c9b28a', IfcBuildingElementProxy: '#a0a8b5',
-  IfcSanitaryTerminal: '#7fb3d5', IfcLightFixture: '#f4d03f', IfcMember: '#7d6bb0', IfcPlate: '#95a5a6', outros: '#b0b6bf',
+  IfcSanitaryTerminal: '#7fb3d5', IfcLightFixture: '#f4d03f', IfcMember: '#7d6bb0', IfcPlate: '#95a5a6', IfcGeographicElement: '#7a9a4e', outros: '#b0b6bf',
 };
 export const COLOR_LABELS = {
   IfcWall: 'Paredes', IfcSlab: 'Lajes e pisos', IfcColumn: 'Pilares', IfcBeam: 'Vigas', IfcDoor: 'Portas', IfcWindow: 'Janelas',
   IfcStair: 'Escadas', IfcRailing: 'Guarda-corpos', IfcRoof: 'Coberturas', IfcFurniture: 'Mobiliário', IfcCovering: 'Revestimentos',
-  IfcBuildingElementProxy: 'Genéricos / caixas', IfcSanitaryTerminal: 'Louças', IfcLightFixture: 'Iluminação', outros: 'Outros',
+  IfcBuildingElementProxy: 'Genéricos / caixas', IfcSanitaryTerminal: 'Louças', IfcLightFixture: 'Iluminação', IfcGeographicElement: 'Terreno', outros: 'Outros',
 };
 
 const TEXTURED = new Set(['textura', 'render']); // estilos com os materiais do RenderMode

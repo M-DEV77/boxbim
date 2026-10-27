@@ -29,6 +29,8 @@ export function materialFor(color, opacity = 1) {
 // Os materiais das camadas vêm da biblioteca de tipos (types.js), que registra o resolvedor aqui.
 let resolveMaterial = () => null;
 export function setMaterialResolver(fn) { resolveMaterial = fn; }
+/** Material da biblioteca pelo nome (ou null se não existe). */
+export const libraryMaterial = name => resolveMaterial(name);
 
 // Construtor da geometria pelo script do objeto de sistema (registrado pelo app; assíncrono)
 let scripted = null;
