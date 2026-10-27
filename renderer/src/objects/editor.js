@@ -16,6 +16,7 @@ import { snapPivot } from '../snap.js';
 import { h, modal, toast, confirmDialog, dropdown, esc } from '../ui.js';
 import { PARAM_TYPES, OBJECT_CATEGORIES, coerceParams, optionList, blankObject } from './objects.js';
 import { ObjectSketch } from './sketch2d.js';
+import { fmtLen, toUnit, fromUnit, unitLabel, unitStep } from '../units.js';
 
 const B = window.boxbim;
 
@@ -324,11 +325,14 @@ class ObjectWorkspace {
       case 'cor': input = h('input', { type: 'color', value: v || '#cccccc', oninput: e => set(e.target.value) }); break;
       case 'texto': input = h('input', { value: v, oninput: e => set(e.target.value) }); break;
       default: {
-        const num = h('input', { type: 'number', class: 'oe-num', step: p.type === 'inteiro' ? 1 : 'any', value: v, oninput: e => { range && (range.value = e.target.value); set(e.target.value); } });
+        // comprimentos na unidade do projeto (o script continua recebendo metros)
+        const len = p.type === 'comprimento';
+        const show = x => (len && x !== '' && x != null ? toUnit(x) : x), back = x => (len ? fromUnit(x) : x);
+        const num = h('input', { type: 'number', class: 'oe-num', step: p.type === 'inteiro' ? 1 : len ? unitStep() : 'any', value: show(v), oninput: e => { range && (range.value = e.target.value); set(back(e.target.value)); } });
         const hasRange = p.min !== '' && p.min != null && p.max !== '' && p.max != null && Number(p.max) > Number(p.min);
-        const range = hasRange ? h('input', { type: 'range', min: p.min, max: p.max, step: p.type === 'inteiro' || p.type === 'angulo' ? 1 : p.type === 'comprimento' ? 0.005 : (Number(p.max) - Number(p.min)) / 200, value: v,
-          oninput: e => { num.value = e.target.value; set(e.target.value); } }) : null;
-        const unit = { comprimento: 'm', angulo: '°' }[p.type] || '';
+        const range = hasRange ? h('input', { type: 'range', min: show(p.min), max: show(p.max), step: p.type === 'inteiro' || p.type === 'angulo' ? 1 : len ? toUnit(0.005) : (Number(p.max) - Number(p.min)) / 200, value: show(v),
+          oninput: e => { num.value = e.target.value; set(back(e.target.value)); } }) : null;
+        const unit = { comprimento: unitLabel(), angulo: '°' }[p.type] || '';
         input = h('div', { class: 'oe-numrow' }, range, num, unit ? h('span', { class: 'muted small' }, unit) : null);
       }
     }
@@ -537,7 +541,7 @@ class ObjectWorkspace {
       this.code.setError(null);
       const ms = Math.round(performance.now() - t0);
       this.status('ok', `✔ ${r.count} peça(s) · ${ms} ms`);
-      this.log([{ kind: 'ok', text: `✔ ${r.count} peça(s) geradas em ${ms} ms${r.opening ? ` · vão ${fmt(r.opening.width)} × ${fmt(r.opening.height)} m` : ''}` },
+      this.log([{ kind: 'ok', text: `✔ ${r.count} peça(s) geradas em ${ms} ms${r.opening ? ` · vão ${fmtLen(r.opening.width)} × ${fmtLen(r.opening.height, { suffix: true })}` : ''}` },
         ...(this.extraLog ? [this.extraLog] : []), ...r.logs.map(text => ({ kind: 'log', text }))]);
       this.extraLog = null;
       return true;
@@ -846,7 +850,7 @@ class Stage {
     helper.userData.dims = true;
     this.helpers.add(helper);
     this.dims.hidden = false;
-    this.dims.innerHTML = `<b>L</b> ${fmt(s.x)} × <b>P</b> ${fmt(s.y)} × <b>A</b> ${fmt(s.z)} m`;
+    this.dims.innerHTML = `<b>L</b> ${fmtLen(s.x)} × <b>P</b> ${fmtLen(s.y)} × <b>A</b> ${fmtLen(s.z)} ${unitLabel()}`;
   }
 
   pick(e) {

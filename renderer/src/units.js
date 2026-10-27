@@ -32,4 +32,4 @@ export function fmtLen(m, { suffix = false, dec } = {}) {
 }
 
 /** Nomes de propriedades que são comprimentos (o painel mostra na unidade do projeto). */
-export const LENGTH_PROPS = new Set(['Comprimento', 'Altura', 'Espessura', 'Largura', 'Profundidade', 'Base', 'Raio', 'Cota', 'Topo', 'Caminho']);
+export const LENGTH_PROPS = new Set(['Comprimento', 'Altura', 'Espessura', 'Largura', 'Profundidade', 'Base', 'Raio', 'Cota', 'Topo', 'Caminho', 'Deslocamento', 'Afastamento']);

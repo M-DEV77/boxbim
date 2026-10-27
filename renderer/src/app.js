@@ -56,7 +56,7 @@ import { styleControls, DEFAULT_STYLE } from './sketch/style.js';
 import { Guides } from './guides.js';
 import { ViewStyles, COLOR_LABELS, DEFAULT_COLORS } from './viewstyle.js';
 import { rest, projectId } from './web/api.js';
-import { units, setUnit, getUnit, UNITS, toUnit, fromUnit, unitLabel, fmtLen, LENGTH_PROPS } from './units.js';
+import { units, setUnit, getUnit, UNITS, toUnit, fromUnit, unitLabel, unitStep, fmtLen, LENGTH_PROPS } from './units.js';
 
 const B = window.boxbim;
 
@@ -716,9 +716,17 @@ class App {
         { key: 'name', label: 'Nome', value: 'Volume' }],
         v => ['box', { level: v.level, position: [v.x, v.y, v.z], size: [v.dx, v.dy, v.dz], type: v.type, name: v.name }]],
     };
-    const [title, fields, make] = forms[kind];
+    const [title, rawFields, make] = forms[kind];
+    // campos de comprimento (marcados "(m)"): na unidade do projeto; voltam a metros antes de criar
+    const lenKeys = new Set();
+    const fields = rawFields.map(f => {
+      if (!/\(m\)/.test(f.label || '')) return f;
+      lenKeys.add(f.key);
+      return { ...f, label: f.label.replace('(m)', `(${unitLabel()})`), value: toUnit(f.value) };
+    });
     const v = await formDialog(title, fields, { ok: 'Criar' });
     if (!v) return;
+    for (const k of lenKeys) v[k] = fromUnit(v[k]);
     try {
       const [k, args] = make(v);
       const el = createOnLevel(k, args, this.levels);
@@ -1028,7 +1036,7 @@ class App {
       h('table', {}, h('tr', {}, h('td', {}, 'Tipo'), h('td', {}, sel))),
       layers.length ? h('table', { class: 'layers-table' }, layers.map((l, i) => h('tr', {},
         h('td', {}, h('span', { class: 'swatch', style: `background:${this.types.materials[l.material]?.color || '#ccc'}` }), l.name),
-        h('td', {}, `${l.material} · ${(cat === 'column' || cat === 'beam') && i === 0 ? 'núcleo' : `${(l.thickness * 100).toFixed(1).replace('.', ',')} cm`}`)))) : null,
+        h('td', {}, `${l.material} · ${(cat === 'column' || cat === 'beam') && i === 0 ? 'núcleo' : fmtLen(l.thickness, { suffix: true, dec: getUnit() === 'm' ? 3 : undefined })}`)))) : null,
       h('button', { class: 'mini', style: 'margin-top:6px', onclick: () => openTypesEditor(this, cat) }, 'Editar tipos e camadas…'));
   }
 
@@ -1066,8 +1074,8 @@ class App {
           slider('deslocamento', 'Deslocamento (cm)', 0, 5, 0.1),
           h('tr', {}, h('td', {}, 'Padrão'), h('td', {}, h('select', { style: 'width:100%', onchange: e => set('textura', e.target.value) },
             Object.entries(patternList()).map(([k, l]) => h('option', { value: k, selected: k === p.textura }, l))))),
-          h('tr', {}, h('td', {}, 'Escala (m)'), h('td', {}, h('input', { type: 'number', step: 0.05, min: 0.05, value: p.escala, style: 'width:100%',
-            onchange: e => set('escala', Math.max(0.05, Number(e.target.value) || 1)) }))))));
+          h('tr', {}, h('td', {}, `Escala (${unitLabel()})`), h('td', {}, h('input', { type: 'number', step: unitStep(), min: toUnit(0.05), value: toUnit(p.escala), style: 'width:100%',
+            onchange: e => set('escala', Math.max(0.05, fromUnit(e.target.value) || 1)) }))))));
     }
     root.append(h('div', { class: 'muted', style: 'font-size:11px' }, 'Vale para todos os elementos com o material; fica gravado na biblioteca de tipos.'));
   }
@@ -1103,11 +1111,12 @@ class App {
       else if (p.type === 'material') input = h('select', { onchange: e => apply(p.name, e.target.value) }, Object.keys(this.types.materials).map(m => h('option', { value: m, selected: m === values[p.name] }, m)));
       else if (p.type === 'cor') input = h('input', { type: 'color', value: values[p.name] || '#cccccc', onchange: e => apply(p.name, e.target.value) });
       else if (p.type === 'texto') input = h('input', { value: values[p.name], onchange: e => apply(p.name, e.target.value) });
+      else if (p.type === 'comprimento') input = h('input', { type: 'number', step: unitStep(), min: p.min !== undefined ? toUnit(p.min) : undefined, max: p.max !== undefined ? toUnit(p.max) : undefined, value: toUnit(values[p.name]), onchange: e => apply(p.name, fromUnit(e.target.value)) });
       else input = h('input', { type: 'number', step: p.type === 'inteiro' ? 1 : 'any', min: p.min, max: p.max, value: values[p.name], onchange: e => apply(p.name, e.target.value) });
       input.style.width = '100%';
       // espessura vem do tipo com camadas: só leitura
       if (sys?.driven[p.name]?.typed && b.layers?.length) { input.disabled = true; input.title = 'Definida pelas camadas do tipo'; }
-      return h('tr', {}, h('td', {}, `${p.label || p.name}${p.type === 'comprimento' ? ' (m)' : p.type === 'angulo' ? ' (°)' : ''}`), h('td', {}, input));
+      return h('tr', {}, h('td', {}, `${p.label || p.name}${p.type === 'comprimento' ? ` (${unitLabel()})` : p.type === 'angulo' ? ' (°)' : ''}`), h('td', {}, input));
     });
     // hospedado: posição ao longo da parede e lado; solto: rotação livre
     let placement = [];
@@ -1119,8 +1128,8 @@ class App {
       };
       placement = [
         h('tr', {}, h('td', {}, 'Hospedeiro'), h('td', {}, host.name)),
-        h('tr', {}, h('td', {}, 'Centro do vão (m do início)'), h('td', {}, h('input', { type: 'number', step: 0.05, value: b.host.offset, style: 'width:100%',
-          onchange: e => rehost({ offset: Number(e.target.value) || 0 }) }))),
+        h('tr', {}, h('td', {}, `Centro do vão (${unitLabel()} do início)`), h('td', {}, h('input', { type: 'number', step: unitStep(), value: toUnit(b.host.offset), style: 'width:100%',
+          onchange: e => rehost({ offset: fromUnit(e.target.value) || 0 }) }))),
         h('tr', {}, h('td', {}, 'Inverter lado'), h('td', {}, h('input', { type: 'checkbox', checked: !!b.host.flip, onchange: e => rehost({ flip: e.target.checked }) }))),
       ];
     } else {
@@ -1150,6 +1159,18 @@ class App {
     this.renderProps();
     if (this.transformTool.bar?.isConnected) this.transformTool.buildBar();
     if (this.sketchTool.active) { const m = this.sketchTool.mode; this.sketchTool.stop(); this.sketchTool.start(m); }
+    // painéis das ferramentas abertas (Piso, Copiar, Espelhar, Telhado): refeitos na unidade nova, sem perder valores
+    const old = UNITS[this._unitPrev || 'm'] || UNITS.m;
+    this._unitPrev = getUnit();
+    for (const t of [this.slabTool, this.copyTool, this.mirrorTool, this.roofTool]) {
+      if (!t?.panel?.isConnected) continue;
+      const keep = t === this.roofTool ? [t.iniIn, t.fimIn].map(i => Number(i.value) / old.f) : null;
+      const collapsed = t._sidebarWasCollapsed;
+      t.panel.remove(); t.tip?.remove(); t.marker?.remove();
+      t.buildPanel();
+      t._sidebarWasCollapsed = collapsed;
+      if (keep) { t.iniIn.value = toUnit(keep[0]); t.fimIn.value = toUnit(keep[1]); }
+    }
     this.status(`Unidade de comprimento: ${unitLabel()}.`);
   }
 

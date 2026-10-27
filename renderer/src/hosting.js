@@ -12,6 +12,7 @@
 // instância fica no mesmo deslocamento ao longo do eixo (follow).
 import * as THREE from 'three';
 import { rebuildElement } from './elements.js';
+import { fmtLen } from './units.js';
 
 const DEG = Math.PI / 180;
 /** Referência permanente de um elemento (GUID; o uuid só vale nesta sessão). */
@@ -113,7 +114,7 @@ export class Hosting {
   attach(inst, wall, { offset, flip = false }) {
     const b = inst.userData.bim;
     const p = this.pose(wall, offset, flip, b.opening);
-    if (!p) throw new Error(`O vão (${(b.opening?.width || 0).toFixed(2)} m) não cabe na parede "${wall.name}".`);
+    if (!p) throw new Error(`O vão (${fmtLen(b.opening?.width || 0, { suffix: true })}) não cabe na parede "${wall.name}".`);
     inst.position.set(...p.position);
     inst.rotation.set(0, 0, p.rotation * DEG);
     b.host = { wallId: refOf(wall), offset: p.offset, flip: !!flip };

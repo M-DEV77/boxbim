@@ -147,7 +147,8 @@ flowchart LR
 | 2026-10-27 | 2.36.0 | `e539b2c` | Laje vira Piso; pontos do piso (arrastar, inserir, apagar, altura, pontos internos de forma) |
 | 2026-10-27 | 2.37.0 | `3caead3` | Editar piso (clique duplo): linhas do contorno e furos num editor em planta, como a parede |
 | 2026-10-27 | 2.38.0 | `e6a4ac0` | Laje vira Piso em toda a interface (camadas, tipos, IA/MCP) e migração única dos dados gravados |
-| 2026-10-27 | 2.39.0 | este commit | Opção Terreno no piso: só a superfície segue os pontos e os outros pisos cortam o terreno |
+| 2026-10-27 | 2.39.0 | `6b4670a` | Opção Terreno no piso: só a superfície segue os pontos e os outros pisos cortam o terreno |
+| 2026-10-27 | 2.39.1 | este commit | Unidade do projeto (m/cm/mm) em todas as ferramentas: diálogos, propriedades, objetos, tipos e painéis abertos |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.39.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.39.1</a>

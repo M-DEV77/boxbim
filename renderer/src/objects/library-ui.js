@@ -4,6 +4,7 @@ import { h, modal, toast, confirmDialog } from '../ui.js';
 import { blankObject, isHostable } from './objects.js';
 import { openObjectEditor } from './editor.js';
 import { fmtElev } from '../levels.js';
+import { fmtLen } from '../units.js';
 import { editObjectMeta, iconView, CATEGORY_LABELS } from './meta-ui.js';
 import { fillThumbnails } from './thumbs.js';
 
@@ -192,7 +193,7 @@ export class PlaceTool {
       if (pose) {
         this.preview.position.set(...pose.position);
         this.preview.rotation.z = pose.rotation * Math.PI / 180;
-        this.app.status(`Na parede "${hit.wall.name}", centro do vão a ${pose.offset.toFixed(2).replace('.', ',')} m do início · clique para colocar · R inverte o lado.`);
+        this.app.status(`Na parede "${hit.wall.name}", centro do vão a ${fmtLen(pose.offset, { suffix: true })} do início · clique para colocar · R inverte o lado.`);
         return;
       }
       this.app.status(hit ? `O vão não cabe na parede "${hit.wall.name}".` : `Aponte para uma parede de ${this.level.name}.`);

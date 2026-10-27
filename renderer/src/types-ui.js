@@ -3,6 +3,7 @@
 import { h, modal, toast, confirmDialog } from './ui.js';
 import { CATEGORIES, FUNCTIONS } from './types.js';
 import { refreshTypedElements } from './modeling.js';
+import { fmtLen, getUnit, toUnit, fromUnit, unitLabel, unitStep } from './units.js';
 
 export function openTypesEditor(app, startCat = 'wall') {
   const lib = app.types;
@@ -16,6 +17,8 @@ export function openTypesEditor(app, startCat = 'wall') {
   const matsBox = h('div', {});
 
   const total = t => t.layers.reduce((s, l) => s + (Number(l.thickness) || 0), 0);
+  // espessuras na unidade do projeto (em metros com milímetros: 0,015 m)
+  const thk = m => fmtLen(m, { suffix: true, dec: getUnit() === 'm' ? 3 : undefined });
   const isCore = (c, i) => (c === 'column' || c === 'beam') && i === 0;
 
   function renderLeft() {
@@ -24,7 +27,7 @@ export function openTypesEditor(app, startCat = 'wall') {
       h('button', { class: k === cat ? 'active' : '', onclick: () => { cat = k; sel = work.types[k].find(t => t.id === work.active[k]) || work.types[k][0]; renderAll(); } }, c.label))));
     left.append(h('div', { class: 'list' }, work.types[cat].map(t => h('div', {
       class: `item${t === sel ? ' active' : ''}`, onclick: () => { sel = t; renderAll(); },
-    }, h('div', {}, h('div', { class: 'title' }, t.name), h('div', { class: 'desc' }, `${(total(t) * 100).toFixed(1).replace('.', ',')} cm · ${t.layers.length} camada(s)`)),
+    }, h('div', {}, h('div', { class: 'title' }, t.name), h('div', { class: 'desc' }, `${thk(total(t))} · ${t.layers.length} camada(s)`)),
     t.id === work.active[cat] ? h('span', { class: 'badge' }, 'padrão') : null))));
     left.append(h('div', { style: 'display:flex;gap:4px;margin-top:8px;flex-wrap:wrap' },
       h('button', { class: 'mini', onclick: () => {
@@ -52,7 +55,7 @@ export function openTypesEditor(app, startCat = 'wall') {
     return h('div', { class: `layer-diagram${vertical ? ' vertical' : ''}` }, t.layers.map((l, i) => {
       const color = work.materials[l.material]?.color || '#cccccc';
       const share = isCore(cat, i) ? 0.5 : (Number(l.thickness) || 0) / T * (cat === 'column' || cat === 'beam' ? 0.5 : 1);
-      return h('div', { title: `${l.name} — ${l.material} — ${(l.thickness * 100).toFixed(1)} cm`, style: `background:${color};${vertical ? 'height' : 'width'}:${Math.max(share * 100, 2)}%;${vertical ? 'min-height:12px' : ''}` },
+      return h('div', { title: `${l.name} — ${l.material} — ${thk(l.thickness)}`, style: `background:${color};${vertical ? 'height' : 'width'}:${Math.max(share * 100, 2)}%;${vertical ? 'min-height:12px' : ''}` },
         share > 0.12 ? l.name : '');
     }));
   }
@@ -64,8 +67,8 @@ export function openTypesEditor(app, startCat = 'wall') {
     const rows = sel.layers.map((l, i) => {
       const mat = h('select', { onchange: e => { l.material = e.target.value; renderRight(); } },
         Object.keys(work.materials).map(m => h('option', { value: m, selected: m === l.material }, m)));
-      const thick = h('input', { type: 'number', step: '0.1', min: 0, value: +(l.thickness * 100).toFixed(2), disabled: isCore(cat, i), title: isCore(cat, i) ? 'O núcleo usa as dimensões da instância' : 'Espessura em centímetros',
-        onchange: e => { l.thickness = Math.max(0, Number(e.target.value) || 0) / 100; renderAll(); } });
+      const thick = h('input', { type: 'number', step: unitStep(), min: 0, value: toUnit(l.thickness), disabled: isCore(cat, i), title: isCore(cat, i) ? 'O núcleo usa as dimensões da instância' : `Espessura (${unitLabel()})`,
+        onchange: e => { l.thickness = Math.max(0, fromUnit(e.target.value) || 0); renderAll(); } });
       const fn = h('select', { onchange: e => { l.function = e.target.value; } }, FUNCTIONS.map(f => h('option', { value: f, selected: f === l.function }, f)));
       const move = d => () => { const j = i + d; if (j < 0 || j >= sel.layers.length) return; [sel.layers[i], sel.layers[j]] = [sel.layers[j], sel.layers[i]]; renderAll(); };
       return h('div', { class: 'layer-row' },
@@ -76,8 +79,8 @@ export function openTypesEditor(app, startCat = 'wall') {
     right.append(
       h('div', { class: 'form' }, h('label', {}, 'Nome do tipo', name)),
       h('div', { class: 'section-title' }, `Camadas (${CATEGORIES[cat].order})`, h('span', { class: 'spacer' }),
-        h('span', { class: 'muted small' }, `total ${(total(sel) * 100).toFixed(1).replace('.', ',')} cm`)),
-      h('div', { class: 'layer-row head' }, 'camada', 'material', 'cm', 'função', '', '', ''),
+        h('span', { class: 'muted small' }, `total ${thk(total(sel))}`)),
+      h('div', { class: 'layer-row head' }, 'camada', 'material', unitLabel(), 'função', '', '', ''),
       ...rows,
       h('button', { class: 'mini', style: 'margin-top:4px', onclick: () => { sel.layers.push({ name: 'Nova camada', material: 'Genérico', thickness: 0.02, function: 'acabamento' }); renderAll(); } }, '+ Camada'),
       h('div', { class: 'section-title' }, 'Seção'), diagram(sel),

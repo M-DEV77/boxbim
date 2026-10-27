@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { h, modal, toast } from './ui.js';
 import { openTextureEditor } from './texture-editor.js';
+import { fmtLen, toUnit, fromUnit, unitLabel, unitStep } from './units.js';
 import { HATCHES, hatchOf, hatchPreview } from './hatch.js';
 import { patternList, patternLabel, MAPS, materialProps, createMaterial, applyMaterial, boxUv, mapThumbnail } from './materials.js';
 
@@ -164,8 +165,8 @@ export function openMaterialEditor(app, startName) {
           h('button', { class: 'mini', title: 'Criar ou editar texturas procedurais próprias (★)', onclick: () => openTextureEditor(app, String(p.textura).slice(3), {
             onSaved: tid => { if (tid) set('textura', `tx:${tid}`, { rebuild: true }); else renderControls(); renderList(); },
           }) }, '★…')),
-        h('label', { class: 'me-row', title: 'Quantos metros o padrão cobre antes de repetir' }, h('span', {}, 'Escala (m)'),
-          h('input', { type: 'number', min: 0.05, step: 0.05, value: p.escala, onchange: e => set('escala', Math.max(0.05, Number(e.target.value) || 1)) }), h('span'))),
+        h('label', { class: 'me-row', title: 'Quantos metros o padrão cobre antes de repetir' }, h('span', {}, `Escala (${unitLabel()})`),
+          h('input', { type: 'number', min: toUnit(0.05), step: unitStep(), value: toUnit(p.escala), onchange: e => set('escala', Math.max(0.05, fromUnit(e.target.value) || 1)) }), h('span'))),
       section('Superfície',
         rough, gloss, check('mapaRugosidade', 'Mapa de rugosidade/brilho', 'Juntas e poros mais foscos, faces mais lisas'),
         slider('metal', 'Metal', 0, 1, 0.01), check('mapaMetal', 'Mapa de metal', 'Só as partes metálicas do padrão (ex.: chapa perfurada)'),
@@ -188,7 +189,7 @@ export function openMaterialEditor(app, startName) {
     const ttl = h('div', { class: 'me-title' }, h('strong', {}, name),
       h('button', { class: 'mini', title: 'Volta aos valores de fábrica deste material', onclick: () => { delete cur().render; applyMaterial(preview, name, cur()); draw(); renderControls(); renderMaps(); } }, 'Restaurar padrão'));
     ctrlBox.prepend(ttl);
-    scaleNote.textContent = `Esfera de 1,1 m e cubo de 0,9 m · o padrão repete a cada ${String(p.escala).replace('.', ',')} m`;
+    scaleNote.textContent = `Esfera de ${fmtLen(1.1, { suffix: true })} e cubo de ${fmtLen(0.9, { suffix: true })} · o padrão repete a cada ${fmtLen(p.escala, { suffix: true })}`;
   }
 
   function select(n) {

@@ -10,7 +10,7 @@
 // Arrastar o texto de uma cota selecionada muda o afastamento.
 import * as THREE from 'three';
 import { h, modal, toast } from './ui.js';
-import { getUnit, UNITS } from './units.js';
+import { getUnit, UNITS, toUnit, fromUnit, unitLabel, unitStep } from './units.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 const svg = (tag, attrs = {}) => { const e = document.createElementNS(SVGNS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
@@ -391,7 +391,7 @@ export class Dimensions {
     rows.push(row('Estilo', h('select', { onchange: e => { c.estilo = e.target.value; commit(); } }, this.styles.map(s => h('option', { value: s.id, selected: s.id === c.estilo }, s.nome))),
       h('button', { class: 'mini', style: 'margin-left:4px', onclick: () => this.stylesDialog(c.estilo) }, 'Estilos…')));
     rows.push(row('Orientação', h('select', { onchange: e => { c.orientacao = e.target.value; commit(); } }, Object.entries(ORIENT).map(([k, l]) => h('option', { value: k, selected: k === c.orientacao }, l)))));
-    rows.push(row('Afastamento (m)', h('input', { type: 'number', step: 0.05, value: c.offset || 0, onchange: e => { c.offset = Number(e.target.value) || 0; commit(); } })));
+    rows.push(row(`Afastamento (${unitLabel()})`, h('input', { type: 'number', step: unitStep(), value: toUnit(c.offset || 0), onchange: e => { c.offset = fromUnit(e.target.value) || 0; commit(); } })));
     rows.push(row('Texto substituto', h('input', { value: c.texto || '', placeholder: 'vazio = a medida', onchange: e => { c.texto = e.target.value.trim(); if (!c.texto) delete c.texto; commit(); } })));
     const params = Object.entries(PARAMS).map(([k, d]) => {
       const own = c.params && k in c.params;
