@@ -6,12 +6,20 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.42.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.42.2** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.42.2] — 2026-10-27 · Talude na aresta de cima do piso
+
+### Corrigido
+- O terreno aparecia **serrilhado na face lateral** do piso (os triângulos que cruzavam a borda ficavam abaixo do
+  topo): o perfil do talude agora continua um pouco para dentro do piso, então a superfície cruza a **aresta de
+  cima** exatamente na cota do topo, no corte e no aterro. A sobra embaixo do piso fica acima do fundo dele (o piso
+  corta tudo) — evita faces coincidentes que travavam o corte booleano.
 
 ## [2.42.1] — 2026-10-27 · Talude sai da aresta do piso
 

@@ -107,7 +107,7 @@ export function applySlopes(geo, terrainEl, floors) {
       return v.applyMatrix4(fromFloor).z;
     };
     const cfg = slopeConfig(so);
-    return { poly: poly.map(p => [p.x, p.y]), zAt, cfg, r: cfg.suavizar ? cfg.raio : 0 };
+    return { poly: poly.map(p => [p.x, p.y]), zAt, cfg, r: cfg.suavizar ? cfg.raio : 0, thick: so.thickness || 0.15 };
   });
   const xs = s.points.map(p => p[0]), ys = s.points.map(p => p[1]);
   const size = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
@@ -116,6 +116,7 @@ export function applySlopes(geo, terrainEl, floors) {
   geo.computeBoundingBox();
   const zb0 = geo.boundingBox.min.z;
   const far = Math.max(0.4, size / 80), near = Math.min(far, 0.2);
+  const band = near * 1.37;
   // até onde cada talude pode chegar (onde o perfil já passou de toda a altura do terreno): fora disso nada muda
   const zTop = geo.boundingBox.max.z, zLow = s.elevation + Math.min(0, ...((s.alturas || []).concat((s.forma || []).map(p => p[2])).filter(Number.isFinite)));
   for (const t of tops) {
@@ -140,6 +141,15 @@ export function applySlopes(geo, terrainEl, floors) {
     for (const t of tops) {
       // o talude sai da ARESTA do piso: cota do topo do piso no ponto mais perto do contorno
       const n = nearestOnPoly(x, y, t.poly), d = n.d, z0 = t.zAt(n.x, n.y);
+      if (d === 0) {
+        // dentro do piso: o perfil continua um pouco para dentro (a faixa da malha fina), assim a superfície cruza a
+        // ARESTA DE CIMA do piso exatamente na cota do topo — sem serrilhado na face lateral (o piso tira o resto)
+        // (no corte, fica acima do fundo do piso: o piso corta essa sobra inteira, sem faces coincidentes)
+        const e = Math.min(n.edge, band), cutSide = top >= z0;
+        if (cutSide && t.cfg.corte.ativo) top = z0 - Math.min(e * (t.cfg.corte.v / t.cfg.corte.h), t.thick * 0.45);
+        else if (!cutSide && t.cfg.aterro.ativo) top = z0 + e * (t.cfg.aterro.v / t.cfg.aterro.h);
+        continue;
+      }
       const hi = t.cfg.corte.ativo ? z0 + slopeRiseSmooth(d, t.cfg.corte, t.r) : Infinity;
       const lo = t.cfg.aterro.ativo ? z0 - slopeRiseSmooth(d, t.cfg.aterro, t.r) : -Infinity;
       // suavizado: o encontro com o terreno natural também concorda (largura em altura ≈ raio × inclinação)
