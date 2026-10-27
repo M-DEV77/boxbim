@@ -1,6 +1,6 @@
 {
   "name": "boxbim",
-  "version": "2.39.1",
+  "version": "2.40.0",
   "description": "BoxBim — modelagem BIM no navegador, em equipe, com IA e ponte com o Revit",
   "main": "server/index.js",
   "scripts": {

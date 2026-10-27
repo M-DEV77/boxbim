@@ -4,6 +4,8 @@
 // A geometria original de cada malha fica em userData._csgOrig (tirar o corte devolve a peça inteira).
 // TERRENO (piso com slab.terreno): os outros pisos cortam o terreno — sai o volume do contorno deles, do fundo do
 // piso para cima (escavação), como o "building pad" do Revit. Também recalcula sozinho.
+// TERRENO dentro de TERRENO: o terreno menor (área do contorno) corta o maior em toda a profundidade e desce até o
+// fundo dele — onde a superfície do menor fica abaixo da do maior é corte; onde fica acima, aterro (preenche).
 import * as THREE from 'three';
 import { Brush, Evaluator, SUBTRACTION } from 'three-bvh-csg';
 import { normalizeGeometry } from './forms.js';
@@ -22,6 +24,42 @@ function compact(geo) {
   }
   out.computeBoundingBox(); out.computeBoundingSphere();
   return out;
+}
+
+/** Área do contorno de um piso (m²). */
+const areaOf = el => Math.abs(THREE.ShapeUtils.area(el.userData.bim.slab.points.map(p => new THREE.Vector2(p[0], p[1]))));
+
+/** Caixa no modelo pela geometria ORIGINAL (sem cortes) das malhas do elemento. */
+function worldBox(el) {
+  el.updateMatrixWorld(true);
+  const box = new THREE.Box3();
+  el.traverse(o => {
+    if (!o.isMesh || o.userData.isEdge || !o.geometry) return;
+    const g = o.userData._csgOrig || o.geometry;
+    if (!g.boundingBox) g.computeBoundingBox();
+    box.union(g.boundingBox.clone().applyMatrix4(o.matrixWorld));
+  });
+  return box;
+}
+
+const overlapXY = (a, b) => {
+  const A = worldBox(a), B = worldBox(b);
+  return A.min.x < B.max.x && A.max.x > B.min.x && A.min.y < B.max.y && A.max.y > B.min.y;
+};
+
+/** Cópia da geometria com o fundo (vértices na cota "from", no modelo) levado até "to". */
+function deepened(geo, matrixWorld, from, to) {
+  const g = geo.clone(), inv = matrixWorld.clone().invert(), v = new THREE.Vector3(), pos = g.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i).applyMatrix4(matrixWorld);
+    if (Math.abs(v.z - from) > 1e-4) continue;
+    v.z = to;
+    v.applyMatrix4(inv);
+    pos.setXYZ(i, v.x, v.y, v.z);
+  }
+  pos.needsUpdate = true;
+  g.computeVertexNormals(); g.computeBoundingBox(); g.computeBoundingSphere();
+  return g;
 }
 
 const meshesOf = el => {
@@ -90,10 +128,28 @@ export class Cuts {
     return parts.join('|');
   }
 
-  /** Pisos (não terreno) que cortam um terreno. */
+  /** Pisos que cortam um terreno: os pisos comuns e os terrenos menores que se sobrepõem a ele. */
   padsFor(el) {
     if (!el.userData.bim.slab?.terreno) return [];
-    return this.viewer.elements().filter(o => o !== el && o.userData.bim.slab && !o.userData.bim.slab.terreno);
+    const A = areaOf(el);
+    return this.viewer.elements().filter(o => o !== el && o.userData.bim.slab
+      && (!o.userData.bim.slab.terreno || (areaOf(o) < A - 1e-6 && overlapXY(o, el))));
+  }
+
+  /**
+   * Fundo até onde um terreno desce: o fundo do terreno maior em que ele está (aterro até lá), ou null.
+   * Em cadeia (terreno dentro de terreno dentro de terreno) vale o fundo mais baixo.
+   */
+  hostBottom(el, depth = 0) {
+    if (!el.userData.bim.slab?.terreno || depth > 8) return null;
+    const A = areaOf(el), own = worldBox(el).min.z;
+    let low = null;
+    for (const o of this.viewer.elements()) {
+      if (o === el || !o.userData.bim.slab?.terreno || areaOf(o) <= A + 1e-6 || !overlapXY(o, el)) continue;
+      const z = this.hostBottom(o, depth + 1) ?? worldBox(o).min.z;
+      if (low === null || z < low) low = z;
+    }
+    return low !== null && low < own - 1e-4 ? low : null;
   }
 
   padSignature(pads) {
@@ -108,8 +164,9 @@ export class Cuts {
     if (THREE.ShapeUtils.isClockWise(pts)) pts = pts.reverse();
     const box = new THREE.Box3();
     pad.traverse(o => { if (o.isMesh && !o.userData.isEdge && o.geometry) { const g = o.userData._csgOrig || o.geometry; g.computeBoundingBox(); box.union(g.boundingBox.clone().applyMatrix4(o.matrixWorld)); } });
-    const z0 = Number.isFinite(box.min.z) ? box.min.z : s.elevation - s.thickness;
-    const geo = new THREE.ExtrudeGeometry(new THREE.Shape(pts), { depth: 1000, bevelEnabled: false });
+    // terreno menor: corta o maior em toda a profundidade (ele mesmo desce e preenche)
+    const z0 = s.terreno ? -1000 : Number.isFinite(box.min.z) ? box.min.z : s.elevation - s.thickness;
+    const geo = new THREE.ExtrudeGeometry(new THREE.Shape(pts), { depth: s.terreno ? 2000 : 1000, bevelEnabled: false });
     geo.translate(0, 0, z0);
     const b = new Brush(normalizeGeometry(geo));
     b.updateMatrixWorld(true);
@@ -123,18 +180,20 @@ export class Cuts {
     for (const el of v.elements()) {
       const ids = el.userData.bim.cortes || [];
       const pads = this.padsFor(el);
-      if (!ids.length && !pads.length) { if (el.userData._cutSig) this.restore(el); continue; }
+      const deepen = this.hostBottom(el);
+      if (!ids.length && !pads.length && deepen === null) { if (el.userData._cutSig) this.restore(el); continue; }
       const voids = ids.map(id => v.findById(id)).filter(Boolean);
-      const sig = this.signature(el, voids) + (pads.length ? `#${this.padSignature(pads)}` : '');
+      const sig = this.signature(el, voids) + (pads.length ? `#${this.padSignature(pads)}` : '') + (deepen !== null ? `~${deepen.toFixed(5)}` : '');
       if (!force && sig === el.userData._cutSig) continue;
       el.userData._cutSig = sig;
-      this.apply(el, voids, pads);
+      this.apply(el, voids, pads, deepen);
       changed = true;
     }
     if (changed) { v._prepare2D(v.model); v._bucketsDirty = true; }
   }
 
-  apply(el, voids, pads = []) {
+  apply(el, voids, pads = [], deepen = null) {
+    const ownBottom = deepen !== null ? worldBox(el).min.z : null;
     const voidBrushes = [];
     for (const p of pads) { try { voidBrushes.push(this.padBrush(p)); } catch (e) { console.warn('terreno', p.name, e); } }
     for (const vd of voids) for (const m of meshesOf(vd)) {
@@ -147,10 +206,11 @@ export class Cuts {
     for (const m of meshesOf(el)) {
       const orig = m.userData._csgOrig || m.geometry;
       m.userData._csgOrig = orig;
-      if (!voidBrushes.length) { m.geometry = orig; this.refreshEdges(m); continue; }
       m.updateMatrixWorld(true);
+      const base = deepen !== null ? deepened(orig, m.matrixWorld, ownBottom, deepen) : orig;
+      if (!voidBrushes.length) { m.geometry = base; this.refreshEdges(m); continue; }
       try {
-        let a = new Brush(normalizeGeometry(orig.clone()));
+        let a = new Brush(normalizeGeometry(base.clone()));
         m.matrixWorld.decompose(a.position, a.quaternion, a.scale);
         a.updateMatrixWorld(true);
         for (const vb of voidBrushes) {

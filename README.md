@@ -126,6 +126,9 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
 - **Terreno** (opção do piso, em Propriedades › Pontos do piso ou no Editar piso): só a **superfície** se desloca com os
   pontos (o fundo fica plano, abaixo do ponto mais baixo) e os **outros pisos cortam o terreno** — sai o volume do
   contorno deles, do fundo do piso para cima (escavação). O corte acompanha quando o piso se move ou muda.
+  **Terreno dentro de terreno** (platô, talude, corte e aterro): o terreno menor corta o maior em toda a
+  profundidade e desce até o fundo dele — onde a superfície do menor fica mais baixa é corte, onde fica mais alta
+  é aterro (preenche a parte baixa).
 - **Copiar** (2D no plano do nível ou 3D sobre os sólidos), com repetições, para outro nível ou por distância.
 - **Telhado**: perfil desenhado num eixo de trabalho vertical, extrudado; tipos de telhado com camadas (telha, ripas, caibros…).
 - **Espelhar** por uma linha (2D ou 3D; vertical, horizontal ou perpendicular ao eixo de trabalho).
@@ -425,4 +428,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.39.1</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.40.0</a>

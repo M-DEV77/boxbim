@@ -6,12 +6,20 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.39.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.40.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.40.0] — 2026-10-27 · Terreno cortado por terreno (corte e aterro)
+
+### Adicionado
+- Quando um terreno se sobrepõe a outro terreno **maior** (área do contorno), o menor corta o maior em **toda a
+  profundidade** e **desce até o fundo** dele: onde a superfície do menor está abaixo da do maior é corte, onde
+  está acima é aterro — a parte baixa fica preenchida. Funciona em cadeia (terreno dentro de terreno dentro de
+  terreno) e recalcula sozinho ao mover ou editar os terrenos.
 
 ## [2.39.1] — 2026-10-27 · Unidade do projeto em todas as ferramentas
 
