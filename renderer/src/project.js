@@ -7,7 +7,6 @@
 //     as de outros chegam pelo WebSocket e substituem o elemento (a última gravação vence);
 //   - presença: quem está no projeto, com a cor de cada um destacando o que ele selecionou.
 import { buildDimension } from './dims.js';
-import { buildTerrain } from './terrain.js';
 import * as THREE from 'three';
 import { rest, projectId } from './web/api.js';
 import { rebuildElement, systemKindOf } from './elements.js';
@@ -103,7 +102,7 @@ export class ProjectSession extends EventTarget {
     const b = el.userData.bim;
     const bim = clone(b);
     const dados = { bim, matriz: this.matrixOf(el) };
-    if (!systemKindOf(b) && !b.objectId && !b.linha && !b.forma && !b.eixo && !b.cota && !b.terreno) {
+    if (!systemKindOf(b) && !b.objectId && !b.linha && !b.forma && !b.eixo && !b.cota) {
       // geometria importada: a malha vai uma vez (com os materiais originais, sem o destaque de seleção)
       if (!el.userData._malha) el.userData._malha = meshJSON(el);
       dados.malha = el.userData._malha;
@@ -129,7 +128,6 @@ export class ProjectSession extends EventTarget {
     if (bim.forma) return buildForm(bim);
     if (bim.eixo) return buildWorkPlane(bim);
     if (bim.cota) return buildDimension(bim); // cota (desenho em overlay; dims.js)
-    if (bim.terreno) return buildTerrain(bim); // terreno (refeito pelos pontos; terrain.js)
     if (systemKindOf(bim)) {
       // parede, laje, pilar, viga, caixa: refeitos pelos dados (o script do objeto de sistema desenha)
       const g = new THREE.Group();

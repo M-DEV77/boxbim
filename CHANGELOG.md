@@ -6,27 +6,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.35.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.35.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
 
-## [2.35.0] — 2026-10-27 · Terreno
+## [2.35.1] — 2026-10-27 · Sem a ferramenta Terreno
 
-### Adicionado
-- **Terreno** (Modelar › Terreno), com três formas de criar:
-  - **por pontos de elevação** — clique cada ponto na planta com a cota digitada na barra (Ctrl+Z tira o último;
-    Enter cria);
-  - **por curvas de nível** — a partir de linhas selecionadas (desenhadas ou importadas de DXF): as que se encostam
-    viram uma curva; cada curva ganha a sua cota (ou usa a altura da própria linha, em DXF 3D); amostragem a cada N m;
-  - **por lista de pontos** — cole o levantamento "x y z" (espaço, ponto e vírgula ou tabulação; vírgula decimal e
-    "id x y z" aceitos).
-- A superfície é triangulada (Delaunay) e fechada num **bloco de terra** (espessura configurável) — aparece cortada,
-  com hachura de terra, nas plantas — com as **curvas de nível** desenhadas sobre ela (mestra a cada 5 intervalos).
-- Propriedades: intervalo das curvas, espessura, material e "Editar os pontos…" (lista x y z). Material "Terreno" de
-  fábrica (grama no Render, hachura de terra no corte) e cor própria no estilo Colorido.
+### Removido
+- **Ferramenta Terreno** (criada na 2.35.0, que não chegou a ser publicada): o comando da faixa, o elemento de
+  terreno e o material "Terreno" de fábrica saíram. Nada mais muda.
 
 ## [2.34.1] — 2026-10-26 · Ícones no Personalizar menus
 

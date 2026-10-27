@@ -884,16 +884,3 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: rgba(31
 img.tb-ico, .obj-icon.tb-ico { object-fit: contain; font-size: 15px; }
 .tb-ico-obj { color: #8fb8d6; font-size: 14px; }
 .tb-item .tb-ico { margin-right: 4px; }
-
-/* terreno (terrain.js) */
-.terrain-opts { display: grid; gap: 8px; }
-.terrain-opt { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 12px 14px; text-align: left; border-radius: 14px; background: rgba(255, 255, 255, .03); border: none; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08); }
-.terrain-opt:hover:not(:disabled) { box-shadow: inset 0 0 0 1px rgba(31, 191, 59, .5); background: rgba(31, 191, 59, .06); }
-.terrain-opt:disabled { opacity: .5; }
-.terrain-opt span { font-size: 12px; }
-.terrain-table { width: 100%; border-collapse: collapse; margin: 6px 0; }
-.terrain-table td, .terrain-table th { padding: 3px 6px; text-align: left; font-size: 12px; }
-.terrain-params { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; font-size: 12px; align-items: center; }
-.terrain-pts { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; overflow: visible; }
-.terrain-pts circle { fill: #e8b04a; stroke: #1b1f24; stroke-width: 1.5; }
-.terrain-pts text { fill: #1b1f24; font: 600 11px system-ui, sans-serif; paint-order: stroke; stroke: #ffffffcc; stroke-width: 3px; }

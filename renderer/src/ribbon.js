@@ -100,7 +100,6 @@ export function buildRibbon(app) {
 
     inserir: cmd('Inserir\nobjeto', 'object', () => app.openObjectLibrary(), { id: 'inserir-objeto', title: 'Inserir um Objeto da biblioteca (parede, laje, pilar, viga, caixa, portas, móveis…)' }),
     ambientes: cmd('Ambientes', 'layers', () => app.envs.openManager(), { id: 'ambientes', title: 'Ambientes e camadas do projeto (administrador): nomes, camadas e os desenhos de cada uma' }),
-    terreno: cmd('Terreno', 'terrain', () => app.terrainTool.open(), { id: 'terreno', title: 'Terreno (topografia): por pontos de elevação clicados na planta, por curvas de nível (linhas selecionadas) ou por lista de pontos x y z' }),
     telhado: cmd('Telhado', 'roof', () => app.roofTool.start(), { id: 'telhado', title: 'Telhado: desenhe o perfil num eixo de trabalho vertical e extrude; tipo com camadas (telha, ripas, caibros…)' }),
     laje: cmd('Laje', 'slab', () => app.slabTool.start(), { id: 'laje-contorno', title: 'Laje: contorno por croqui 2D, linhas 2D, paredes (face externa/interna/eixo) ou face de sólido; contornos internos viram furos', menu: 'Laje por contorno' }),
     pisoLinhas: cmd('Piso das\nlinhas', 'floorLines', () => app.floorFromLines(), { id: 'piso-linhas', title: 'Piso (laje) a partir das linhas 2D selecionadas — contornos fechados horizontais, ex.: tiradas das quinas dos sólidos' }),
@@ -169,7 +168,6 @@ export function buildRibbon(app) {
       button(C.inserir),
       fam('f-laje', 'Laje e piso', 'slab', [C.laje, C.pisoLinhas]),
       button(C.telhado),
-      button(C.terreno),
       fam('f-niveis', 'Níveis', 'level', [C.nivel, C.editarNiveis]),
       button(C.ortho),
       button(C.ambientes)),

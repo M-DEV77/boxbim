@@ -40,7 +40,6 @@ export const DEFAULT_MATERIALS = {
   'Telha cerâmica': { color: '#b5522e' },
   'Fibrocimento': { color: '#b9b8b0' },
   'Genérico': { color: '#c4c4c4' },
-  'Terreno': { color: '#8a7a55' },
 };
 
 const L = (name, material, thickness, fn = 'acabamento') => ({ name, material, thickness, function: fn });

@@ -47,7 +47,6 @@ const DEFAULTS = {
   'Impermeabilização': { rugosidade: 0.6 },
   'Isolamento térmico': { rugosidade: 1, textura: 'reboco', escala: 0.4 },
   'Telha cerâmica': { rugosidade: 0.7, textura: 'tijolo', escala: 0.5 },
-  'Terreno': { rugosidade: 1, textura: 'grama', escala: 2.5, normal: 0.9 },
 };
 
 /** Propriedades de render de um material da biblioteca (base + padrões do nome + o que estiver gravado). */

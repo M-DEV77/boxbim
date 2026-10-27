@@ -164,10 +164,6 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
   só no preenchimento do corte das plantas e forros, seguindo a escala da vista.
 - **Vistas no navegador**: renomeie (clique duplo ou ✎) e duplique (⧉) qualquer vista — a cópia tem câmera, estilo e
   escala próprios; ✕ apaga a cópia; botão direito abre o menu. Nomes e cópias ficam gravados no projeto.
-- **Terreno** (Modelar › Terreno): por **pontos de elevação** (clique cada ponto na planta com a cota digitada),
-  por **curvas de nível** (linhas selecionadas — desenhadas ou de DXF; cada curva ganha a sua cota ou usa a altura
-  da própria linha) ou por **lista de pontos** x y z colada. Superfície triangulada (Delaunay) num bloco de terra com
-  curvas de nível (mestra a cada 5); intervalo, espessura, material e pontos editáveis em Propriedades.
 - **Cotas** (Desenho › Cota): clique dois pontos (encaixe em pontas e quinas; Shift solta) e a posição da linha. Cada
   cota é um objeto do projeto, com **estilos de cota** e todos os parâmetros no painel Propriedades: texto (altura em mm
   de papel, cor, posição, fundo, texto substituto, prefixo/sufixo), número (unidade, casas, mostrar unidade), marca
@@ -418,4 +414,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.35.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.35.1</a>

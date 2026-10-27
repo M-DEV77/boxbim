@@ -40,7 +40,6 @@ flowchart LR
     MODEL --> DRAW["draw.js parede"]
     MODEL --> SLAB["slab-tool.js laje"]
     MODEL --> ROOF["roof-tool.js telhado"]
-    MODEL --> TERRAIN["terrain.js terreno<br/>(pontos, curvas de nível, lista)"]
     MODEL --> WALLED["wall-edit.js editar parede / até o telhado"]
     MODEL --> COPY["copy-tool.js / mirror-tool.js<br/>copiar, espelhar"]
     MODEL --> SK["sketch/*<br/>linhas 2D, aparar, canto, offset,<br/>extrudar, varrer, vazios, lineares"]
@@ -138,7 +137,8 @@ flowchart LR
 | 2026-10-26 | 2.33.0 | `ad3d349` | Cotas como objeto (`dims.js`: `bim.cota`, estilos `dados.estilosCota`, ferramenta com encaixe, overlay SVG em mm de papel, propriedades) |
 | 2026-10-26 | 2.34.0 | `99879f3` | Medidor do Chat IA (`chat-meter.js`: carregamento do modelo, contexto, tokens; `localModelInfo` consulta LM Studio/Ollama) |
 | 2026-10-26 | 2.34.1 | `fc4dab8` | Ícones no Personalizar menus (`toolbars.itemIcon`) |
-| 2026-10-27 | 2.35.0 | este commit | Terreno (`terrain.js`: Delaunay, bloco de terra, curvas de nível; por pontos, por curvas de nível, por lista) |
+| 2026-10-27 | 2.35.0 | `bd12f5c` | Ferramenta Terreno (não publicada; retirada na 2.35.1) |
+| 2026-10-27 | 2.35.1 | este commit | Retirada a ferramenta Terreno (revert da 2.35.0) |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.35.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.35.1</a>

@@ -28,7 +28,6 @@ const DEFAULTS = {
   'Vidro': { padrao: 'vidro', escala: 2, angulo: 45, cor: '#4a7fa8' },
   'Impermeabilização': { padrao: 'solido', cor: '#222222' },
   'Telha cerâmica': { padrao: 'diagonal', escala: 1.4 },
-  'Terreno': { padrao: 'terra', escala: 3, cor: '#5a4a32' },
   'Fibrocimento': { padrao: 'diagonal', escala: 1.2, angulo: 135 },
   'Genérico': { padrao: 'diagonal', escala: 3 },
 };
