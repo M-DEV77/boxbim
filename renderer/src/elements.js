@@ -265,7 +265,9 @@ export function subdivide(geo, maxLen) {
   const emit = (a, b, c) => { for (const t of [a, b, c]) t.forEach((arr, j) => out[j].push(...arr)); written += 3; };
   const split = (a, b, c, depth) => {
     const ab = lenXY(a, b), bc = lenXY(b, c), ca = lenXY(c, a), m = Math.max(ab, bc, ca);
-    if (m <= maxLen || depth > 10) return emit(a, b, c);
+    // maxLen pode ser uma função do centro do triângulo (malha mais fina onde precisa)
+    const lim = typeof maxLen === 'function' ? maxLen((a[pi][0] + b[pi][0] + c[pi][0]) / 3, (a[pi][1] + b[pi][1] + c[pi][1]) / 3, (a[pi][2] + b[pi][2] + c[pi][2]) / 3, m) : maxLen;
+    if (m <= lim || depth > 30) return emit(a, b, c);
     if (m === ab) { const p = mid(a, b); split(a, p, c, depth + 1); split(p, b, c, depth + 1); }
     else if (m === bc) { const p = mid(b, c); split(a, b, p, depth + 1); split(a, p, c, depth + 1); }
     else { const p = mid(c, a); split(a, b, p, depth + 1); split(p, b, c, depth + 1); }

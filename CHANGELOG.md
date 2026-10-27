@@ -6,12 +6,20 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.42.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.42.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.42.1] — 2026-10-27 · Talude sai da aresta do piso
+
+### Corrigido
+- O talude ficava com um **desnível** na borda quando o piso tinha pontos com altura: agora ele sai da **aresta do
+  piso**, na cota real do topo em cada ponto do contorno (com as alturas dos pontos e o piso inclinado).
+- Malha do terreno mais fina (20 cm) junto da aresta dos pisos, sem degraus serrilhados, e subdividida só até onde
+  o talude pode chegar (o fundo não é subdividido): o recálculo ficou várias vezes mais rápido.
 
 ## [2.42.0] — 2026-10-27 · Suavizar o talude
 
