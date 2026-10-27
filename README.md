@@ -128,8 +128,6 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
   (os lados se encontram), raio ou chanfro, como nas linhas 2D; desfaz arredondamentos e chanfros com o vivo.
 - **Pontos de elevação**: **dois cliques com uma pausa** no piso (ou Propriedades › Pontos de elevação) — o clique
   simples só seleciona.
-- **Edição 2D do contorno** (Propriedades do piso): **Canto** com raio ou chanfro (clique nos cantos do piso na vista)
-  ou vivo (clique no "+" do lado: os vizinhos se estendem até se encontrar), e **Offset** do contorno.
 - **Editar piso** (clique duplo no piso, Propriedades › Editar piso e linhas… ou faixa › Piso › Editar piso e linhas),
   como o Editar parede: nome, tipo, cota do topo e as **linhas do piso** num editor em planta — arrastar pontos
   (Shift trava 0°/90°), clique duplo num lado acrescenta, botão direito/Delete tira, clique num lado mostra e muda o
@@ -444,4 +442,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.46.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.46.1</a>

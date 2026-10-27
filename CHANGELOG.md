@@ -6,12 +6,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.46.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.46.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.46.1] — 2026-10-27 · Sem a Edição 2D nas propriedades do piso
+
+### Removido
+- O bloco **Edição 2D do contorno** (canto e offset) das Propriedades do piso: o canto agora é a ferramenta **Canto**
+  da faixa direto nos lados do piso, e o resto (offset, aparar, estender…) é pelo contorno em linhas 2D (clique duplo).
 
 ## [2.46.0] — 2026-10-27 · Canto da faixa no piso
 

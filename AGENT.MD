@@ -161,7 +161,8 @@ flowchart LR
 | 2026-10-27 | 2.43.0 | `f472c02` | Edição do piso na tela: medidas dos lados clicáveis e furos com pontos, "+" e medidas |
 | 2026-10-27 | 2.44.0 | `9dbe8e0` | Edição 2D do contorno do piso: canto (raio, chanfro, vivo) e offset |
 | 2026-10-27 | 2.45.0 | `2a9ea14` | Contorno do piso com linhas 2D (clique duplo) e pontos de elevação com dois cliques pausados |
-| 2026-10-27 | 2.46.0 | este commit | Canto da faixa (vivo, raio, chanfro) direto nos lados do piso |
+| 2026-10-27 | 2.46.0 | `c141c7f` | Canto da faixa (vivo, raio, chanfro) direto nos lados do piso |
+| 2026-10-27 | 2.46.1 | este commit | Tirado o bloco Edição 2D do contorno das Propriedades do piso |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.46.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.46.1</a>
