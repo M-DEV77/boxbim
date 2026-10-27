@@ -523,6 +523,46 @@ export class FloorPoints {
     this.commit(el);
   }
 
+  /**
+   * Canto entre dois lados (i e j) do mesmo contorno do piso, como o Canto das linhas 2D: os dois lados se estendem
+   * até se encontrar (somem os lados entre eles, pelo caminho mais curto) e, com raio ou chanfro, o canto é arredondado
+   * ou chanfrado. opts = { modo: 'vivo'|'raio'|'chanfro', raio, distancia }.
+   */
+  cornerEdges(el, r, i, j, opts) {
+    el = this.live(el);
+    const s = el.userData.bim.slab, ring = this.ring(s, r), n = ring.length;
+    const P = k => ring[((k % n) + n) % n];
+    // encontro das retas dos dois lados
+    const meet = (u, w) => {
+      const A = P(u), A2 = P(u + 1), B = P(w), B2 = P(w + 1);
+      const d1 = [A2[0] - A[0], A2[1] - A[1]], d2 = [B2[0] - B[0], B2[1] - B[1]], den = d1[0] * d2[1] - d1[1] * d2[0];
+      if (Math.abs(den) < 1e-12) return null;
+      const t = ((B[0] - A[0]) * d2[1] - (B[1] - A[1]) * d2[0]) / den;
+      return [A[0] + d1[0] * t, A[1] + d1[1] * t];
+    };
+    const X = meet(i, j);
+    if (!X) throw new Error('Os dois lados são paralelos: não se encontram.');
+    // somem os pontos do lado do encontro: entre os dois caminhos, o que tem os pontos mais perto de X
+    const far = (u, w) => { let m = 0; for (let k = u + 1; k !== w + 1 + (w < u ? n : 0); k++) m = Math.max(m, Math.hypot(P(k)[0] - X[0], P(k)[1] - X[1])); return m; };
+    if (far(j, i + (i < j ? n : 0)) < far(i, j + (j < i ? n : 0))) [i, j] = [j, i];
+    const between = (j - i - 1 + n) % n; // lados entre os dois
+    // novo contorno: de j+1 até i (inclusive) e o encontro X no lugar dos pontos i+1…j
+    const keep = [];
+    for (let k = 0; k < n - (between + 1); k++) keep.push(((j + 1 + k) % n + n) % n);
+    if (keep.length + 1 < 3) throw new Error('O contorno ficaria com menos de 3 pontos.');
+    const f = slabShapeFn(s), alt = s.alturas;
+    const pts = keep.map(k => ring[k]);
+    const ins = (opts.modo === 'raio' || opts.modo === 'chanfro')
+      ? cornerPoints(pts[pts.length - 1], X, pts[0], opts.modo, opts.modo === 'raio' ? opts.raio : opts.distancia)
+      : [X];
+    if (!ins) throw new Error(`Não cabe: ${opts.modo === 'raio' ? `raio de ${fmtLen(opts.raio, { suffix: true })}` : `chanfro de ${fmtLen(opts.distancia, { suffix: true })}`} é maior que os lados.`);
+    const next = [...pts, ...ins].map(p => p.map(round6));
+    if (!r && alt) s.alturas = [...keep.map(k => alt[k] || 0), ...ins.map(p => round6(f ? f(p[0], p[1]) : 0))];
+    if (r) s.holes[r - 1] = next; else s.points = next;
+    this.rebuildHandles(); this._key = this.shapeKey(s);
+    return this.commit(el);
+  }
+
   /** Offset do contorno externo (positivo = para fora). */
   offsetOutline(el, d) {
     el = this.live(el);

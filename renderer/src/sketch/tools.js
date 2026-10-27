@@ -299,6 +299,16 @@ export class SketchTool extends EventTarget {
         if (linearKind(el) !== 'varredura' && this.app.levels.ofElement(el) !== this.level) continue;
         out.push(...handlesOf(this.app, el));
       }
+      // lados dos pisos deste nível (contorno e furos): o Canto da faixa funciona neles
+      for (const el of this.viewer.elements()) {
+        const s = el.userData.bim?.slab;
+        if (!s || !el.visible || this.app.levels.ofElement(el) !== this.level) continue;
+        el.updateMatrixWorld(true);
+        const W = ([x, y]) => { const v = new THREE.Vector3(x, y, s.elevation).applyMatrix4(el.matrixWorld); return [v.x, v.y]; };
+        [s.points, ...(s.holes || [])].forEach((ring, r) => ring.forEach((p, k) => {
+          out.push({ kind: 'piso', el, i: r * 100000 + k, ring: r, edge: k, l: { a: W(p), b: W(ring[(k + 1) % ring.length]), arco: null, z: 0 }, apply: () => {} });
+        }));
+      }
     }
     return out;
   }
@@ -546,7 +556,21 @@ export class SketchTool extends EventTarget {
 
   edit(e) {
     const hit = this.pickHandle(e);
-    if (!hit) { this.app.status(`${SKETCH_MODES[this.mode].label}: clique sobre uma linha, parede, viga ou varredura.`); return; }
+    if (!hit) { this.app.status(`${SKETCH_MODES[this.mode].label}: clique sobre uma linha, parede, viga, varredura ou lado de piso.`); return; }
+    // lados de piso: só o Canto (entre dois lados do mesmo contorno); aparar/estender pelo contorno em linhas 2D
+    if (hit.kind === 'piso' || this.picked?.kind === 'piso') {
+      if (this.mode !== 'canto') { this.app.status('Para aparar ou estender o piso, dê clique duplo nele: o contorno vira linhas 2D.'); return; }
+      if (!this.picked) { this.picked = hit; this.app.status('Canto no piso: agora clique o outro lado do piso.'); return; }
+      const a = this.picked;
+      this.picked = null;
+      if (a.kind !== 'piso' || hit.kind !== 'piso' || a.el !== hit.el || a.ring !== hit.ring) { toast('Canto no piso: clique dois lados do mesmo contorno do piso.', 'error'); return; }
+      if (a.edge === hit.edge) return;
+      try {
+        this.app.floorPoints.cornerEdges(a.el, a.ring, a.edge, hit.edge, this.corner);
+        this.app.status(`Canto ${this.corner.modo === 'vivo' ? 'vivo' : this.corner.modo === 'raio' ? `com raio ${fmtLen(this.corner.raio, { suffix: true })}` : `chanfrado ${fmtLen(this.corner.distancia, { suffix: true })}`} no piso. Clique o próximo ou Esc.`);
+      } catch (err) { toast(err.message, 'error'); }
+      return;
+    }
     const same = (a, b) => a.el === b.el && a.i === b.i;
     const others = () => this.handles().filter(o => !same(o, hit)).map(o => o.l);
     try {

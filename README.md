@@ -124,6 +124,8 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
   enquanto isso — edite com as ferramentas 2D da faixa (Linha, Aparar, Estender, Canto, Offset, Mover…) e
   **✔ Concluir** (Enter) refaz o piso com os contornos fechados; **✖ Cancelar** (Esc) volta como estava. As linhas do
   esboço ficam só na sua tela.
+- **Canto da faixa (Desenho › Canto) no piso**: clique dois lados do mesmo contorno do piso (ou de um furo) — vivo
+  (os lados se encontram), raio ou chanfro, como nas linhas 2D; desfaz arredondamentos e chanfros com o vivo.
 - **Pontos de elevação**: **dois cliques com uma pausa** no piso (ou Propriedades › Pontos de elevação) — o clique
   simples só seleciona.
 - **Edição 2D do contorno** (Propriedades do piso): **Canto** com raio ou chanfro (clique nos cantos do piso na vista)
@@ -442,4 +444,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.45.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.46.0</a>

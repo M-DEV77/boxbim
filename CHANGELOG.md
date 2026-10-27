@@ -6,12 +6,21 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.45.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.46.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.46.0] — 2026-10-27 · Canto da faixa no piso
+
+### Adicionado
+- A ferramenta **Canto** da faixa (Desenho) funciona nos **lados dos pisos** do nível: clique dois lados do mesmo
+  contorno (ou do mesmo furo) — **vivo** estende os dois até se encontrarem (somem os lados do meio, do lado do
+  canto, ex.: um arredondamento ou chanfro), **raio** arredonda e **chanfro** corta o canto. As alturas dos pontos
+  acompanham.
+- Os lados dos pisos também servem de limite para **Aparar** e **Estender** as linhas 2D.
 
 ## [2.45.0] — 2026-10-27 · Contorno do piso com linhas 2D
 
