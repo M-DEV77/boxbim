@@ -152,7 +152,8 @@ flowchart LR
 | 2026-10-27 | 2.39.0 | `6b4670a` | Opção Terreno no piso: só a superfície segue os pontos e os outros pisos cortam o terreno |
 | 2026-10-27 | 2.39.1 | `c108a4d` | Unidade do projeto (m/cm/mm) em todas as ferramentas: diálogos, propriedades, objetos, tipos e painéis abertos |
 | 2026-10-27 | 2.40.0 | `a9f0409` | Terreno cortado por terreno menor: corte em toda a profundidade e aterro até o fundo |
-| 2026-10-27 | 2.41.0 | este commit | Talude no piso: corte e aterro com proporção, altura das instâncias e distância entre elas |
+| 2026-10-27 | 2.41.0 | `c8d2682` | Talude no piso: corte e aterro com proporção, altura das instâncias e distância entre elas |
+| 2026-10-27 | 2.42.0 | este commit | Suavizar o talude: raio nas quinas do perfil e no encontro com o terreno |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.41.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.42.0</a>

@@ -6,12 +6,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.41.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.42.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.42.0] — 2026-10-27 · Suavizar o talude
+
+### Adicionado
+- Opção **Suavizar · raio** no Talude do piso (`talude.suavizar`, `talude.raio`, padrão 1 m): as quinas do perfil
+  (crista, pé e bordas das bermas) viram curvas da largura do raio e o encontro com o terreno natural concorda
+  (mínimo/máximo suaves). Na borda do piso o talude continua começando na cota do topo.
 
 ## [2.41.0] — 2026-10-27 · Talude de corte e aterro
 

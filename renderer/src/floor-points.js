@@ -315,6 +315,10 @@ export class FloorPoints {
       h('label', { class: 'inline', title: 'O terreno em volta do piso é cortado ou aterrado em talude até encontrar o piso (na cota do topo dele)' },
         h('input', { type: 'checkbox', checked: cfg.ativo, onchange: e => save({ ativo: e.target.checked }) }), 'Talude em volta do piso'),
       cfg.ativo ? h('div', { class: 'small muted' }, 'Vale nos terrenos em volta: acima do piso o terreno é cortado, abaixo é aterrado.') : null,
+      cfg.ativo ? h('table', { class: 'slope-table' }, h('tr', { title: 'Arredonda a crista, o pé, as bordas das bermas e o encontro com o terreno natural' },
+        h('td', {}, h('label', { class: 'inline' }, h('input', { type: 'checkbox', checked: cfg.suavizar, onchange: e => save({ suavizar: e.target.checked }) }), `Suavizar · raio (${u})`)),
+        h('td', {}, h('input', { type: 'number', min: 0, step: unitStep(), value: toUnit(cfg.raio), disabled: !cfg.suavizar, title: `Raio da suavização (${u})`, style: 'width:100%',
+          onchange: e => { const x = fromUnit(e.target.value); if (x > 0) save({ raio: x }); } })))) : null,
       cfg.ativo ? part('corte', 'Corte') : null,
       cfg.ativo ? part('aterro', 'Aterro') : null,
     ];

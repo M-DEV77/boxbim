@@ -4,6 +4,8 @@
 //     v : h ....... proporção do trecho (1 : 1,5 = sobe 1 a cada 1,5 na horizontal)
 //     altura ...... altura de cada instância (0 = um talude só, contínuo)
 //     berma ....... distância (horizontal, plana) entre as instâncias
+//   slab.talude.suavizar + raio: arredonda as quinas (crista, pé, bordas das bermas) e o encontro com o terreno
+//     natural — média do perfil numa faixa de "raio" e mínimo/máximo suaves no encontro com o terreno.
 // Aplicado nos terrenos (slab.terreno) pelo sistema de cortes (sketch/cuts.js): a superfície do terreno fica presa entre
 // o perfil de aterro (embaixo) e o de corte (em cima), medidos a partir do contorno do piso, na cota do topo dele.
 import * as THREE from 'three';
@@ -19,6 +21,8 @@ export function slopeConfig(s) {
   const t = s.talude || {};
   return {
     ativo: !!t.ativo,
+    suavizar: !!t.suavizar,
+    raio: Number.isFinite(Number(t.raio)) && Number(t.raio) > 0 ? Number(t.raio) : 1,
     corte: { ...SLOPE_DEFAULTS.corte, ...(t.corte || {}) },
     aterro: { ...SLOPE_DEFAULTS.aterro, ...(t.aterro || {}) },
   };
@@ -34,6 +38,23 @@ export function slopeRise(d, c) {
   const n = Math.floor(d / cycle), rem = d - n * cycle;
   return n * H + Math.min(rem, run) * k;
 }
+
+/**
+ * Perfil suavizado: média do perfil na faixa [d − r, d] (o lado de dentro do contorno vale 0, então na borda do
+ * piso continua em 0 — o piso não muda) — as quinas viram curvas de largura r.
+ */
+export function slopeRiseSmooth(d, c, r) {
+  if (!(r > 0)) return slopeRise(d, c);
+  if (d <= 0) return 0;
+  const N = 10;
+  let s = 0;
+  for (let i = 0; i <= N; i++) s += slopeRise(d - r * i / N, c);
+  return s / (N + 1);
+}
+
+/** Mínimo e máximo suaves (concordância de largura k entre as duas superfícies). */
+const smin = (a, b, k) => { if (!(k > 0)) return Math.min(a, b); const h = Math.max(k - Math.abs(a - b), 0) / k; return Math.min(a, b) - h * h * k / 4; };
+const smax = (a, b, k) => -smin(-a, -b, k);
 
 const inside = (x, y, poly) => {
   let r = false;
@@ -77,7 +98,8 @@ export function applySlopes(geo, terrainEl, floors) {
     o.updateMatrixWorld(true);
     const so = o.userData.bim.slab;
     const poly = so.points.map(([x, y]) => new THREE.Vector3(x, y, so.elevation).applyMatrix4(o.matrixWorld).applyMatrix4(inv));
-    return { poly: poly.map(p => [p.x, p.y]), z: poly[0].z, cfg: slopeConfig(so) };
+    const cfg = slopeConfig(so);
+    return { poly: poly.map(p => [p.x, p.y]), z: poly[0].z, cfg, r: cfg.suavizar ? cfg.raio : 0 };
   });
   const xs = s.points.map(p => p[0]), ys = s.points.map(p => p[1]);
   const size = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
@@ -92,9 +114,14 @@ export function applySlopes(geo, terrainEl, floors) {
     let top = top0;
     for (const t of tops) {
       const d = distOut(x, y, t.poly);
-      const hi = t.cfg.corte.ativo ? t.z + slopeRise(d, t.cfg.corte) : Infinity;
-      const lo = t.cfg.aterro.ativo ? t.z - slopeRise(d, t.cfg.aterro) : -Infinity;
-      top = Math.min(Math.max(top, lo), hi);
+      const hi = t.cfg.corte.ativo ? t.z + slopeRiseSmooth(d, t.cfg.corte, t.r) : Infinity;
+      const lo = t.cfg.aterro.ativo ? t.z - slopeRiseSmooth(d, t.cfg.aterro, t.r) : -Infinity;
+      // suavizado: o encontro com o terreno natural também concorda (largura em altura ≈ raio × inclinação)
+      const kc = t.r * (t.cfg.corte.v / t.cfg.corte.h), ka = t.r * (t.cfg.aterro.v / t.cfg.aterro.h);
+      if (t.r > 0) {
+        if (Number.isFinite(lo) && d > 0) top = smax(top, lo, ka); else top = Math.max(top, lo);
+        if (Number.isFinite(hi) && d > 0) top = smin(top, hi, kc); else top = Math.min(top, hi);
+      } else top = Math.min(Math.max(top, lo), hi);
     }
     if (Math.abs(top - top0) < 1e-6) continue;
     top = Math.max(top, zb + 0.01);
