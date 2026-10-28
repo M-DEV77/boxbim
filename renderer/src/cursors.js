@@ -34,19 +34,24 @@ const ALIAS = { arco: 'circulo', polilinha: 'linha', 'linhas-solido': 'arestas' 
 
 const cache = new Map();
 
-/** Valor CSS do ponteiro da ferramenta (mira com o ícone da ferramenta). */
-export function toolCursor(name) {
-  const key = ALIAS[name] || name;
+/**
+ * Valor CSS do ponteiro da ferramenta (mira com o ícone da ferramenta). state 'ok': o ponteiro está sobre algo que a
+ * ferramenta pode usar (ícone verde e anel na mira) — dá a noção de acerto antes do clique.
+ */
+export function toolCursor(name, state = '') {
+  const base = ALIAS[name] || name, key = state ? `${base}:${state}` : base;
   if (cache.has(key)) return cache.get(key);
-  const icon = ICONS[key] || '';
+  const ok = state === 'ok';
+  const icon = ICONS[base] || '';
   // mira: 4 traços em volta do ponto (12, 12), com folga de 3 px no meio
   const cross = 'M12 1.5 V8.5 M12 15.5 V22.5 M1.5 12 H8.5 M15.5 12 H22.5';
   const g = d => `<path d="${d}"/>`;
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none" stroke-linecap="round" stroke-linejoin="round">'
     + `<g stroke="#10141a" stroke-width="3.4" opacity=".9">${g(cross)}${icon}</g>`
     + `<g stroke="#ffffff" stroke-width="1.4">${g(cross)}</g>`
-    + `<g stroke="#ff5fe2" stroke-width="1.5">${icon}</g>`
-    + '<circle cx="12" cy="12" r="1" fill="#ff5fe2" stroke="none"/>'
+    + `<g stroke="${ok ? '#39ff6a' : '#ff5fe2'}" stroke-width="1.5">${icon}</g>`
+    + (ok ? '<circle cx="12" cy="12" r="4.5" stroke="#39ff6a" stroke-width="1.4"/>' : '')
+    + `<circle cx="12" cy="12" r="1" fill="${ok ? '#39ff6a' : '#ff5fe2'}" stroke="none"/>`
     + '</svg>';
   const value = `url("data:image/svg+xml,${encodeURIComponent(svg)}") 12 12, crosshair`;
   cache.set(key, value);

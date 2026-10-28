@@ -457,6 +457,16 @@ export class FloorPoints {
    */
   cornerEdges(el, r, i, j, opts) {
     el = this.live(el);
+    const res = this.cornerCompute(el, r, i, j, opts);
+    const s = el.userData.bim.slab;
+    if (!r && res.alt) s.alturas = res.alt;
+    if (r) s.holes[r - 1] = res.next; else s.points = res.next;
+    this.rebuildHandles(); this._key = this.shapeKey(s);
+    return this.commit(el);
+  }
+
+  /** O contorno como ficaria com o canto (sem mudar o piso) — { next, alt }. Usado também na prévia. */
+  cornerCompute(el, r, i, j, opts) {
     const s = el.userData.bim.slab, ring = this.ring(s, r), n = ring.length;
     const P = k => ring[((k % n) + n) % n];
     // encontro das retas dos dois lados
@@ -484,10 +494,7 @@ export class FloorPoints {
       : [X];
     if (!ins) throw new Error(`Não cabe: ${opts.modo === 'raio' ? `raio de ${fmtLen(opts.raio, { suffix: true })}` : `chanfro de ${fmtLen(opts.distancia, { suffix: true })}`} é maior que os lados.`);
     const next = [...pts, ...ins].map(p => p.map(round6));
-    if (!r && alt) s.alturas = [...keep.map(k => alt[k] || 0), ...ins.map(p => round6(f ? f(p[0], p[1]) : 0))];
-    if (r) s.holes[r - 1] = next; else s.points = next;
-    this.rebuildHandles(); this._key = this.shapeKey(s);
-    return this.commit(el);
+    return { next, alt: !r && alt ? [...keep.map(k => alt[k] || 0), ...ins.map(p => round6(f ? f(p[0], p[1]) : 0))] : null };
   }
 
   // ------------------------------------------------------------ rodapé (perfil de objeto ao longo do contorno)

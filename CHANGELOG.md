@@ -6,12 +6,21 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.57.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.58.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.58.0] — 2026-10-28 · Prévia do Canto
+
+### Adicionado
+- **Prévia do Canto** (linhas 2D, contorno do piso em edição e lados de piso): a 1ª linha escolhida fica em
+  **laranja**, a linha sob o mouse em **amarelo** e o **resultado** (raio, chanfro ou vivo) em **verde**, antes do
+  segundo clique — por cima de tudo, inclusive do neon do contorno.
+- O **ponteiro** de Aparar, Estender e Canto fica **verde com um anel** quando está sobre uma linha que a ferramenta
+  pode usar (toolCursor com estado "ok"); Aparar e Estender também destacam a linha sob o mouse.
 
 ## [2.57.0] — 2026-10-28 · Carregando na edição do terreno
 

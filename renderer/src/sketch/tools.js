@@ -28,11 +28,18 @@ import { handlesOf, linearKind, offsetPlan, offsetLinear, KIND_LABEL } from './l
 import { fmtLen, fromUnit, toUnit, unitLabel, unitStep } from '../units.js';
 import { toolCursor } from '../cursors.js';
 import { snapSegments, snapPick, showSnapMarker } from '../osnap.js';
+import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
+import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 
 const SNAP_PX = 12;
 const GRID = 0.01;
 const fmtM = v => fmtLen(v);
 const RUBBER = new THREE.LineDashedMaterial({ color: 0x1fbf3b, dashSize: 0.2, gapSize: 0.1, depthTest: false });
+// destaques das ferramentas de edição (por cima de tudo, inclusive do neon do contorno do piso)
+const HOT_MAT = new LineMaterial({ color: 0xffd23f, linewidth: 4, depthTest: false, transparent: true, opacity: 0.95 });   // linha sob o mouse
+const PICK_MAT = new LineMaterial({ color: 0xff8a1f, linewidth: 4, depthTest: false, transparent: true, opacity: 0.95 });  // 1ª linha escolhida
+const RESULT_MAT = new LineMaterial({ color: 0x39ff6a, linewidth: 2.5, depthTest: false, transparent: true, opacity: 0.95 }); // como vai ficar
 const store = (k, v) => { try { localStorage.setItem(k, v); } catch { /* sem armazenamento */ } };
 const load = k => { try { return localStorage.getItem(k); } catch { return null; } };
 
@@ -355,6 +362,43 @@ export class SketchTool extends EventTarget {
 
   clearPreview() { for (const c of [...(this.group?.children || [])]) { this.group.remove(c); c.geometry?.dispose(); } }
 
+  /** Linhas grossas de destaque (pontos no plano do desenho, pares de trechos) por cima de tudo. */
+  thick(segs, mat) {
+    const arr = [];
+    for (const pts of segs) for (let i = 1; i < pts.length; i++) {
+      const a = this.toWorld(pts[i - 1], 0.004), b = this.toWorld(pts[i], 0.004);
+      arr.push(a.x, a.y, a.z, b.x, b.y, b.z);
+    }
+    if (!arr.length) return;
+    const size = this.viewer.renderer.getSize(new THREE.Vector2());
+    mat.resolution.set(size.x, size.y);
+    const l = new LineSegments2(new LineSegmentsGeometry().setPositions(arr), mat);
+    l.renderOrder = 1000;
+    this.group.add(l);
+  }
+
+  /** Prévia do Canto: a 1ª linha (laranja), a linha sob o mouse (amarelo) e o resultado (verde) antes do clique. */
+  cornerPreview(hit) {
+    const a = this.picked;
+    if (a) this.thick([segPoints(a.l)], PICK_MAT);
+    if (!hit) return;
+    this.thick([segPoints(hit.l)], HOT_MAT);
+    if (!a || (a.el === hit.el && a.i === hit.i)) return;
+    try {
+      if (a.kind === 'piso' || hit.kind === 'piso') {
+        if (a.kind !== 'piso' || hit.kind !== 'piso' || a.el !== hit.el || a.ring !== hit.ring || a.edge === hit.edge) return;
+        const res = this.app.floorPoints.cornerCompute(a.el, a.ring, a.edge, hit.edge, this.corner);
+        const m = a.el.matrixWorld, inv = this.inverse;
+        const z = a.el.userData.bim.slab.elevation;
+        const pts = res.next.map(([x, y]) => { const q = new THREE.Vector3(x, y, z).applyMatrix4(m).applyMatrix4(inv); return [q.x, q.y]; });
+        this.thick([[...pts, pts[0]]], RESULT_MAT);
+        return;
+      }
+      const r = corner(a.l, a.p, hit.l, hit.p, this.corner);
+      this.thick([segPoints(r.l1), segPoints(r.l2), ...(r.extra ? [segPoints(r.extra)] : [])], RESULT_MAT);
+    } catch { /* não fecha (paralelas, não cabe): sem prévia */ }
+  }
+
   previewPts(pts, closed = false) {
     const v = pts.map(p => this.toWorld(p, 0.003));
     if (closed && v.length) v.push(v[0].clone());
@@ -384,7 +428,10 @@ export class SketchTool extends EventTarget {
     if (['aparar', 'estender', 'canto'].includes(this.mode)) {
       const hit = this.pickHandle(e);
       this.clearPreview();
-      if (hit) this.previewPts(segPoints(hit.l));
+      // ponteiro: muda (verde) quando está sobre uma linha que a ferramenta pode usar
+      this.viewer.renderer.domElement.style.cursor = toolCursor(this.mode, hit ? 'ok' : '');
+      if (this.mode === 'canto') this.cornerPreview(hit);
+      else if (hit) this.thick([segPoints(hit.l)], HOT_MAT);
       this.tip.hidden = !hit || hit.kind === 'linha';
       if (hit && hit.kind !== 'linha') {
         const pr = this.tip.parentElement.getBoundingClientRect();
