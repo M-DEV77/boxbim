@@ -6,12 +6,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.52.3** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.53.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.53.0] — 2026-10-28 · Contorno aberto em vermelho
+
+### Adicionado
+- Na edição do contorno do piso, as linhas de um contorno **que não fecha** ficam em **vermelho** (neon) e cada
+  **ponta solta** ganha um **X** vermelho — é o que falta ligar; o texto do painel também fica vermelho dizendo
+  quantos contornos estão abertos. Fechou, volta ao rosa.
 
 ## [2.52.3] — 2026-10-28 · Edição do piso não trava depois de copiar
 

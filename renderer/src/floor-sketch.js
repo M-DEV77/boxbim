@@ -19,6 +19,10 @@ const NEON_HALO = new LineMaterial({ color: 0xff4fe0, linewidth: 8, depthTest: f
 // selecionadas: ciano (a cor muda ao selecionar, para ver o que vai ser editado)
 const SEL_CORE = new LineMaterial({ color: 0xd9fbff, linewidth: 1.8, depthTest: false, transparent: true });
 const SEL_GLOW = new LineMaterial({ color: 0x00e5ff, linewidth: 6, depthTest: false, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending });
+// abertas (contorno sem fechar): vermelho
+const OPEN_CORE = new LineMaterial({ color: 0xffd0d0, linewidth: 1.5, depthTest: false, transparent: true });
+const OPEN_GLOW = new LineMaterial({ color: 0xff2a2a, linewidth: 5, depthTest: false, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending });
+const OPEN_HALO = new LineMaterial({ color: 0xff3b3b, linewidth: 11, depthTest: false, transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending });
 const SEL_HALO = new LineMaterial({ color: 0x00b3ff, linewidth: 12, depthTest: false, transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending });
 
 const r6 = v => +v.toFixed(6);
@@ -104,11 +108,43 @@ export class FloorSketch {
     for (const c of [...this.neonGroup.children]) { this.neonGroup.remove(c); c.geometry.dispose(); }
     if (!this.active) { this.neonGroup.parent?.remove(this.neonGroup); return; }
     if (!this.neonGroup.parent) v.overlay.add(this.neonGroup);
-    const arr = [], sel = [];
-    for (const e of v.elements().filter(x => this.isTemp(x) && x.visible)) {
-      const pts = worldPoints(e.userData.bim.linha), out = v.selected.has(e) ? sel : arr;
+    const arr = [], sel = [], open = [], ends = [];
+    const els = v.elements().filter(x => this.isTemp(x) && x.visible);
+    // contorno sem fechar: as linhas ligadas a uma ponta solta (sem outra linha nela) ficam em VERMELHO, e as pontas
+    // soltas ganham um X — é o que falta fechar
+    const key = p => `${p.x.toFixed(4)},${p.y.toFixed(4)}`;
+    const W = new Map(els.map(e => [e, worldPoints(e.userData.bim.linha)]));
+    const deg = new Map(), byKey = new Map();
+    for (const [e, w] of W) for (const p of [w[0], w[w.length - 1]]) {
+      const k = key(p);
+      deg.set(k, (deg.get(k) || 0) + 1);
+      if (!byKey.has(k)) byKey.set(k, []);
+      byKey.get(k).push(e);
+    }
+    const isOpen = new Set();
+    for (const [e, w] of W) {
+      const loose = [w[0], w[w.length - 1]].filter(p => deg.get(key(p)) === 1);
+      ends.push(...loose);
+      if (!loose.length || isOpen.has(e)) continue;
+      // toda a cadeia ligada a esta linha está aberta
+      const q = [e];
+      isOpen.add(e);
+      while (q.length) {
+        const c = W.get(q.pop());
+        for (const p of [c[0], c[c.length - 1]]) for (const n of byKey.get(key(p)) || []) if (!isOpen.has(n)) { isOpen.add(n); q.push(n); }
+      }
+    }
+    for (const e of els) {
+      const pts = W.get(e), out = v.selected.has(e) ? sel : isOpen.has(e) ? open : arr;
       for (let i = 1; i < pts.length; i++) out.push(pts[i - 1].x, pts[i - 1].y, pts[i - 1].z + 0.01, pts[i].x, pts[i].y, pts[i].z + 0.01);
     }
+    // X nas pontas soltas (tamanho pela extensão do esboço)
+    if (ends.length) {
+      const all = [...W.values()].flat(), xs = all.map(p => p.x), ys = all.map(p => p.y);
+      const s = Math.max(0.12, Math.hypot(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) * 0.012);
+      for (const p of ends) open.push(p.x - s, p.y - s, p.z + 0.01, p.x + s, p.y + s, p.z + 0.01, p.x - s, p.y + s, p.z + 0.01, p.x + s, p.y - s, p.z + 0.01);
+    }
+    this.openEnds = ends.length;
     const size = v.renderer.getSize(new THREE.Vector2());
     const draw = (pos, mats) => {
       if (!pos.length) return;
@@ -120,6 +156,7 @@ export class FloorSketch {
       }
     };
     draw(arr, [NEON_HALO, NEON_GLOW, NEON_CORE]);
+    draw(open, [OPEN_HALO, OPEN_GLOW, OPEN_CORE]);
     draw(sel, [SEL_HALO, SEL_GLOW, SEL_CORE]);
   }
 
@@ -246,7 +283,8 @@ export class FloorSketch {
   refreshInfo() {
     if (!this.active || !this.info) return;
     const { els, loops, chains } = this.loops();
-    this.info.textContent = `${els.length} linha(s) · ${loops.length} contorno(s) fechado(s)${chains.length ? ` · ${chains.length} aberto(s) — feche para concluir` : ''}`;
+    this.info.textContent = `${els.length} linha(s) · ${loops.length} contorno(s) fechado(s)${chains.length ? ` · ${chains.length} aberto(s) — feche o que está em vermelho para concluir` : ''}`;
+    this.info.classList.toggle('floor-open', chains.length > 0);
   }
 
   /** Concluir (ok = true) refaz o piso com as linhas; cancelar volta como estava. Tira as linhas do esboço. */

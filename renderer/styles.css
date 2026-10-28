@@ -973,3 +973,4 @@ img.tb-ico, .obj-icon.tb-ico { object-fit: contain; font-size: 15px; }
   color: #bfeaff; background: rgba(15, 19, 23, .78); border: 1px solid transparent; border-radius: 2px; cursor: move; white-space: nowrap;
   font-variant-numeric: tabular-nums; }
 .guide-dim-label:hover { border-color: #7fd7ff; color: #fff; }
+.small.muted.floor-open { color: #ff6b6b; }

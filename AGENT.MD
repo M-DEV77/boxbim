@@ -177,7 +177,8 @@ flowchart LR
 | 2026-10-28 | 2.52.0 | `7a1357c` | Snap do projeto (ponta, meio, perpendicular), cotas guias arrastáveis, offset sem laço, barras verticais |
 | 2026-10-28 | 2.52.1 | `c4635c6` | Seleção bloqueada (só as linhas do contorno) durante a edição do piso |
 | 2026-10-28 | 2.52.2 | `8e8546e` | Clique seleciona cada linha do contorno (atravessa o bloqueado; linha ganha da superfície) |
-| 2026-10-28 | 2.52.3 | este commit | Copiar contorno/linhas de um clique: não trava mais as ferramentas da edição do piso |
+| 2026-10-28 | 2.52.3 | `0e4da5d` | Copiar contorno/linhas de um clique: não trava mais as ferramentas da edição do piso |
+| 2026-10-28 | 2.53.0 | este commit | Contorno do piso aberto em vermelho, com X nas pontas soltas |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.52.3</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.53.0</a>
