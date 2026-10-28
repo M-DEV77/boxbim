@@ -162,6 +162,10 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
 - **Terreno** (opção do piso, em Propriedades › Pontos do piso ou no Editar piso): só a **superfície** se desloca com os
   pontos (o fundo fica plano, abaixo do ponto mais baixo) e os **outros pisos cortam o terreno** — sai o volume do
   contorno deles, do fundo do piso para cima (escavação). O corte acompanha quando o piso se move ou muda.
+  **Pontos de altura no meio do terreno**: com os pontos do terreno à mostra (dois cliques com uma pausa), a barra
+  flutuante **▲ Terreno › ＋ Ponto de altura** coloca pontos dentro dele (morro, vale, platô). Clique no terreno,
+  digite a altura e repita; Esc termina. Os pontos podem ser arrastados, ter a altura mudada com um clique e ser
+  apagados com o botão direito.
   **Terreno dentro de terreno** (platô, talude, corte e aterro): o terreno menor corta o maior em toda a
   profundidade e desce até o fundo dele — onde a superfície do menor fica mais baixa é corte, onde fica mais alta
   é aterro (preenche a parte baixa).
@@ -472,4 +476,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.62.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.63.0</a>

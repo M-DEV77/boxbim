@@ -7,12 +7,14 @@
 //   clicar num ponto ........... digita a ALTURA do ponto (deslocamento em relação ao topo do piso): o piso inclina
 //   botão direito no ponto ..... apaga o ponto (o contorno fica com pelo menos 3)
 //   ＋ Ponto interno ............ clique dentro do piso para colocar um ponto de forma (rampa, caimento, ralo…)
+//   TERRENO: com os pontos à mostra, uma barra flutuante "Pontos de altura" coloca pontos NO MEIO do terreno (morro,
+//                               vale, platô): clique no terreno e digite a altura; Esc termina
 //   medida de cada lado ........ aparece na tela (como no Editar piso); clique nela para digitar o comprimento
 //   furos ...................... pontos, "+" e medidas também nos furos (botão direito no último ponto apaga o furo)
 //   Canto da faixa ............. entre dois lados do piso: vivo, raio ou chanfro (cornerEdges)
 // Dados: slab.points (contorno), slab.alturas[i] (altura de cada ponto do contorno), slab.forma [[x, y, dz], …].
 import * as THREE from 'three';
-import { h, toast } from './ui.js';
+import { h, toast, floatBar } from './ui.js';
 import { rebuildElement, slabShapeFn } from './elements.js';
 import { slopeConfig } from './slopes.js';
 import { fmtLen, fromUnit, toUnit, unitLabel, unitStep } from './units.js';
@@ -110,9 +112,36 @@ export class FloorPoints {
       this._slow = setTimeout(() => { this._slow = 0; this.showPoints(obj); }, 320);
     });
     cv.addEventListener('dblclick', () => this.cancelSlowClick());
+    // barra flutuante do terreno: pontos de altura no meio
+    this.addBtn = h('button', { onclick: () => (this.placing ? this.stopPlacing() : this.startPlacing()),
+      title: 'Clique no terreno para colocar um ponto de altura no meio dele (depois digite a altura) · Esc termina' }, '＋ Ponto de altura');
+    this.bar = h('div', { class: 'draw-bar', hidden: true }, h('strong', {}, '▲ Terreno'), this.addBtn,
+      h('span', { class: 'muted' }, 'arraste os pontos · clique num ponto para a altura · botão direito apaga'),
+      h('button', { onclick: () => { this.stopPlacing(); this.pointsFor = null; this.update(); } }, 'Sair'));
+    floatBar(this.bar, 'pontos-terreno');
   }
 
   get viewer() { return this.app.viewer; }
+
+  /** Botão da barra do terreno conforme o modo (colocando pontos ou não). */
+  syncBar() {
+    if (this.addBtn.classList.contains('on') === this.placing) return;
+    this.addBtn.classList.toggle('on', this.placing);
+    this.addBtn.textContent = this.placing ? '✔ Terminar pontos' : '＋ Ponto de altura';
+  }
+
+  /** A barra do terreno não fica escondida atrás de outra barra flutuante (ex.: a do Mover): desce para baixo dela. */
+  unstackBar() {
+    const host = this.bar.parentElement?.getBoundingClientRect();
+    if (!host) return;
+    for (let k = 0; k < 4; k++) {
+      const me = this.bar.getBoundingClientRect();
+      const other = [...document.querySelectorAll('.floating-bar')].find(o => o !== this.bar && !o.hidden && o.offsetParent
+        && (() => { const r = o.getBoundingClientRect(); return r.left < me.right && r.right > me.left && r.top < me.bottom && r.bottom > me.top; })());
+      if (!other) return;
+      this.bar.style.top = `${other.getBoundingClientRect().bottom - host.top + 6}px`;
+    }
+  }
 
   cancelSlowClick() { if (this._slow) { clearTimeout(this._slow); this._slow = 0; } }
 
@@ -214,6 +243,12 @@ export class FloorPoints {
     const el = this.el;
     const show = el && el.parent && el.visible && !this.viewer.tool && !this.viewer.renderOverride
       && (this.pointsFor === el.userData.bim.guid || this.placing);
+    const terrainBar = !!(show && el.userData.bim.slab.terreno);
+    if (this.bar.hidden === terrainBar) {
+      this.bar.hidden = !terrainBar;
+      if (terrainBar) requestAnimationFrame(() => this.unstackBar());
+    }
+    if (terrainBar) this.syncBar();
     if (!show) { if (!this.box.hidden) this.box.hidden = true; return; }
     const s = el.userData.bim.slab;
     if (this._key !== this.shapeKey(s)) { this._key = this.shapeKey(s); this.rebuildHandles(); }
@@ -700,7 +735,10 @@ export class FloorPoints {
     c.addEventListener('pointerdown', this._place, true);
     document.addEventListener('keydown', this._esc, true);
     c.style.cursor = toolCursor('ponto');
-    this.app.status('Pontos do piso · clique dentro do piso para colocar um ponto de forma (depois digite a altura) · Esc termina.');
+    this.syncBar();
+    this.app.status(this.el.userData.bim.slab.terreno
+      ? 'Terreno · clique no terreno para colocar um ponto de altura no meio (depois digite a altura) · Esc termina.'
+      : 'Pontos do piso · clique dentro do piso para colocar um ponto de forma (depois digite a altura) · Esc termina.');
     this.app.renderProps();
   }
 
@@ -711,6 +749,7 @@ export class FloorPoints {
     c.removeEventListener('pointerdown', this._place, true);
     document.removeEventListener('keydown', this._esc, true);
     c.style.cursor = '';
+    this.syncBar();
     this.app.status('Pronto.');
     if (this.el) this.app.renderProps();
   }
@@ -730,6 +769,7 @@ export class FloorPoints {
     const q = hit.clone().applyMatrix4(el.matrixWorld.clone().invert());
     const p = [q.x, q.y].map(v => round6(Math.round(v / GRID) * GRID));
     if (!inside(p, s.points)) { toast('Clique dentro do contorno do piso.', 'error'); return; }
+    if ((s.holes || []).some(hl => inside(p, hl))) { toast('Esse ponto cai num furo do piso.', 'error'); return; }
     s.forma ||= [];
     s.forma.push([p[0], p[1], round6(q.z - s.elevation)]);
     this.commit(el).then(() => { this.rebuildHandles(); this.update(); this.typeHeight('f', s.forma.length - 1); });

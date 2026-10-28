@@ -6,12 +6,24 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.62.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.63.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.63.0] — 2026-10-28 · Ponto de altura no meio do terreno
+
+### Adicionado
+- **Pontos de altura no meio do terreno**: com os pontos de um piso marcado como **Terreno** à mostra (dois cliques
+  com uma pausa), aparece a barra flutuante **▲ Terreno** com **＋ Ponto de altura**.
+  - Clique no terreno para colocar o ponto e digite a altura; dá para colocar vários seguidos. Esc ou
+    **✔ Terminar pontos** encerra.
+  - O ponto pode ser arrastado, ter a altura mudada com um clique e ser apagado com o botão direito.
+  - Ponto num furo do piso é recusado com um aviso.
+  - O ponteiro muda para o de "ponto".
+  - A barra desce sozinha quando cai atrás de outra barra flutuante (ex.: a do Mover).
 
 ## [2.62.0] — 2026-10-28 · Terreno mais rápido e sem travar a página
 

@@ -191,7 +191,8 @@ flowchart LR
 | 2026-10-28 | 2.60.1 | `368e5e5` | Linhas do sólido: aresta reta subdividida vira um segmento único |
 | 2026-10-28 | 2.60.2 | `696a6a3` | Talude: subdivisão por aresta (malha fechada, sem dentes na união com o piso) e malha mais fina junto do contorno |
 | 2026-10-28 | 2.61.0 | `908bcb9` | Puxar a linha 2D (grips.js): anda paralela, as ligadas esticam até ela e os arcos vão junto; pontas ligadas acompanham |
-| 2026-10-28 | 2.62.0 | este commit | Terreno 7,2 s → 2,6 s: limite da subdivisão e perfil do talude sem objetos/por ponto, booleano só perto do piso, creaseEdges numérico; recálculo em etapas (cuts.steps/updateAsync) sem travar a página |
+| 2026-10-28 | 2.62.0 | `b0414c7` | Terreno 7,2 s → 2,6 s: limite da subdivisão e perfil do talude sem objetos/por ponto, booleano só perto do piso, creaseEdges numérico; recálculo em etapas (cuts.steps/updateAsync) sem travar a página |
+| 2026-10-28 | 2.63.0 | este commit | Terreno: barra flutuante "▲ Terreno › ＋ Ponto de altura" nos pontos à mostra (floor-points.js) para pontos no meio do terreno |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.62.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.63.0</a>
