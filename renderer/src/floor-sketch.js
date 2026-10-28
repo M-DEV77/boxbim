@@ -65,6 +65,8 @@ export class FloorSketch {
       });
     }
     el.visible = false;
+    // durante a edição só as linhas do contorno são selecionáveis (os outros elementos ficam bloqueados)
+    this.viewer.selectFilter = x => this.isTemp(x);
     this.viewer.select(lines);
     this.buildPanel();
     this.app.status('Editar contorno do piso · use as ferramentas 2D (Linha, Aparar, Estender, Canto, Offset…) nas linhas · ✔ Concluir ou ✖ Cancelar.');
@@ -272,6 +274,7 @@ export class FloorSketch {
     this.viewer.removeEventListener('change', this._chg);
     this.viewer.removeEventListener('select', this._sel);
     this.panel?.remove(); this.panel = null;
+    this.viewer.selectFilter = null; // libera a seleção
     this.active = null;
     this.neon(); // tira o neon
     el.visible = true;

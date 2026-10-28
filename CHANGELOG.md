@@ -6,12 +6,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.52.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.52.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.52.1] — 2026-10-28 · Seleção bloqueada na edição do piso
+
+### Corrigido
+- Editando o contorno do piso, clicar ou passar a janela selecionava outros elementos (ex.: o terreno): agora só as
+  linhas do contorno podem ser selecionadas (e destacadas ao passar o mouse); ao concluir ou cancelar, a seleção
+  volta ao normal (filtro de seleção no viewer).
 
 ## [2.52.0] — 2026-10-28 · Snap, cotas guias e correção do Offset
 

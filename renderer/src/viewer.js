@@ -674,7 +674,8 @@ export class Viewer extends EventTarget {
       const now = performance.now();
       if (now - hoverT < 90) return;
       hoverT = now;
-      const obj = this.pickAt(e.clientX, e.clientY);
+      let obj = this.pickAt(e.clientX, e.clientY);
+      if (obj && this.selectFilter && !this.selectFilter(obj)) obj = null; // fora do filtro: nem destaca
       if (obj !== this.hovered) { this.hovered = obj; el.style.cursor = obj ? 'pointer' : ''; this.dispatchEvent(new Event('hover')); }
     });
   }
@@ -735,6 +736,7 @@ export class Viewer extends EventTarget {
 
   select(objs, additive = false) {
     objs = objs.filter(o => !o.userData?.locked); // camada travada ou não liberada: não seleciona
+    if (this.selectFilter) objs = objs.filter(this.selectFilter); // ex.: editando o contorno do piso, só as linhas dele
     if (!additive) for (const o of this.selected) this._highlight(o, false);
     if (!additive) this.selected.clear();
     for (const o of objs) {
