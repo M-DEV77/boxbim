@@ -6,12 +6,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.52.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.52.2** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.52.2] — 2026-10-28 · Seleção individual das linhas do contorno
+
+### Corrigido
+- Na edição do contorno do piso, o clique numa linha não a selecionava quando havia uma superfície (terreno) na
+  mesma cota: o clique agora atravessa o que está bloqueado pelo filtro de seleção e, no projeto todo, uma linha 2D
+  no mesmo plano de uma superfície ganha dela no clique.
 
 ## [2.52.1] — 2026-10-28 · Seleção bloqueada na edição do piso
 

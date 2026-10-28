@@ -716,11 +716,18 @@ export class Viewer extends EventTarget {
     this.raycaster.layers.enable(LINE_LAYER);
     this.raycaster.params.Line.threshold = this._worldPerPixel(x, y) * 6;
     const visibleThroughCut = p => this.clipPlanes.every(pl => pl.distanceToPoint(p) >= -1e-4);
-    const hit = this.raycaster.intersectObject(this.model, true)
-      .find(h => h.object.visible && (h.object.isMesh || h.object.userData.sketchLine) && visibleThroughCut(h.point));
-    let obj = hit?.object || null;
-    while (obj && !obj.userData?.bim && obj.parent !== this.model) obj = obj.parent;
-    return obj ? { obj, point: hit.point.clone() } : null;
+    const owner = o => { while (o && !o.userData?.bim && o.parent !== this.model) o = o.parent; return o; };
+    let hits = this.raycaster.intersectObject(this.model, true)
+      .filter(h => h.object.visible && (h.object.isMesh || h.object.userData.sketchLine) && visibleThroughCut(h.point))
+      .map(h => ({ h, obj: owner(h.object) })).filter(x => x.obj);
+    // com filtro de seleção (ex.: editando o contorno do piso), o clique atravessa o que não pode ser selecionado
+    if (this.selectFilter) hits = hits.filter(x => this.selectFilter(x.obj));
+    if (!hits.length) return null;
+    // uma linha 2D logo acima/abaixo de uma superfície (no mesmo plano) ganha da superfície: dá para clicar nela
+    let pick = hits[0];
+    const line = hits.find(x => x.h.object.userData.sketchLine);
+    if (line && line !== pick && line.h.distance - pick.h.distance < 0.25) pick = line;
+    return { obj: pick.obj, point: pick.h.point.clone() };
   }
 
   /** Metros por pixel perto do ponto da tela (para tolerâncias de clique). */

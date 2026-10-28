@@ -175,7 +175,8 @@ flowchart LR
 | 2026-10-28 | 2.51.0 | `7e4da61` | Copiar contorno (e furos) de outro piso no Editar contorno do piso |
 | 2026-10-28 | 2.51.1 | `3376215` | Regra do idioma no CLAUDE.md: sempre em português |
 | 2026-10-28 | 2.52.0 | `7a1357c` | Snap do projeto (ponta, meio, perpendicular), cotas guias arrastáveis, offset sem laço, barras verticais |
-| 2026-10-28 | 2.52.1 | este commit | Seleção bloqueada (só as linhas do contorno) durante a edição do piso |
+| 2026-10-28 | 2.52.1 | `c4635c6` | Seleção bloqueada (só as linhas do contorno) durante a edição do piso |
+| 2026-10-28 | 2.52.2 | este commit | Clique seleciona cada linha do contorno (atravessa o bloqueado; linha ganha da superfície) |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.52.1</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.52.2</a>
