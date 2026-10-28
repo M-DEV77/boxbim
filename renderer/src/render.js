@@ -501,10 +501,10 @@ export class RenderMode extends EventTarget {
       const o = h2('option', { value: val }, label); if (val === s.qualidade) o.selected = true; q.append(o);
     }
     q.addEventListener('change', () => this.setQuality(q.value));
-    const shot = h2('button', { class: 'primary', title: 'Salvar a imagem renderizada (PNG)' }, 'Salvar imagem');
+    const shot = h2('button', { class: 'primary', title: 'Salvar a imagem renderizada (PNG)' }, 'Salvar');
     shot.addEventListener('click', () => this.app.saveScreenshot());
     this.bar = h2('div', { class: 'draw-bar render-bar' },
-      h2('strong', {}, '☀ Render'),
+      h2('strong', { title: 'Opções do estilo Render' }, '☀'),
       h2('label', { title: 'Direção do sol (graus a partir do Norte, sentido horário)' }, 'Azimute', ...range('azimute', 0, 360, 1)),
       h2('label', { title: 'Altura do sol acima do horizonte (graus)' }, 'Altura', ...range('altura', 1, 89, 1)),
       h2('label', {}, 'Céu', sel('ceu', SKIES)),
@@ -513,7 +513,9 @@ export class RenderMode extends EventTarget {
       h2('label', { title: 'Oclusão ambiente (cantos mais escuros)' }, ao, 'AO'),
       h2('label', {}, 'Qualidade', q),
       shot);
-    document.querySelector('.center').append(this.bar);
+    // BARRA INFERIOR: uma faixa encostada no pé da vista 3D, de lado a lado (não cobre o desenho do meio)
+    this.bar.classList.add('render-dock');
+    (document.getElementById('viewport') || document.querySelector('.center')).append(this.bar);
     if (s.qualidade === 'path-tracing' && !this.pt) this.startPathTracing();
   }
 }

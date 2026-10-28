@@ -182,7 +182,8 @@ flowchart LR
 | 2026-10-28 | 2.53.0 | `e4c2231` | Contorno do piso aberto em vermelho, com X nas pontas soltas |
 | 2026-10-28 | 2.54.0 | `6d6faec` | Contorno do piso: solda de pontas (5 mm), T divide a linha, ○ nos cruzamentos e Fechar pontas |
 | 2026-10-28 | 2.55.0 | `fa932bd` | Displacement real nos materiais (Render) e rodapé no piso com objeto de perfil |
-| 2026-10-28 | 2.56.0 | este commit | Material do talude: pele com o material escolhido sobre o corte e o aterro |
+| 2026-10-28 | 2.56.0 | `bb0e2db` | Material do talude: pele com o material escolhido sobre o corte e o aterro |
+| 2026-10-28 | 2.56.1 | este commit | Opções do Render numa barra inferior encostada no pé da vista |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.56.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.56.1</a>

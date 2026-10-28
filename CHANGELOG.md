@@ -6,12 +6,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.56.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.56.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.56.1] — 2026-10-28 · Opções do Render na barra inferior
+
+### Mudado
+- As opções do estilo **Render** (azimute e altura do sol, céu, chão, exposição, AO, qualidade e Salvar) saíram do
+  alto da vista e ficam numa **barra inferior** compacta, encostada no pé da vista 3D de lado a lado (rola na
+  horizontal se a janela for estreita).
 
 ## [2.56.0] — 2026-10-28 · Material do talude
 
