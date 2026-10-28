@@ -6,12 +6,24 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.60.2** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.61.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.61.0] — 2026-10-28 · Puxar a linha sem descolar as outras
+
+### Adicionado
+- **Puxar a linha**: com uma linha 2D selecionada (também no contorno do piso em edição), pegue a própria linha ou o
+  losango do meio e arraste. A linha anda **paralela a si mesma**, e o ponteiro muda para o de puxar.
+  - As linhas ligadas nas pontas **esticam ou encolhem na direção delas** até a linha nova.
+  - Os **arcos dos cantos** vão junto, com as linhas presas neles.
+  - O contorno continua fechado.
+  - Tem snap do projeto (ponta, meio) e passo de 1 cm.
+- **Pontas ligadas**: arrastar a ponta de uma linha 2D leva junto as pontas das outras linhas ligadas nela (a menos de
+  5 mm).
 
 ## [2.60.2] — 2026-10-28 · Talude sem deformação na união com o piso
 

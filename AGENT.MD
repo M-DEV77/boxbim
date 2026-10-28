@@ -189,7 +189,8 @@ flowchart LR
 | 2026-10-28 | 2.59.0 | `dc2f757` | Canto arredondado do piso vira uma linha curva única na edição do contorno |
 | 2026-10-28 | 2.60.0 | `b44f6e9` | Linhas do sólido copia curvas como arco/círculo único (polylineArcs) |
 | 2026-10-28 | 2.60.1 | `368e5e5` | Linhas do sólido: aresta reta subdividida vira um segmento único |
-| 2026-10-28 | 2.60.2 | este commit | Talude: subdivisão por aresta (malha fechada, sem dentes na união com o piso) e malha mais fina junto do contorno |
+| 2026-10-28 | 2.60.2 | `696a6a3` | Talude: subdivisão por aresta (malha fechada, sem dentes na união com o piso) e malha mais fina junto do contorno |
+| 2026-10-28 | 2.61.0 | este commit | Puxar a linha 2D (grips.js): anda paralela, as ligadas esticam até ela e os arcos vão junto; pontas ligadas acompanham |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.60.2</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.61.0</a>

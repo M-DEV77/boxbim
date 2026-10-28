@@ -2,16 +2,21 @@
 // aparecem uma cota com a medida e dois pontos nas extremidades.
 //   arrastar um ponto ...... move aquela ponta (snap nas pontas de linhas/paredes/vigas; ORTO/F8 ou Shift trava 0°/90°)
 //   clicar na medida ....... digita o comprimento (Enter): a primeira ponta fica, a segunda anda na direção da linha
+//   pegar a linha (ou o losango do meio) e puxar ... a linha anda paralela a si mesma; as linhas LIGADAS nas pontas
+//                            esticam/encolhem até ela (na direção delas) e os arcos dos cantos vão junto — nada descola
+//   nas linhas 2D, arrastar uma ponta leva junto as pontas das outras linhas ligadas nela
 // Tudo em DOM/SVG por cima do canvas: os pontos ficam sempre do mesmo tamanho na tela.
 import * as THREE from 'three';
 import { h, toast } from './ui.js';
-import { isSketch, bake, rebuildSketch, planeMatrix, frameOf, worldPoints } from './sketch/sketch.js';
+import { isSketch, bake, rebuildSketch, planeMatrix, frameOf, worldPoints, samePlane } from './sketch/sketch.js';
+import { toolCursor } from './cursors.js';
 import { rebuildElement } from './elements.js';
 import { fmtLen, fromUnit, toUnit, unitLabel, unitStep } from './units.js';
 import { snapSegments, snapPick, showSnapMarker } from './osnap.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 const SNAP_PX = 12;
+const JOIN = 0.005; // pontas a menos de 5 mm estão ligadas
 const GRID = 0.01;
 const fmtM = v => fmtLen(v);
 const svg = (tag, attrs = {}) => { const e = document.createElementNS(SVGNS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
@@ -43,7 +48,19 @@ export class Grips {
     });
     this.tip = h('div', { class: 'draw-tip', hidden: true });
     this.marker = h('div', { class: 'snap-marker', hidden: true });
+    // losango do meio (linhas 2D): pegar e puxar a linha inteira
+    const mid = h('div', { class: 'grip-point grip-mid', title: 'Arraste para puxar a linha (as linhas ligadas acompanham)' });
+    mid.addEventListener('pointerdown', e => this.startDrag(e, 2));
+    this.points.push(mid);
     this.box = h('div', { class: 'grips', hidden: true }, this.svg, this.label, ...this.points);
+    // pegar a própria linha selecionada (perto dela, na tela) também puxa
+    const cv = app.viewer.renderer.domElement;
+    cv.addEventListener('pointerdown', e => { if (e.button === 0 && this.nearLine(e)) this.startDrag(e, 2); }, true);
+    cv.addEventListener('pointermove', e => {
+      if (this.drag) return;
+      const near = this.nearLine(e);
+      if (near) { cv.style.cursor = toolCursor('puxar'); this._cur = true; } else if (this._cur) { cv.style.cursor = ''; this._cur = false; }
+    });
     center.append(this.box, this.tip, this.marker);
     app.viewer.addEventListener('select', () => this.refresh());
     app.viewer.frameHooks.push(() => this.update());
@@ -87,6 +104,8 @@ export class Grips {
     this.box.hidden = false;
     this.points[0].style.transform = `translate(${a.x}px, ${a.y}px)`;
     this.points[1].style.transform = `translate(${b.x}px, ${b.y}px)`;
+    this.points[2].hidden = !el.userData.bim.linha;
+    this.points[2].style.transform = `translate(${(a.x + b.x) / 2}px, ${(a.y + b.y) / 2}px)`;
     // cota paralela à linha, afastada 22 px (para o lado de cima da tela)
     let nx = -(b.y - a.y), ny = b.x - a.x;
     const L = Math.hypot(nx, ny) || 1;
@@ -109,8 +128,9 @@ export class Grips {
 
   startDrag(e, i) {
     if (e.button !== 0 || !this.el) return;
-    e.preventDefault(); e.stopPropagation();
     const el = this.el, b = el.userData.bim;
+    if (i === 2 && !b.linha) return;
+    e.preventDefault(); e.stopImmediatePropagation();
     if (b.linha) bake(el);
     el.updateMatrixWorld(true);
     const [A, B] = this.ends();
@@ -129,9 +149,121 @@ export class Grips {
     }
     const data = b.linha || b.wall || b.beam;
     const keys = b.linha ? ['a', 'b'] : ['start', 'end'];
-    this.drag = { i, el, plane, toData, fromData, data, key: keys[i], other: data[keys[1 - i]], start: [...data[keys[i]]], snaps: this.snapCandidates(el), moved: false };
-    this.points[i].setPointerCapture?.(e.pointerId);
+    this.drag = { i, el, plane, toData, fromData, data, key: keys[i], other: data[keys[1 - i]], start: [...(data[keys[i]] || [])], snaps: this.snapCandidates(el), moved: false };
+    if (b.linha) {
+      // linhas ligadas nas pontas (no mesmo plano): acompanham o arraste
+      this.drag.links = [0, 1].map(k => (i === 2 || i === k ? this.linksAt([A, B][k], el, i === 2) : []));
+      this.drag.A0 = [...data.a]; this.drag.B0 = [...data.b];
+      if (i === 2) {
+        const hit0 = this.rayHit(e, plane);
+        this.drag.grab = hit0 ? toData(hit0) : [(data.a[0] + data.b[0]) / 2, (data.a[1] + data.b[1]) / 2];
+        const dx = data.b[0] - data.a[0], dy = data.b[1] - data.a[1], L = Math.hypot(dx, dy) || 1;
+        this.drag.n = [-dy / L, dx / L];
+        this.drag.key = null;
+      }
+    }
+    (this.points[i] || this.viewer.renderer.domElement).setPointerCapture?.(e.pointerId);
+    if (i === 2) this.viewer.renderer.domElement.style.cursor = toolCursor('puxar');
     this.viewer.controls.enabled = false;
+  }
+
+  /** O ponteiro está sobre a linha 2D selecionada (a menos de 6 px dela, longe das pontas)? */
+  nearLine(e) {
+    const el = this.el;
+    if (!el?.userData.bim.linha || this.box.hidden || this.drag || this.viewer.tool) return false;
+    const [A, B] = this.ends(), a = this.screen(A), b = this.screen(B);
+    const dx = b.cx - a.cx, dy = b.cy - a.cy, L2 = dx * dx + dy * dy;
+    if (L2 < 400) return false;
+    const t = ((e.clientX - a.cx) * dx + (e.clientY - a.cy) * dy) / L2;
+    if (t < 0.08 || t > 0.92) return false;
+    return Math.hypot(a.cx + dx * t - e.clientX, a.cy + dy * t - e.clientY) < 6;
+  }
+
+  rayHit(e, plane) {
+    const r = this.viewer.renderer.domElement.getBoundingClientRect();
+    const ray = new THREE.Raycaster();
+    ray.setFromCamera(new THREE.Vector2((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1), this.viewer.camera);
+    return ray.ray.intersectPlane(plane, new THREE.Vector3());
+  }
+
+  /**
+   * Linhas 2D ligadas no ponto P (modelo), no mesmo plano da linha arrastada: { el, key, orig, inv, M, arc, next }.
+   * Com deep, os arcos ligados guardam também as linhas ligadas na outra ponta deles (vão junto quando o arco anda).
+   */
+  linksAt(P, except, deep, seen = new Set([except])) {
+    const f0 = frameOf(except.userData.bim.linha), out = [];
+    for (const n of this.viewer.elements()) {
+      const l = n.userData.bim?.linha;
+      if (!l || seen.has(n) || !n.visible || !n.parent || !samePlane(frameOf(l), f0)) continue;
+      n.updateMatrixWorld(true);
+      const pts = worldPoints(l).map(v => v.applyMatrix4(n.matrixWorld));
+      const key = pts[0].distanceTo(P) < JOIN ? 'a' : pts[pts.length - 1].distanceTo(P) < JOIN ? 'b' : null;
+      if (!key) continue;
+      if (l.arco && !deep) continue; // ponta solta de arco: o arco não estica
+      seen.add(n);
+      bake(n);
+      const M = planeMatrix(frameOf(l));
+      const link = { el: n, key, orig: JSON.parse(JSON.stringify(l)), M, inv: M.clone().invert(), arc: !!l.arco, next: [] };
+      if (link.arc) {
+        const far = (key === 'a' ? pts[pts.length - 1] : pts[0]);
+        link.next = this.linksAt(far, except, false, seen).filter(x => !x.arc);
+      }
+      out.push(link);
+    }
+    return out;
+  }
+
+  /** Move a ponta de uma linha ligada para W (modelo). */
+  setLinkEnd(lk, W) {
+    const q = W.clone().applyMatrix4(lk.inv);
+    lk.el.userData.bim.linha[lk.key] = [q.x, q.y];
+    rebuildSketch(lk.el);
+  }
+
+  /** Arco ligado (e as linhas presas na outra ponta dele) deslocado de Dw (modelo). */
+  shiftArc(lk, Dw) {
+    const l = lk.el.userData.bim.linha, o = lk.orig;
+    const d0 = new THREE.Vector3().applyMatrix4(lk.inv), d1 = Dw.clone().applyMatrix4(lk.inv).sub(d0);
+    const s = p => [p[0] + d1.x, p[1] + d1.y];
+    l.a = s(o.a); l.b = s(o.b);
+    l.arco = { ...o.arco, c: s(o.arco.c) };
+    rebuildSketch(lk.el);
+    for (const nx of lk.next) {
+      const w = new THREE.Vector3(...nx.orig[nx.key], 0).applyMatrix4(nx.M).add(Dw);
+      this.setLinkEnd(nx, w);
+    }
+  }
+
+  /** Puxar a linha: deslocamento perpendicular t (dados da linha) e as ligações acompanhando. */
+  applyPull(t) {
+    const d = this.drag, n = d.n;
+    const D = [n[0] * t, n[1] * t];
+    d.data.a = [d.A0[0] + D[0], d.A0[1] + D[1]];
+    d.data.b = [d.B0[0] + D[0], d.B0[1] + D[1]];
+    const Dw = d.fromData(D).sub(d.fromData([0, 0]));
+    const dir = [d.B0[0] - d.A0[0], d.B0[1] - d.A0[1]];
+    for (let k = 0; k < 2; k++) {
+      const P = k ? d.data.b : d.data.a;
+      let corner = null; // a ponta da linha puxada vai para o encontro com a 1ª linha ligada (não paralela)
+      for (const lk of d.links[k]) {
+        if (lk.arc) { this.shiftArc(lk, Dw); continue; }
+        // a linha ligada estica/encolhe na direção dela até a linha nova (paralelas: anda junto)
+        const o = lk.orig, other = o[lk.key === 'a' ? 'b' : 'a'];
+        const F = d.toData(new THREE.Vector3(...other, 0).applyMatrix4(lk.M));
+        const E = d.toData(new THREE.Vector3(...o[lk.key], 0).applyMatrix4(lk.M));
+        const v = [E[0] - F[0], E[1] - F[1]];
+        const cr = v[0] * dir[1] - v[1] * dir[0];
+        let W;
+        if (Math.abs(cr) < 1e-9 * Math.hypot(...v) * Math.hypot(...dir) + 1e-12) W = [E[0] + D[0], E[1] + D[1]];
+        else {
+          const s = ((P[0] - F[0]) * dir[1] - (P[1] - F[1]) * dir[0]) / cr;
+          W = [F[0] + v[0] * s, F[1] + v[1] * s];
+          corner = corner || W;
+        }
+        this.setLinkEnd(lk, d.fromData(W));
+      }
+      if (corner) d.data[k ? 'b' : 'a'] = corner;
+    }
   }
 
   /** Pontas de linhas, paredes e vigas (no modelo) para o snap. */
@@ -155,6 +287,7 @@ export class Grips {
     const hit = ray.ray.intersectPlane(d.plane, new THREE.Vector3());
     if (!hit) return;
     let p = d.toData(hit), snapped = false, kind = null;
+    if (d.i === 2) return this.movePull(e, hit, p);
     // snap do projeto: ponta, meio e perpendicular (a partir da outra ponta) — em planta, nos outros elementos
     const toS = q => { const s = this.screen(new THREE.Vector3(q[0], q[1], hit.z)); return [s.cx, s.cy]; };
     const wFrom = d.fromData(d.other);
@@ -178,6 +311,8 @@ export class Grips {
     d.data[d.key] = p;
     d.moved = true;
     this.rebuild(d.el, true);
+    // linhas ligadas nesta ponta vão junto
+    for (const lk of d.links?.[d.i] || []) this.setLinkEnd(lk, d.fromData(p));
     // dica e marcador de snap
     const pr = this.box.parentElement.getBoundingClientRect();
     const s = this.screen(d.fromData(p));
@@ -188,13 +323,39 @@ export class Grips {
     this.tip.hidden = false;
   }
 
+  /** Arraste do corpo da linha: distância perpendicular (com snap do projeto e grade). */
+  movePull(e, hit, p) {
+    const d = this.drag, n = d.n;
+    let t = (p[0] - d.grab[0]) * n[0] + (p[1] - d.grab[1]) * n[1], kind = null;
+    if (Math.abs(d.plane.normal.z) > 0.999) {
+      const toS = q => { const s = this.screen(new THREE.Vector3(q[0], q[1], hit.z)); return [s.cx, s.cy]; };
+      const except = [d.el, ...d.links.flat().flatMap(l => [l.el, ...l.next.map(x => x.el)])];
+      const best = snapPick({ segs: snapSegments(this.app, { except }), toScreen: toS, cursor: [e.clientX, e.clientY] });
+      if (best) { const q = d.toData(new THREE.Vector3(best.p[0], best.p[1], hit.z)); t = (q[0] - d.A0[0]) * n[0] + (q[1] - d.A0[1]) * n[1]; kind = best.kind; }
+    }
+    if (!kind) t = Math.round(t / GRID) * GRID;
+    this.applyPull(t);
+    d.moved = true;
+    this.rebuild(d.el, true);
+    const pr = this.box.parentElement.getBoundingClientRect();
+    const s = this.screen(d.fromData([(d.data.a[0] + d.data.b[0]) / 2, (d.data.a[1] + d.data.b[1]) / 2]));
+    showSnapMarker(this.marker, kind, s.x, s.y);
+    this.tip.textContent = `↔ ${fmtLen(Math.abs(t), { suffix: true })}${kind ? `  ◻ ${kind}` : ''}`;
+    Object.assign(this.tip.style, { left: `${e.clientX - pr.left + 16}px`, top: `${e.clientY - pr.top + 14}px` });
+    this.tip.hidden = false;
+  }
+
   endDrag() {
     const d = this.drag;
     if (!d) return;
     this.drag = null;
     this.viewer.controls.enabled = true;
     this.tip.hidden = true; this.marker.hidden = true;
-    if (d.moved) this.commit(d.el);
+    if (d.i === 2) { this.viewer.renderer.domElement.style.cursor = ''; this._cur = false; }
+    if (d.moved) {
+      for (const lk of (d.links || []).flat().flatMap(l => [l, ...l.next])) this.viewer._prepare2D(lk.el);
+      this.commit(d.el);
+    }
   }
 
   /** Refaz a geometria do elemento (live = durante o arraste: sem esperar o script do objeto). */

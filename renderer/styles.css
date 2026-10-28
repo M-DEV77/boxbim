@@ -580,6 +580,9 @@ table.budget tr.muted td { color: var(--muted); }
 .grip-point { position: absolute; left: 0; top: 0; width: 12px; height: 12px; margin: -6px 0 0 -6px; pointer-events: auto;
   background: #2f9bff; border: 2px solid #fff; border-radius: 2px; cursor: move; box-shadow: 0 0 0 1px #0006; }
 .grip-point:hover { background: #ff9f1a; }
+.grip-point.grip-mid { width: 14px; height: 14px; margin: -7px 0 0 -7px; border: 0; box-shadow: none; background: #2f9bff;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.grip-point.grip-mid:hover { background: #ff9f1a; }
 .grip-label { position: absolute; pointer-events: auto; padding: 0 5px; min-width: 0; font-size: 12px; line-height: 17px; font-weight: 600;
   color: #2f9bff; background: rgba(15, 19, 23, .75); border: 1px solid transparent; border-radius: 3px; cursor: text; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .grip-label:hover { border-color: #2f9bff; }
