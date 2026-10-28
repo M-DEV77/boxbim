@@ -16,7 +16,7 @@ function bvhOf(geo) {
 
 const meshesOf = el => {
   const out = [];
-  el.traverse(o => { if (o.isMesh && !o.userData.isEdge && !o.userData.rodape && o.geometry) out.push(o); });
+  el.traverse(o => { if (o.isMesh && !o.userData.isEdge && !o.userData.rodape && !o.userData.taludeSkin && o.geometry) out.push(o); });
   return out;
 };
 

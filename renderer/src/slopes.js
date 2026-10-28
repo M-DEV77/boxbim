@@ -4,6 +4,8 @@
 //     v : h ....... proporção do trecho (1 : 1,5 = sobe 1 a cada 1,5 na horizontal)
 //     altura ...... altura de cada instância (0 = um talude só, contínuo)
 //     berma ....... distância (horizontal, plana) entre as instâncias
+//   slab.talude.material: material da SUPERFÍCIE do talude (grama, pedra, concreto projetado…) — uma pele por cima
+//     do terreno, só onde o talude mudou o terreno (fora do piso); vazio = o material do próprio terreno
 //   slab.talude.suavizar + raio: arredonda as quinas (crista, pé, bordas das bermas) e o encontro com o terreno
 //     natural — média do perfil numa faixa de "raio" e mínimo/máximo suaves no encontro com o terreno.
 // Aplicado nos terrenos (slab.terreno) pelo sistema de cortes (sketch/cuts.js): a superfície do terreno fica presa entre
@@ -22,6 +24,7 @@ export function slopeConfig(s) {
   return {
     ativo: !!t.ativo,
     suavizar: !!t.suavizar,
+    material: t.material || '',
     raio: Number.isFinite(Number(t.raio)) && Number(t.raio) > 0 ? Number(t.raio) : 1,
     corte: { ...SLOPE_DEFAULTS.corte, ...(t.corte || {}) },
     aterro: { ...SLOPE_DEFAULTS.aterro, ...(t.aterro || {}) },
@@ -133,15 +136,21 @@ export function applySlopes(geo, terrainEl, floors) {
   const pos = out.attributes.position;
   let zb = Infinity;
   for (let i = 0; i < pos.count; i++) zb = Math.min(zb, pos.getZ(i));
+  // quem mudou cada vértice da SUPERFÍCIE (índice do piso do talude; -1 = ninguém, -2 = dentro de um piso)
+  const who = new Int32Array(pos.count).fill(-1);
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
     if (z <= zb + 1e-4) continue; // fundo fica
     const top0 = s.elevation + (f ? f(x, y) : 0);
+    const onTop = Math.abs(z - top0) < 1e-4; // vértice da superfície de cima (não de uma camada de dentro)
     let top = top0;
-    for (const t of tops) {
+    for (let ti = 0; ti < tops.length; ti++) {
+      const t = tops[ti];
+      const before = top;
       // o talude sai da ARESTA do piso: cota do topo do piso no ponto mais perto do contorno
       const n = nearestOnPoly(x, y, t.poly), d = n.d, z0 = t.zAt(n.x, n.y);
       if (d === 0) {
+        if (onTop) who[i] = -2;
         // dentro do piso: o perfil continua um pouco para dentro (a faixa da malha fina), assim a superfície cruza a
         // ARESTA DE CIMA do piso exatamente na cota do topo — sem serrilhado na face lateral (o piso tira o resto)
         // (no corte, fica acima do fundo do piso: o piso corta essa sobra inteira, sem faces coincidentes)
@@ -158,6 +167,7 @@ export function applySlopes(geo, terrainEl, floors) {
         if (Number.isFinite(lo) && d > 0) top = smax(top, lo, ka); else top = Math.max(top, lo);
         if (Number.isFinite(hi) && d > 0) top = smin(top, hi, kc); else top = Math.min(top, hi);
       } else top = Math.min(Math.max(top, lo), hi);
+      if (onTop && who[i] !== -2 && Math.abs(top - before) > 1e-6) who[i] = ti;
     }
     if (Math.abs(top - top0) < 1e-6) continue;
     top = Math.max(top, zb + 0.01);
@@ -166,5 +176,18 @@ export function applySlopes(geo, terrainEl, floors) {
   }
   pos.needsUpdate = true;
   out.computeVertexNormals(); out.computeBoundingBox(); out.computeBoundingSphere();
+  // PELE do talude: os triângulos da superfície com os 3 vértices mudados pelo mesmo piso (que tem material), 2 mm
+  // acima — vira uma malha à parte com o material do talude (sketch/cuts.js)
+  const skins = new Map();
+  for (let i = 0; i + 2 < pos.count; i += 3) {
+    const w = who[i];
+    if (w < 0 || who[i + 1] !== w || who[i + 2] !== w) continue;
+    const mat = tops[w].cfg.material;
+    if (!mat) continue;
+    if (!skins.has(mat)) skins.set(mat, []);
+    const arr = skins.get(mat);
+    for (let k = 0; k < 3; k++) arr.push(pos.getX(i + k), pos.getY(i + k), pos.getZ(i + k) + 0.002);
+  }
+  out.userData.taludeSkins = [...skins].map(([material, positions]) => ({ material, positions }));
   return out;
 }

@@ -624,6 +624,11 @@ export class FloorPoints {
         h('td', {}, h('label', { class: 'inline' }, h('input', { type: 'checkbox', checked: cfg.suavizar, onchange: e => save({ suavizar: e.target.checked }) }), `Suavizar · raio (${u})`)),
         h('td', {}, h('input', { type: 'number', min: 0, step: unitStep(), value: toUnit(cfg.raio), disabled: !cfg.suavizar, title: `Raio da suavização (${u})`, style: 'width:100%',
           onchange: e => { const x = fromUnit(e.target.value); if (x > 0) save({ raio: x }); } })))) : null,
+      cfg.ativo ? h('table', { class: 'slope-table' }, h('tr', { title: 'Material da superfície do talude (corte e aterro) — vazio = o do próprio terreno' },
+        h('td', {}, 'Material do talude'),
+        h('td', {}, h('select', { style: 'width:100%', onchange: e => save({ material: e.target.value }) },
+          h('option', { value: '', selected: !cfg.material }, '(o do terreno)'),
+          Object.keys(this.app.types.materials).map(m => h('option', { value: m, selected: m === cfg.material }, m)))))) : null,
       cfg.ativo ? part('corte', 'Corte') : null,
       cfg.ativo ? part('aterro', 'Aterro') : null,
     ];

@@ -13,6 +13,7 @@ import { Brush, Evaluator, SUBTRACTION } from 'three-bvh-csg';
 import { normalizeGeometry } from './forms.js';
 import { applySlopes, slopeFloors, slopeSignature } from '../slopes.js';
 import { drapeGeometry, hostSignature } from '../drape.js';
+import { materialByName } from '../elements.js';
 
 const evaluator = new Evaluator();
 evaluator.useGroups = false;
@@ -38,7 +39,7 @@ function worldBox(el) {
   el.updateMatrixWorld(true);
   const box = new THREE.Box3();
   el.traverse(o => {
-    if (!o.isMesh || o.userData.isEdge || o.userData.rodape || !o.geometry) return;
+    if (!o.isMesh || o.userData.isEdge || o.userData.rodape || o.userData.taludeSkin || !o.geometry) return;
     const g = o.userData._csgOrig || o.geometry;
     if (!g.boundingBox) g.computeBoundingBox();
     box.union(g.boundingBox.clone().applyMatrix4(o.matrixWorld));
@@ -68,7 +69,7 @@ function deepened(geo, matrixWorld, from, to) {
 
 const meshesOf = el => {
   const out = [];
-  el.traverse(o => { if (o.isMesh && !o.userData.isEdge && !o.userData.rodape) out.push(o); }); // o rodapé do piso não entra
+  el.traverse(o => { if (o.isMesh && !o.userData.isEdge && !o.userData.rodape && !o.userData.taludeSkin) out.push(o); }); // rodapé e pele do talude não entram
   return out;
 };
 
@@ -109,7 +110,13 @@ export class Cuts {
     this.viewer.changed();
   }
 
+  /** Tira a pele do talude (malhas avulsas do terreno). */
+  clearSkins(el) {
+    for (const c of el.children.filter(c => c.userData.taludeSkin)) { el.remove(c); c.geometry.dispose(); }
+  }
+
   restore(el) {
+    this.clearSkins(el);
     for (const m of meshesOf(el)) {
       if (!m.userData._csgOrig) continue;
       m.geometry = m.userData._csgOrig;
@@ -205,6 +212,8 @@ export class Cuts {
   }
 
   apply(el, voids, pads = [], deepen = null, slopes = [], drape = null) {
+    this.clearSkins(el);
+    const skins = [];
     const ownBottom = deepen !== null ? worldBox(el).min.z : null;
     const voidBrushes = [];
     for (const p of pads) { try { voidBrushes.push(this.padBrush(p)); } catch (e) { console.warn('terreno', p.name, e); } }
@@ -220,7 +229,7 @@ export class Cuts {
       m.userData._csgOrig = orig;
       m.updateMatrixWorld(true);
       let base = deepen !== null ? deepened(orig, m.matrixWorld, ownBottom, deepen) : orig;
-      if (slopes.length) base = applySlopes(base === orig ? orig.clone() : base, el, slopes);
+      if (slopes.length) { base = applySlopes(base === orig ? orig.clone() : base, el, slopes); skins.push(...(base.userData.taludeSkins || [])); }
       if (drape) base = drapeGeometry(base === orig ? orig.clone() : base, m.matrixWorld, el.userData.bim.slab, drape);
       if (!voidBrushes.length) { m.geometry = base; this.refreshEdges(m); continue; }
       try {
@@ -240,6 +249,18 @@ export class Cuts {
         m.geometry = orig;
       }
       this.refreshEdges(m);
+    }
+    // pele do talude: uma malha por material, por cima do terreno (só onde o talude mudou o terreno, fora dos pisos)
+    for (const { material, positions } of skins) {
+      if (!positions.length) continue;
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+      g.computeVertexNormals(); g.computeBoundingBox(); g.computeBoundingSphere();
+      const skin = new THREE.Mesh(g, materialByName(material));
+      skin.name = `Talude (${material})`;
+      skin.userData.taludeSkin = true;
+      skin.userData.layer = { name: 'Talude', material };
+      el.add(skin);
     }
   }
 }

@@ -166,6 +166,7 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
   **aterrado** (onde está abaixo) até encontrar o piso na cota do topo. Corte e aterro têm cada um: liga/desliga,
   **proporção V : H** das instâncias (trechos inclinados), **altura da instância** (0 = talude contínuo) e
   **distância entre instâncias** (berma plana). Recalcula sozinho ao mover ou editar o piso ou o terreno.
+  **Material do talude** reveste a superfície do corte e do aterro (grama, pedra…).
   **Suavizar** (com raio) arredonda a crista, o pé, as bordas das bermas e o encontro com o terreno natural.
 - **Copiar** (2D no plano do nível ou 3D sobre os sólidos), com repetições, para outro nível ou por distância.
 - **Telhado**: perfil desenhado num eixo de trabalho vertical, extrudado; tipos de telhado com camadas (telha, ripas, caibros…).
@@ -466,4 +467,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.55.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.56.0</a>

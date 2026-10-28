@@ -57,6 +57,11 @@ function effectiveLayers(layers, fallbackThickness, ifcType) {
   return [{ name: 'Genérico', material: null, thickness: fallbackThickness, function: 'estrutura', _ifc: ifcType }];
 }
 
+/** Material (de vista) de um material da biblioteca pelo nome — para malhas avulsas (ex.: pele do talude). */
+export function materialByName(name, fallback = 0xcccccc) {
+  return (name && resolveMaterial(name)) || materialFor(fallback);
+}
+
 function layerMaterial(l, ifcType) {
   return (l.material && resolveMaterial(l.material)) || materialFor(IFC_COLORS[l._ifc || ifcType] ?? 0xcccccc);
 }

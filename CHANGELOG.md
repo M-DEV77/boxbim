@@ -6,12 +6,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.55.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.56.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.56.0] — 2026-10-28 · Material do talude
+
+### Adicionado
+- **Material do talude** (Propriedades do piso › Talude; `talude.material`): a superfície do corte e do aterro
+  gerada no terreno ganha o material escolhido — uma "pele" 2 mm por cima do terreno, só onde o talude mudou o
+  terreno (fora do piso), com o material da biblioteca (aparece também no Render). Vazio = o material do terreno.
 
 ## [2.55.0] — 2026-10-28 · Displacement nos materiais e rodapé no piso
 
