@@ -11,10 +11,10 @@ import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 
-// NEON das linhas do esboço: núcleo claro e brilho largo, por cima de tudo (na cena de sobreposição)
-const NEON_CORE = new LineMaterial({ color: 0xc8fdff, linewidth: 2.2, depthTest: false, transparent: true });
-const NEON_GLOW = new LineMaterial({ color: 0x00e5ff, linewidth: 9, depthTest: false, transparent: true, opacity: 0.38, blending: THREE.AdditiveBlending });
-const NEON_HALO = new LineMaterial({ color: 0x00b3ff, linewidth: 18, depthTest: false, transparent: true, opacity: 0.14, blending: THREE.AdditiveBlending });
+// NEON (rosa, fino) das linhas do esboço: núcleo claro e brilho, por cima de tudo (na cena de sobreposição)
+const NEON_CORE = new LineMaterial({ color: 0xffd6f6, linewidth: 1.3, depthTest: false, transparent: true });
+const NEON_GLOW = new LineMaterial({ color: 0xff2bd6, linewidth: 4, depthTest: false, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending });
+const NEON_HALO = new LineMaterial({ color: 0xff4fe0, linewidth: 8, depthTest: false, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending });
 
 const r6 = v => +v.toFixed(6);
 const keyOf = p => `${p[0].toFixed(4)},${p[1].toFixed(4)}`;
@@ -74,6 +74,9 @@ export class FloorSketch {
       h('div', { class: 'small muted' }, 'O contorno virou linhas 2D: edite com as ferramentas 2D da faixa. Contornos fechados: o maior é o piso, os de dentro são furos.'),
       this.info,
       h('div', { class: 'row-buttons' },
+        h('button', { onclick: () => this.pickLines(), title: 'Clique em linhas 2D do desenho: entram cópias delas (e das ligadas a elas) no contorno' }, '⧉ Copiar linhas'),
+        h('button', { onclick: () => this.pickSolidEdges(), title: 'Clique nas arestas (cantos) dos sólidos: entram como linhas do contorno, projetadas na planta' }, '⧉ Copiar arestas de sólidos')),
+      h('div', { class: 'row-buttons' },
         h('button', { class: 'primary', onclick: () => this.finish(true), title: 'Refaz o piso com as linhas (Enter)' }, '✔ Concluir'),
         h('button', { onclick: () => this.finish(false), title: 'Volta o piso como estava (Esc)' }, '✖ Cancelar')));
     this.app.showTab?.('props');
@@ -106,6 +109,68 @@ export class FloorSketch {
     }
   }
 
+  /** Copiar arestas dos sólidos: a ferramenta "Linhas do sólido", projetando na planta (as linhas novas entram no contorno). */
+  pickSolidEdges() {
+    const st = this.app.sketchTool;
+    st.edgeProject = true;
+    st.edgeMode = 'aresta';
+    st.start('arestas');
+    this.app.status('Copiar arestas · clique nas arestas dos sólidos (ou numa face: Contorno da face) · Esc termina · depois ✔ Concluir o piso.');
+  }
+
+  /**
+   * Copiar linhas 2D: cada clique numa linha do desenho (que não é do esboço) põe no contorno uma cópia dela e das
+   * ligadas a ela pelas pontas. Esc termina.
+   */
+  pickLines() {
+    if (!this.active) return;
+    const v = this.viewer, cv = v.renderer.domElement;
+    for (const t of [this.app.sketchTool, this.app.wallTool, this.app.placeTool]) if (t?.active) t.stop();
+    const level = this.app.levels.ofElement(this.active.el);
+    const stop = () => { cv.removeEventListener('pointerdown', down, true); document.removeEventListener('keydown', key, true); cv.style.cursor = ''; this.picking = null; };
+    const key = e => { if (e.key === 'Escape') { e.stopPropagation(); stop(); this.app.status('Copiar linhas terminado.'); } };
+    const screen = p => { const q = p.clone().project(v.camera), r = cv.getBoundingClientRect(); return [(q.x + 1) / 2 * r.width + r.left, (1 - q.y) / 2 * r.height + r.top]; };
+    const distSeg = (p, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], L = dx * dx + dy * dy || 1, t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L)); return Math.hypot(a[0] + dx * t - p[0], a[1] + dy * t - p[1]); };
+    const down = e => {
+      if (e.button !== 0) return;
+      e.preventDefault(); e.stopPropagation();
+      // linha do desenho mais perto do clique (até 10 px), fora do esboço
+      const lines = v.elements().filter(x => isSketch(x) && x.visible && !this.isTemp(x));
+      let best = null, bd = 10;
+      for (const x of lines) {
+        const pts = worldPoints(x.userData.bim.linha).map(screen);
+        for (let i = 1; i < pts.length; i++) { const d = distSeg([e.clientX, e.clientY], pts[i - 1], pts[i]); if (d < bd) { bd = d; best = x; } }
+      }
+      if (!best) { this.app.status('Copiar linhas · clique sobre uma linha 2D do desenho · Esc termina.'); return; }
+      // a linha e as ligadas a ela pelas pontas (no mesmo plano horizontal)
+      const key2 = p => `${p.x.toFixed(4)},${p.y.toFixed(4)},${p.z.toFixed(3)}`;
+      const ends = x => { const w = worldPoints(x.userData.bim.linha); return [w[0], w[w.length - 1]]; };
+      const chain = new Set([best]), queue = [best];
+      while (queue.length) {
+        const cur = queue.pop(), ks = new Set(ends(cur).map(key2));
+        for (const x of lines) if (!chain.has(x) && ends(x).some(p => ks.has(key2(p)))) { chain.add(x); queue.push(x); }
+      }
+      let n = 0;
+      for (const x of chain) {
+        const w = worldPoints(x.userData.bim.linha);
+        if (w.some(p => Math.abs(p.z - w[0].z) > 0.01)) continue; // só as horizontais
+        for (let i = 1; i < w.length; i++) {
+          const line = createSketch({ z: this.active.z, a: [r6(w[i - 1].x), r6(w[i - 1].y)], b: [r6(w[i].x), r6(w[i].y)], arco: null }, level);
+          line.userData.bim.name = line.name = 'Contorno do piso';
+          v.add(line);
+          n++;
+        }
+      }
+      v.changed();
+      this.app.status(`${n} linha(s) copiada(s) para o contorno · clique em outras · Esc termina.`);
+    };
+    cv.addEventListener('pointerdown', down, true);
+    document.addEventListener('keydown', key, true);
+    cv.style.cursor = 'copy';
+    this.picking = stop;
+    this.app.status('Copiar linhas · clique numa linha 2D do desenho (entram ela e as ligadas) · Esc termina.');
+  }
+
   /** Linhas do esboço (no modelo) e os contornos que elas fecham. */
   loops() {
     const els = this.viewer.elements().filter(e => this.isTemp(e));
@@ -113,7 +178,7 @@ export class FloorSketch {
     const segs = [];
     for (const e of els) {
       const pts = worldPoints(e.userData.bim.linha);
-      if (pts.some(p => Math.abs(p.z - z) > 0.01)) continue; // só as da cota do piso
+      if (pts.some(p => Math.abs(p.z - pts[0].z) > 0.01)) continue; // só as horizontais (contam pela planta)
       for (let i = 1; i < pts.length; i++) segs.push({ a: [r6(pts[i - 1].x), r6(pts[i - 1].y)], b: [r6(pts[i].x), r6(pts[i].y)], arco: null, z });
     }
     return { els, ...chainSegments(segs) };
@@ -148,6 +213,8 @@ export class FloorSketch {
       else delete s.alturas;
       if (main.furos.length) s.holes = main.furos.map(hl => hl.map(toL)); else delete s.holes;
     }
+    this.picking?.();
+    if (this.app.sketchTool.active) this.app.sketchTool.stop();
     // tira as linhas do esboço (nunca foram para o servidor)
     for (const e of this.viewer.elements().filter(x => this.isTemp(x))) this.viewer.remove(e);
     this.viewer.removeEventListener('change', this._chg);

@@ -6,12 +6,23 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.48.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.49.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.49.0] — 2026-10-28 · Copiar linhas e arestas no contorno do piso
+
+### Adicionado
+- No **Editar contorno do piso** (clique duplo): **⧉ Copiar linhas** — clique numa linha 2D do desenho e entram no
+  contorno cópias dela e das ligadas a ela pelas pontas (as originais ficam); **⧉ Copiar arestas de sólidos** — usa
+  "Linhas do sólido" projetando na planta: clique nas arestas (cantos) dos sólidos ou no contorno de uma face.
+  Qualquer linha horizontal do esboço conta para o contorno, em qualquer cota.
+
+### Mudado
+- Neon do contorno do piso **mais fino e rosa** (no esboço e nos pontos de elevação).
 
 ## [2.48.0] — 2026-10-28 · Neon no contorno do piso e barras flutuantes
 
