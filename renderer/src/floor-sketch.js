@@ -76,7 +76,8 @@ export class FloorSketch {
       this.info,
       h('div', { class: 'row-buttons' },
         h('button', { onclick: () => this.pickLines(), title: 'Clique em linhas 2D do desenho: entram cópias delas (e das ligadas a elas) no contorno' }, '⧉ Copiar linhas'),
-        h('button', { onclick: () => this.pickSolidEdges(), title: 'Clique nas arestas (cantos) dos sólidos: entram como linhas do contorno, projetadas na planta' }, '⧉ Copiar arestas de sólidos')),
+        h('button', { onclick: () => this.pickSolidEdges(), title: 'Clique nas arestas (cantos) dos sólidos: entram como linhas do contorno, projetadas na planta' }, '⧉ Copiar arestas de sólidos'),
+        h('button', { onclick: () => this.pickFloorOutline(), title: 'Clique na face de outro piso: o contorno dele (e os furos) entram como linhas do contorno' }, '⧉ Copiar contorno de piso')),
       h('div', { class: 'row-buttons' },
         h('button', { class: 'primary', onclick: () => this.finish(true), title: 'Refaz o piso com as linhas (Enter)' }, '✔ Concluir'),
         h('button', { onclick: () => this.finish(false), title: 'Volta o piso como estava (Esc)' }, '✖ Cancelar')));
@@ -111,6 +112,45 @@ export class FloorSketch {
   }
 
   /** Copiar arestas dos sólidos: a ferramenta "Linhas do sólido", projetando na planta (as linhas novas entram no contorno). */
+  /** Copiar contorno de piso: cada clique na face de outro piso põe o contorno e os furos dele no esboço. Esc termina. */
+  pickFloorOutline() {
+    if (!this.active) return;
+    const v = this.viewer, cv = v.renderer.domElement;
+    for (const t of [this.app.sketchTool, this.app.wallTool, this.app.placeTool]) if (t?.active) t.stop();
+    this.picking?.();
+    const level = this.app.levels.ofElement(this.active.el);
+    const stop = () => { cv.removeEventListener('pointerdown', down, true); document.removeEventListener('keydown', key, true); cv.style.cursor = ''; this.picking = null; };
+    const key = e => { if (e.key === 'Escape') { e.stopPropagation(); stop(); this.app.status('Copiar contorno terminado.'); } };
+    const owner = o => { while (o && !o.userData?.bim) o = o.parent; return o; };
+    const down = e => {
+      if (e.button !== 0) return;
+      e.preventDefault(); e.stopPropagation();
+      const r = cv.getBoundingClientRect(), ray = new THREE.Raycaster();
+      ray.setFromCamera(new THREE.Vector2((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1), v.camera);
+      const hit = ray.intersectObject(v.model, true).map(x => owner(x.object)).find(o => o?.visible && o.userData.bim.slab && o !== this.active.el);
+      if (!hit) { this.app.status('Copiar contorno · clique na face de um piso · Esc termina.'); return; }
+      hit.updateMatrixWorld(true);
+      const s = hit.userData.bim.slab;
+      const W = ([x, y]) => { const p = new THREE.Vector3(x, y, s.elevation).applyMatrix4(hit.matrixWorld); return [r6(p.x), r6(p.y)]; };
+      let n = 0;
+      for (const ring of [s.points, ...(s.holes || [])]) {
+        ring.forEach((p, i) => {
+          const line = createSketch({ z: this.active.z, a: W(p), b: W(ring[(i + 1) % ring.length]), arco: null }, level);
+          line.userData.bim.name = line.name = 'Contorno do piso';
+          v.add(line);
+          n++;
+        });
+      }
+      v.changed();
+      this.app.status(`Contorno de "${hit.userData.bim.name || 'Piso'}" copiado (${n} linha(s)) · clique em outro · Esc termina.`);
+    };
+    cv.addEventListener('pointerdown', down, true);
+    document.addEventListener('keydown', key, true);
+    cv.style.cursor = toolCursor('copiar-contorno');
+    this.picking = stop;
+    this.app.status('Copiar contorno · clique na face de outro piso (entram o contorno e os furos) · Esc termina.');
+  }
+
   pickSolidEdges() {
     const st = this.app.sketchTool;
     st.edgeProject = true;
@@ -125,6 +165,7 @@ export class FloorSketch {
    */
   pickLines() {
     if (!this.active) return;
+    this.picking?.();
     const v = this.viewer, cv = v.renderer.domElement;
     for (const t of [this.app.sketchTool, this.app.wallTool, this.app.placeTool]) if (t?.active) t.stop();
     const level = this.app.levels.ofElement(this.active.el);

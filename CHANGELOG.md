@@ -6,12 +6,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.50.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.51.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.51.0] — 2026-10-28 · Copiar contorno de piso
+
+### Adicionado
+- No **Editar contorno do piso**: **⧉ Copiar contorno de piso** — clique na face de outro piso e o contorno exato dele
+  (e os furos) entra como linhas do esboço, na cota do piso em edição; vários cliques somam, Esc termina. Ponteiro
+  próprio ("copiar-contorno").
 
 ## [2.50.0] — 2026-10-28 · Ponteiro de cada ferramenta
 

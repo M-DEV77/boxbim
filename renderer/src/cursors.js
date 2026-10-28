@@ -26,6 +26,7 @@ const ICONS = {
   // piso
   ponto: '<path d="M23.5 17 L28.5 22 L23.5 27 L18.5 22 Z"/><path d="M23.5 20 V24 M21.5 22 H25.5"/>',
   hospedeiro: '<circle cx="23.5" cy="23" r="5"/><circle cx="23.5" cy="23" r="1.8"/>',
+  'copiar-contorno': '<path d="M17 22 L22 18 H30 V26 L25 29 H17 Z"/><path d="M20 23 h6 v3"/>',
   'copiar-linhas': '<path d="M17 27 L26 18 M21 29 L30 20"/><path d="M27 26 h4 m-2 -2 v4"/>',
 };
 // modos do desenho 2D do editor de Objetos e outros apelidos

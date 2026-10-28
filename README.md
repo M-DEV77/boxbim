@@ -125,7 +125,8 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
   **✔ Concluir** (Enter) refaz o piso com os contornos fechados; **✖ Cancelar** (Esc) volta como estava. As linhas do
   esboço ficam só na sua tela e aparecem em **neon rosa** (o contorno dos pontos de elevação também). No painel,
   **⧉ Copiar linhas** (clique numa linha 2D: entram cópias dela e das ligadas) e **⧉ Copiar arestas de sólidos**
-  (clique nas arestas dos sólidos: entram projetadas na planta) para montar o contorno.
+  (clique nas arestas dos sólidos: entram projetadas na planta) e **⧉ Copiar contorno de piso** (clique na face de
+  outro piso: entram o contorno e os furos dele) para montar o contorno.
 - **Barras das ferramentas flutuantes** (desenho 2D, Canto, Aparar, Mover/Girar, Cota…), quadradas e compactas: arraste
   pela alça **⠿** para onde quiser na vista; a posição fica guardada e o duplo clique na alça devolve ao lugar.
 - **Ponteiro de cada ferramenta**: ao usar uma ferramenta o ponteiro vira uma mira fina (o ponto exato do clique no
@@ -452,4 +453,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.50.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.51.0</a>
