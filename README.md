@@ -126,8 +126,11 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
   esboço ficam só na sua tela e aparecem em **neon rosa** (o contorno dos pontos de elevação também). No painel,
   **⧉ Copiar linhas** (clique numa linha 2D: entram cópias dela e das ligadas) e **⧉ Copiar arestas de sólidos**
   (clique nas arestas dos sólidos: entram projetadas na planta) para montar o contorno.
-- **Barras das ferramentas flutuantes** (desenho 2D, Canto, Aparar, Mover/Girar…): arraste pela alça **⠿** para onde
-  quiser na vista; a posição fica guardada e o duplo clique na alça devolve ao lugar.
+- **Barras das ferramentas flutuantes** (desenho 2D, Canto, Aparar, Mover/Girar, Cota…), quadradas e compactas: arraste
+  pela alça **⠿** para onde quiser na vista; a posição fica guardada e o duplo clique na alça devolve ao lugar.
+- **Ponteiro de cada ferramenta**: ao usar uma ferramenta o ponteiro vira uma mira fina (o ponto exato do clique no
+  centro) com o ícone dela — Aparar, Estender, Canto, Offset, Linha, Retângulo, Círculo, Parede, Piso, Telhado, Cota,
+  Copiar, Espelhar, Inserir objeto e as escolhas na vista.
 - **Canto da faixa (Desenho › Canto) no piso**: clique dois lados do mesmo contorno do piso (ou de um furo) — vivo
   (os lados se encontram), raio ou chanfro, como nas linhas 2D; desfaz arredondamentos e chanfros com o vivo.
 - **Sobrepor** (Propriedades do piso): ligue e clique no piso **hospedeiro** na vista — o piso deita sobre ele e
@@ -449,4 +452,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.49.1</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.50.0</a>

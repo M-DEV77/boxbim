@@ -24,6 +24,7 @@ export class MirrorTool extends CopyTool {
     this.keep = load('boxbim.espelhoManter') !== '0';
     this.planeKind = PLANES[load('boxbim.espelhoPlano')] ? load('boxbim.espelhoPlano') : 'vertical';
     this.pickLine = false;
+    this.cursorName = 'espelhar';
   }
 
   start() {

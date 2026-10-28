@@ -22,6 +22,7 @@ import { fmtElev } from './levels.js';
 import { fmtLen, fromUnit, toUnit, unitLabel } from './units.js';
 import { isSketch, bake, distToSeg, offsetPolyline } from './sketch/sketch.js';
 import { fixTees } from './sketch/linear.js';
+import { toolCursor } from './cursors.js';
 
 const SNAP_PX = 12;      // raio do snap de ponta, em pixels
 const GRID = 0.01;       // arredondamento sem snap: 1 cm
@@ -151,7 +152,7 @@ export class WallDrawTool extends EventTarget {
     document.addEventListener('keydown', this._h.key, true);
     document.addEventListener('keyup', this._h.keyup, true);
     this.app.views.addEventListener('activate', this._h.view);
-    el.style.cursor = 'crosshair';
+    el.style.cursor = toolCursor('parede');
     this._statusHelp();
     this.dispatchEvent(new Event('change'));
   }
@@ -394,7 +395,7 @@ export class WallDrawTool extends EventTarget {
     this._clearPreview();
     this.marker.hidden = true;
     const hit = this._pickRef(e);
-    if (!hit) { this.tip.hidden = true; this.viewer.renderer.domElement.style.cursor = 'crosshair'; return; }
+    if (!hit) { this.tip.hidden = true; this.viewer.renderer.domElement.style.cursor = toolCursor('parede'); return; }
     this.viewer.renderer.domElement.style.cursor = 'pointer';
     const axes = axisPolyline(hit.pts, this._offset(hit.pts, hit.closed), hit.closed);
     axes.forEach((s, i) => this._preview(s.a, s.b, { ext0: i > 0 || hit.closed, ext1: i < axes.length - 1 || hit.closed, ref: [hit.pts[i], hit.pts[(i + 1) % hit.pts.length]] }));

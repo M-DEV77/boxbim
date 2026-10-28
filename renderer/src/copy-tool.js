@@ -14,6 +14,7 @@ import { fmtElev } from './levels.js';
 import { fmtLen, fromUnit, toUnit, unitLabel } from './units.js';
 import { isSketch, bake } from './sketch/sketch.js';
 import { handlesOf } from './sketch/linear.js';
+import { toolCursor } from './cursors.js';
 
 const SNAP_PX = 12;
 const GRID = 0.01;
@@ -53,7 +54,7 @@ export class CopyTool {
     el.addEventListener('pointerdown', this._h.down);
     el.addEventListener('contextmenu', this._h.ctx);
     document.addEventListener('keydown', this._h.key, true);
-    el.style.cursor = 'crosshair';
+    el.style.cursor = toolCursor(this.cursorName || 'copiar');
     this.step = this.viewer.selected.size ? 'base' : 'selecionar';
     this.buildPanel();
     this.sync();

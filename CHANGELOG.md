@@ -6,12 +6,24 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.49.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.50.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.50.0] — 2026-10-28 · Ponteiro de cada ferramenta
+
+### Adicionado
+- **Ponteiro próprio em cada ferramenta** (cursors.js): mira fina com folga no meio e o ponto exato do clique, mais o
+  ícone da ferramenta em rosa — Aparar, Estender, Canto, Offset, Linha, Retângulo, Círculo, Linhas do sólido, Eixo de
+  trabalho, Parede, Piso, Telhado, Cota, Copiar, Espelhar, Inserir objeto, ponto de forma, hospedeiro e Copiar linhas.
+  Regra do projeto (CLAUDE.md › Interface): ferramenta nova sempre com o seu ponteiro.
+
+### Mudado
+- Barras flutuantes **quadradas e compactas** (cantos de 3 px, fonte e campos menores); a barra da **Cota** também
+  flutua e é arrastável.
 
 ## [2.49.1] — 2026-10-28 · Ferramentas 2D no contorno do piso em qualquer cota
 

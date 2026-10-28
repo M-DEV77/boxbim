@@ -26,6 +26,7 @@ import { styleControls, DEFAULT_STYLE } from './style.js';
 import { sweepFromGroups } from './sweep.js';
 import { handlesOf, linearKind, offsetPlan, offsetLinear, KIND_LABEL } from './linear.js';
 import { fmtLen, fromUnit, toUnit, unitLabel, unitStep } from '../units.js';
+import { toolCursor } from '../cursors.js';
 
 const SNAP_PX = 12;
 const GRID = 0.01;
@@ -102,7 +103,7 @@ export class SketchTool extends EventTarget {
     el.addEventListener('pointerleave', this._h.leave);
     document.addEventListener('keydown', this._h.key, true);
     this.app.views.addEventListener('activate', this._h.view);
-    el.style.cursor = mode === 'selecao' ? 'default' : 'crosshair';
+    el.style.cursor = mode === 'selecao' ? 'default' : toolCursor(mode);
     this.buildBar();
     this.app.status(`${SKETCH_MODES[mode].label}: ${SKETCH_MODES[mode].tip}`);
     this.dispatchEvent(new Event('change'));

@@ -7,6 +7,7 @@ import { fmtElev } from '../levels.js';
 import { fmtLen } from '../units.js';
 import { editObjectMeta, iconView, CATEGORY_LABELS } from './meta-ui.js';
 import { fillThumbnails } from './thumbs.js';
+import { toolCursor } from '../cursors.js';
 
 const B = window.boxbim;
 
@@ -148,7 +149,7 @@ export class PlaceTool {
     el.addEventListener('pointerdown', this._h.down);
     el.addEventListener('contextmenu', this._h.ctx);
     document.addEventListener('keydown', this._h.key, true);
-    el.style.cursor = 'crosshair';
+    el.style.cursor = toolCursor('inserir');
     this.app.status(this.hostMode
       ? `Inserir "${def.name}": aponte para uma parede de ${this.level.name} e clique · R/Espaço inverte o lado · Esc sai.`
       : `Inserir "${def.name}" em ${this.level.name} (${fmtElev(this.level.elevation)}): clique para colocar · R/Espaço gira 90° · Esc sai.`);

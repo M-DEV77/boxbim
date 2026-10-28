@@ -16,6 +16,7 @@ import { h, toast } from './ui.js';
 import { rebuildElement, slabShapeFn } from './elements.js';
 import { slopeConfig } from './slopes.js';
 import { fmtLen, fromUnit, toUnit, unitLabel, unitStep } from './units.js';
+import { toolCursor } from './cursors.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 const SNAP_PX = 12;
@@ -531,7 +532,7 @@ export class FloorPoints {
     };
     cv.addEventListener('pointerdown', down, true);
     document.addEventListener('keydown', key, true);
-    cv.style.cursor = 'crosshair';
+    cv.style.cursor = toolCursor('hospedeiro');
     this.app.status('Sobrepor · clique no piso hospedeiro na vista · Esc cancela.');
     this.app.renderProps();
   }
@@ -640,7 +641,7 @@ export class FloorPoints {
     const c = this.viewer.renderer.domElement;
     c.addEventListener('pointerdown', this._place, true);
     document.addEventListener('keydown', this._esc, true);
-    c.style.cursor = 'crosshair';
+    c.style.cursor = toolCursor('ponto');
     this.app.status('Pontos do piso · clique dentro do piso para colocar um ponto de forma (depois digite a altura) · Esc termina.');
     this.app.renderProps();
   }

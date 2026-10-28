@@ -12,6 +12,7 @@ import { trim, extend, corner, snapPointsOf, distToSeg, chainSegments, outerWith
 import { styleControls, DEFAULT_STYLE } from '../sketch/style.js';
 import { sweepFromGroups } from '../sketch/sweep.js';
 import { fmtLen, fromUnit, toUnit, unitLabel } from '../units.js';
+import { toolCursor } from '../cursors.js';
 
 const SNAP_PX = 12;
 const GRID = 0.001; // objetos são pequenos: arredonda em 1 mm
@@ -235,7 +236,7 @@ export class ObjectSketch {
     el.addEventListener('pointerup', this._h.up, true);
     el.addEventListener('contextmenu', this._h.ctx);
     el.addEventListener('pointerleave', this._h.leave);
-    el.style.cursor = mode === 'selecao' ? 'default' : 'crosshair';
+    el.style.cursor = mode === 'selecao' ? 'default' : toolCursor(mode);
     st.el.append(this.tip, this.marker);
     this.btns.forEach(x => x.classList.toggle('on', x.dataset.mode === mode));
     this.cornerBox.hidden = mode !== 'canto';

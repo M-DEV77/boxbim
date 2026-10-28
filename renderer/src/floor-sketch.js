@@ -10,6 +10,7 @@ import { slabShapeFn } from './elements.js';
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
+import { toolCursor } from './cursors.js';
 
 // NEON (rosa, fino) das linhas do esboço: núcleo claro e brilho, por cima de tudo (na cena de sobreposição)
 const NEON_CORE = new LineMaterial({ color: 0xffd6f6, linewidth: 1.3, depthTest: false, transparent: true });
@@ -166,7 +167,7 @@ export class FloorSketch {
     };
     cv.addEventListener('pointerdown', down, true);
     document.addEventListener('keydown', key, true);
-    cv.style.cursor = 'copy';
+    cv.style.cursor = toolCursor('copiar-linhas');
     this.picking = stop;
     this.app.status('Copiar linhas · clique numa linha 2D do desenho (entram ela e as ligadas) · Esc termina.');
   }

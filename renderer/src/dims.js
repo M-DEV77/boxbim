@@ -9,8 +9,9 @@
 // Ferramenta "Cota": clique o 1º ponto, o 2º (encaixe em pontas e quinas; Shift solta o encaixe) e a posição da linha.
 // Arrastar o texto de uma cota selecionada muda o afastamento.
 import * as THREE from 'three';
-import { h, modal, toast } from './ui.js';
+import { h, modal, toast, floatBar } from './ui.js';
 import { getUnit, UNITS, toUnit, fromUnit, unitLabel, unitStep } from './units.js';
+import { toolCursor } from './cursors.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 const svg = (tag, attrs = {}) => { const e = document.createElementNS(SVGNS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
@@ -264,6 +265,7 @@ export class Dimensions {
     el.addEventListener('pointermove', this._h.move);
     el.addEventListener('pointerdown', this._h.down);
     addEventListener('keydown', this._h.key);
+    el.style.cursor = toolCursor('cota');
     this.marker = h('div', { class: 'snap-marker', hidden: true });
     document.querySelector('.center').append(this.marker);
     const orient = h('select', { onchange: e => { this.tool.orient = this._orient = e.target.value; } }, Object.entries(ORIENT).map(([k, l]) => h('option', { value: k, selected: k === this.tool.orient }, l)));
@@ -272,7 +274,7 @@ export class Dimensions {
       h('button', { class: 'mini', onclick: () => this.stylesDialog() }, 'Estilos…'),
       h('span', { class: 'muted' }, '1º ponto · 2º ponto · posição da linha — Shift solta o encaixe · Esc sai'),
       h('button', { onclick: () => this.stop() }, 'Sair'));
-    document.querySelector('.center').append(this.bar);
+    floatBar(this.bar, 'cota'); // flutuante na vista, arrastável
     app.status('Cota: clique o primeiro ponto.');
   }
 
@@ -282,6 +284,7 @@ export class Dimensions {
     el.removeEventListener('pointermove', this._h.move);
     el.removeEventListener('pointerdown', this._h.down);
     removeEventListener('keydown', this._h.key);
+    el.style.cursor = '';
     this.bar?.remove(); this.marker?.remove();
     if (this._saved) { this._saved.ctl.mouseButtons = this._saved.buttons; this._saved = null; }
     if (v.tool === this) v.tool = null;

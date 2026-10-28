@@ -23,6 +23,13 @@ O `AGENT.MD` na raiz guarda, em todo commit:
   `<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software vX.Y.Z</a>`
   — com a versão atual do BoxBim no lugar de vX.Y.Z (no app ela vem do `package.json`).
 
+## Interface
+- **Toda ferramenta tem o seu ponteiro**: ao usar uma ferramenta (desenho 2D, aparar, estender, canto, offset, parede,
+  piso, telhado, copiar, espelhar, cota, inserir objeto, escolhas na vista…), o ponteiro muda para a mira com o ícone
+  dela — `toolCursor('<nome>')` de `renderer/src/cursors.js`. Ferramenta nova = ícone novo em `cursors.js` e
+  `el.style.cursor = toolCursor(...)` no início (e `''` no fim). Nunca deixar só `crosshair` genérico.
+- Barras de ferramenta ficam **flutuantes e arrastáveis** (`floatBar` de `ui.js`), quadradas e compactas.
+
 ## Como testar
 - Servidor de teste isolado (nunca o do usuário): `BOXBIM_DATA=<pasta temporária> PORTA=3911 node server/index.js`.
 - A instância do BoxBim do próprio usuário (porta 3000, `Documentos\\BoxBim`) não deve ser fechada nem alterada,
