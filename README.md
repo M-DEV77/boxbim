@@ -123,7 +123,9 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
 - **Clique duplo no piso** (ou faixa › Piso › Editar contorno): o contorno e os furos viram **linhas 2D** e o piso some
   enquanto isso — edite com as ferramentas 2D da faixa (Linha, Aparar, Estender, Canto, Offset, Mover…) e
   **✔ Concluir** (Enter) refaz o piso com os contornos fechados; **✖ Cancelar** (Esc) volta como estava. As linhas do
-  esboço ficam só na sua tela.
+  esboço ficam só na sua tela e aparecem em **neon** (o contorno dos pontos de elevação também).
+- **Barras das ferramentas flutuantes** (desenho 2D, Canto, Aparar, Mover/Girar…): arraste pela alça **⠿** para onde
+  quiser na vista; a posição fica guardada e o duplo clique na alça devolve ao lugar.
 - **Canto da faixa (Desenho › Canto) no piso**: clique dois lados do mesmo contorno do piso (ou de um furo) — vivo
   (os lados se encontram), raio ou chanfro, como nas linhas 2D; desfaz arredondamentos e chanfros com o vivo.
 - **Sobrepor** (Propriedades do piso): ligue e clique no piso **hospedeiro** na vista — o piso deita sobre ele e
@@ -445,4 +447,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.47.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.48.0</a>

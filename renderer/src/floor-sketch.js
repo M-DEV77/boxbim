@@ -7,6 +7,14 @@ import * as THREE from 'three';
 import { h, toast } from './ui.js';
 import { createSketch, isSketch, worldPoints, chainSegments, outerWithHoles, area } from './sketch/sketch.js';
 import { slabShapeFn } from './elements.js';
+import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
+import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
+
+// NEON das linhas do esboço: núcleo claro e brilho largo, por cima de tudo (na cena de sobreposição)
+const NEON_CORE = new LineMaterial({ color: 0xc8fdff, linewidth: 2.2, depthTest: false, transparent: true });
+const NEON_GLOW = new LineMaterial({ color: 0x00e5ff, linewidth: 9, depthTest: false, transparent: true, opacity: 0.38, blending: THREE.AdditiveBlending });
+const NEON_HALO = new LineMaterial({ color: 0x00b3ff, linewidth: 18, depthTest: false, transparent: true, opacity: 0.14, blending: THREE.AdditiveBlending });
 
 const r6 = v => +v.toFixed(6);
 const keyOf = p => `${p[0].toFixed(4)},${p[1].toFixed(4)}`;
@@ -71,8 +79,31 @@ export class FloorSketch {
     this.app.showTab?.('props');
     (document.querySelector('.tab-body[data-body="props"]') || document.querySelector('.center')).prepend(this.panel);
     this.refreshInfo();
-    this._chg = () => this.refreshInfo();
+    this.neon();
+    this._chg = () => { this.refreshInfo(); this.neon(); };
     this.viewer.addEventListener('change', this._chg);
+  }
+
+  /** Desenha as linhas do esboço em neon (por cima da vista) — refeito a cada mudança. */
+  neon() {
+    const v = this.viewer;
+    if (!this.neonGroup) { this.neonGroup = new THREE.Group(); this.neonGroup.renderOrder = 999; }
+    for (const c of [...this.neonGroup.children]) { this.neonGroup.remove(c); c.geometry.dispose(); }
+    if (!this.active) { this.neonGroup.parent?.remove(this.neonGroup); return; }
+    if (!this.neonGroup.parent) v.overlay.add(this.neonGroup);
+    const arr = [];
+    for (const e of v.elements().filter(x => this.isTemp(x) && x.visible)) {
+      const pts = worldPoints(e.userData.bim.linha);
+      for (let i = 1; i < pts.length; i++) arr.push(pts[i - 1].x, pts[i - 1].y, pts[i - 1].z + 0.01, pts[i].x, pts[i].y, pts[i].z + 0.01);
+    }
+    if (!arr.length) return;
+    const size = v.renderer.getSize(new THREE.Vector2());
+    for (const mat of [NEON_HALO, NEON_GLOW, NEON_CORE]) {
+      mat.resolution.set(size.x, size.y);
+      const l = new LineSegments2(new LineSegmentsGeometry().setPositions(arr), mat);
+      l.renderOrder = 999;
+      this.neonGroup.add(l);
+    }
   }
 
   /** Linhas do esboço (no modelo) e os contornos que elas fecham. */
@@ -122,6 +153,7 @@ export class FloorSketch {
     this.viewer.removeEventListener('change', this._chg);
     this.panel?.remove(); this.panel = null;
     this.active = null;
+    this.neon(); // tira o neon
     el.visible = true;
     this.viewer.select([el]);
     if (ok) this.app.floorPoints.commit(el);

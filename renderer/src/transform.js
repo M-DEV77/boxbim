@@ -8,7 +8,7 @@
 // Paredes levam junto as portas/janelas que hospedam; uma porta/janela movida sozinha volta ao eixo da parede.
 import * as THREE from 'three';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
-import { h, toast } from './ui.js';
+import { h, toast, floatBar } from './ui.js';
 import { snapPivot } from './snap.js';
 import { fmtLen, fromUnit, toUnit, unitLabel } from './units.js';
 
@@ -388,7 +388,6 @@ export class TransformTool extends EventTarget {
       h('label', { title: 'Mostrar estas opções sempre que algo for selecionado' },
         h('input', { type: 'checkbox', checked: this.autoOnSelect, onchange: e => { this.autoOnSelect = e.target.checked; store('boxbim.tAuto', this.autoOnSelect ? '1' : '0'); } }), 'Ao selecionar'),
       h('button', { onclick: () => { this.stop(); this.viewer.select([]); }, title: 'Esc: sai e limpa a seleção' }, 'Sair'));
-    // no fim da faixa (à direita dos grupos); sem faixa, flutuando na vista
-    (document.querySelector('#ribbon-context') || document.querySelector('.center')).append(this.bar);
+    floatBar(this.bar, 'mover'); // flutuante na vista, arrastável
   }
 }

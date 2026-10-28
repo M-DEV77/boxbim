@@ -916,3 +916,15 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: rgba(31
 img.tb-ico, .obj-icon.tb-ico { object-fit: contain; font-size: 15px; }
 .tb-ico-obj { color: #8fb8d6; font-size: 14px; }
 .tb-item .tb-ico { margin-right: 4px; }
+
+/* barras de ferramenta flutuantes (arrastáveis pela alça) — ui.js floatBar */
+.draw-bar.floating-bar, .ribbon-context .draw-bar.floating-bar { position: absolute; inset: auto; top: 10px; left: 10px; right: auto; bottom: auto; margin: 0;
+  transform: none; width: max-content; max-width: calc(100% - 20px); z-index: 30; flex-wrap: wrap; overflow: visible; }
+.float-grip { cursor: grab; user-select: none; color: var(--muted); font-size: 15px; line-height: 1; padding: 2px 2px 2px 0; touch-action: none; }
+.float-grip:hover { color: var(--green-2); }
+.floating-bar.dragging { opacity: .92; box-shadow: 0 12px 34px #000a; }
+.floating-bar.dragging .float-grip { cursor: grabbing; }
+
+/* contorno do piso em NEON (pontos de elevação) */
+.floor-outline { stroke: #3cf6ff; stroke-width: 2.4; filter: drop-shadow(0 0 3px #3cf6ff) drop-shadow(0 0 8px rgba(60, 246, 255, .7)); }
+.floor-outline.hole { stroke: #ff4dff; filter: drop-shadow(0 0 3px #ff4dff) drop-shadow(0 0 8px rgba(255, 77, 255, .6)); }

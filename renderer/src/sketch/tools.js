@@ -15,7 +15,7 @@
 // O plano do desenho é o do nível da vista ou o EIXO DE TRABALHO ativo (this.frame).
 // Extrudar, Varrer e Cortar com vazio são comandos sobre a seleção (sketchCommands).
 import * as THREE from 'three';
-import { h, toast, formDialog } from '../ui.js';
+import { h, toast, formDialog, floatBar } from '../ui.js';
 import { createSketch, rebuildSketch, isSketch, bake, trim, extend, corner, snapPointsOf, distToSeg, chainSegments, outerWithHoles, dist, segPoints, planeMatrix, frameOf, samePlane, toFrame, worldPoints, offsetPolyline, offsetLoop, area, pointInPoly, isCircle } from './sketch.js';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { createForm, isVoid, isForm, rebuildForm } from './forms.js';
@@ -198,7 +198,7 @@ export class SketchTool extends EventTarget {
       this.mode === 'eixo' ? h('span', { class: 'muted small' }, this.level ? `${this.level.name}` : '') : this.planeSelect(),
       ...fields,
       h('button', { class: 'primary', onclick: () => this.stop(), title: 'Sai da ferramenta (Esc)' }, 'Sair'));
-    (document.querySelector('#ribbon-context') || document.querySelector('.center')).append(this.bar);
+    floatBar(this.bar, 'desenho'); // flutuante na vista, arrastável
     const center = document.querySelector('.center');
     this.tip = h('div', { class: 'draw-tip', hidden: true });
     this.marker = h('div', { class: 'snap-marker', hidden: true });

@@ -151,3 +151,48 @@ export function markdown(src) {
   flush();
   return out.join('');
 }
+
+/**
+ * Barra de ferramenta FLUTUANTE na vista: arraste pela alça (⠿) para onde quiser; a posição fica guardada (por
+ * "key") e volta igual na próxima vez. Duplo clique na alça devolve ao lugar padrão (no alto, no meio da vista).
+ */
+export function floatBar(bar, key) {
+  const host = document.querySelector('.center');
+  const store = `boxbim.barra.${key}`;
+  bar.classList.add('floating-bar');
+  const grip = h('span', { class: 'float-grip', title: 'Arraste para mover a barra (duplo clique: volta ao lugar)' }, '⠿');
+  bar.prepend(grip);
+  host.append(bar);
+  const clamp = (x, y) => {
+    const r = host.getBoundingClientRect(), b = bar.getBoundingClientRect();
+    return [Math.min(Math.max(0, x), Math.max(0, r.width - b.width)), Math.min(Math.max(0, y), Math.max(0, r.height - b.height))];
+  };
+  const place = (x, y) => { [x, y] = clamp(x, y); bar.style.left = `${x}px`; bar.style.top = `${y}px`; };
+  const reset = () => {
+    const r = host.getBoundingClientRect(), b = bar.getBoundingClientRect();
+    const tabs = host.querySelector('.view-tabs')?.getBoundingClientRect(); // abaixo das abas das vistas
+    place((r.width - b.width) / 2, (tabs && tabs.height ? tabs.bottom - r.top : 0) + 8);
+  };
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(store) || 'null'); } catch { /* sem armazenamento: posição padrão */ }
+  const init = () => (saved ? place(saved[0], saved[1]) : reset());
+  init();
+  requestAnimationFrame(init); // de novo depois do layout (largura final da barra)
+  grip.addEventListener('dblclick', () => { reset(); try { localStorage.removeItem(store); } catch { /* ok */ } });
+  grip.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const r = host.getBoundingClientRect(), b = bar.getBoundingClientRect();
+    const dx = e.clientX - b.left, dy = e.clientY - b.top;
+    grip.setPointerCapture?.(e.pointerId);
+    bar.classList.add('dragging');
+    const move = ev => place(ev.clientX - r.left - dx, ev.clientY - r.top - dy);
+    const up = () => {
+      grip.removeEventListener('pointermove', move); grip.removeEventListener('pointerup', up);
+      bar.classList.remove('dragging');
+      try { localStorage.setItem(store, JSON.stringify([parseFloat(bar.style.left) || 0, parseFloat(bar.style.top) || 0])); } catch { /* ok */ }
+    };
+    grip.addEventListener('pointermove', move); grip.addEventListener('pointerup', up);
+  });
+  return bar;
+}

@@ -6,12 +6,21 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.47.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.48.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.48.0] — 2026-10-28 · Neon no contorno do piso e barras flutuantes
+
+### Mudado
+- As linhas do **esboço do contorno do piso** (clique duplo) aparecem em **neon** ciano — núcleo claro, brilho e halo
+  por cima da vista — e o contorno dos pontos de elevação também (furos em magenta).
+- As **barras das ferramentas** (Linha, Retângulo, Círculo, Aparar, Estender, Canto, Offset… e Mover/Girar) ficam
+  **flutuando na vista** e podem ser **arrastadas** pela alça ⠿; cada barra guarda a posição e o duplo clique na alça
+  a devolve ao lugar padrão (no alto, no meio, abaixo das abas das vistas).
 
 ## [2.47.0] — 2026-10-27 · Piso sobreposto
 

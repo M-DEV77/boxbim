@@ -165,7 +165,8 @@ flowchart LR
 | 2026-10-27 | 2.45.0 | `2a9ea14` | Contorno do piso com linhas 2D (clique duplo) e pontos de elevação com dois cliques pausados |
 | 2026-10-27 | 2.46.0 | `c141c7f` | Canto da faixa (vivo, raio, chanfro) direto nos lados do piso |
 | 2026-10-27 | 2.46.1 | `2d8b188` | Tirado o bloco Edição 2D do contorno das Propriedades do piso |
-| 2026-10-27 | 2.47.0 | este commit | Piso sobreposto: acompanha o relevo do piso hospedeiro (escolhido na vista) |
+| 2026-10-27 | 2.47.0 | `159849d` | Piso sobreposto: acompanha o relevo do piso hospedeiro (escolhido na vista) |
+| 2026-10-28 | 2.48.0 | este commit | Neon no contorno do piso em edição e barras das ferramentas flutuantes e arrastáveis |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.47.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.48.0</a>
