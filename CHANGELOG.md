@@ -6,12 +6,20 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.60.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.60.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.60.1] — 2026-10-28 · Linhas do sólido: reta num segmento só
+
+### Corrigido
+- **Linhas do sólido** copiava as arestas retas de malhas subdivididas (terreno, piso com pontos) em vários
+  segmentos: no modo Aresta, clicar numa aresta reta pega os pedaços alinhados e cria **um segmento único**; no
+  Contorno da face, trechos retos alinhados também viram um só. (Na edição do contorno do piso os pontos continuam,
+  porque podem ter altura.)
 
 ## [2.60.0] — 2026-10-28 · Linhas do sólido com curvas únicas
 

@@ -466,7 +466,7 @@ export function outerWithHoles(loops) {
  * mesma curva (até 30° por trecho) vira arco. Devolve [{ a, b, arco: null | { c, r, a0, a1 } }] (arco anti-horário
  * de a0 a a1, como nas linhas 2D). Uma volta inteira vira um círculo.
  */
-export function polylineArcs(pts, closed) {
+export function polylineArcs(pts, closed, { merge = true } = {}) {
   const n = pts.length, m = closed ? n : n - 1; // m trechos
   if (m < 1) return [];
   const P = k => pts[closed ? ((k % n) + n) % n : k];
@@ -511,7 +511,24 @@ export function polylineArcs(pts, closed) {
     out.push({ a: P(i), b: P(i + 1), arco: null });
     k += 1;
   }
-  return out;
+  // trechos RETOS alinhados em sequência (malha subdividida, terreno) viram um trecho só
+  const straight = (u, w) => {
+    if (u.arco || w.arco) return false;
+    const same = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1]) < 1e-6;
+    if (!same(u.b, w.a)) return false;
+    const d1 = [u.b[0] - u.a[0], u.b[1] - u.a[1]], d2 = [w.b[0] - w.a[0], w.b[1] - w.a[1]];
+    const l1 = Math.hypot(...d1), l2 = Math.hypot(...d2);
+    if (l1 < 1e-9 || l2 < 1e-9) return true;
+    return Math.abs(d1[0] * d2[1] - d1[1] * d2[0]) / (l1 * l2) < 2e-3 && d1[0] * d2[0] + d1[1] * d2[1] > 0; // < ~0,1°
+  };
+  if (!merge) return out;
+  const merged = [];
+  for (const sg of out) {
+    const last = merged[merged.length - 1];
+    if (last && straight(last, sg)) last.b = sg.b; else merged.push({ ...sg });
+  }
+  if (closed && merged.length > 1 && straight(merged[merged.length - 1], merged[0])) { merged[0].a = merged[merged.length - 1].a; merged.pop(); }
+  return merged;
 }
 
 // pontos de encaixe das linhas: pontas, meios e centros

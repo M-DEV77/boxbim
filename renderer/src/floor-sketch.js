@@ -29,7 +29,7 @@ const r6 = v => +v.toFixed(6);
 const keyOf = p => `${p[0].toFixed(4)},${p[1].toFixed(4)}`;
 
 /** Trechos de um contorno fechado com os cantos arredondados de volta a arcos (ver polylineArcs em sketch.js). */
-export const ringToSegments = pts => polylineArcs(pts, true);
+export const ringToSegments = pts => polylineArcs(pts, true, { merge: false }); // os pontos do piso ficam (podem ter altura)
 
 export class FloorSketch {
   constructor(app) {

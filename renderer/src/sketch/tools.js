@@ -700,23 +700,30 @@ export class SketchTool extends EventTarget {
     if (this.edgeMode === 'aresta') {
       // aresta de uma CURVA (borda de cilindro, canto arredondado): pega a curva inteira — os trechos ligados de mesmo
       // tamanho e com pouca virada (até 30°) — para virar uma linha curva única
+      // e a aresta RETA de uma malha subdividida (terreno, piso com pontos): pega a reta inteira (os pedaços alinhados)
       const k = v => `${v.x.toFixed(4)},${v.y.toFixed(4)},${v.z.toFixed(4)}`;
       const L0 = best[0].distanceTo(best[1]);
       const similar = ed => Math.abs(ed[0].distanceTo(ed[1]) - L0) <= Math.max(1e-4, L0 * 0.02);
+      const neighbors = tip => onFace.filter(ed => ed !== best && (k(ed[0]) === k(tip) || k(ed[1]) === k(tip)));
+      const dir0 = best[1].clone().sub(best[0]).normalize();
+      // reta ou curva? olha o vizinho de cada ponta: alinhado (< 0,5°) = reta
+      const aligned = [1, 0].some(end => neighbors(best[end]).some(ed => {
+        const other = k(ed[0]) === k(best[end]) ? ed[1] : ed[0];
+        return other.clone().sub(best[end]).normalize().angleTo(end ? dir0 : dir0.clone().negate()) < 0.0087;
+      }));
       const chain = [best];
       for (const end of [1, 0]) {
-        let cur = best, tip = best[end], prevDir = best[1].clone().sub(best[0]).normalize().multiplyScalar(end ? 1 : -1);
-        for (let guard = 0; guard < 720; guard++) {
-          const next = onFace.find(ed => !chain.includes(ed) && similar(ed) && (k(ed[0]) === k(tip) || k(ed[1]) === k(tip)));
+        let tip = best[end], prevDir = end ? dir0.clone() : dir0.clone().negate();
+        for (let guard = 0; guard < 2000; guard++) {
+          const next = onFace.find(ed => !chain.includes(ed) && (aligned || similar(ed)) && (k(ed[0]) === k(tip) || k(ed[1]) === k(tip))
+            && (() => { const o = k(ed[0]) === k(tip) ? ed[1] : ed[0]; const ang = prevDir.angleTo(o.clone().sub(tip).normalize()); return aligned ? ang < 0.0087 : ang <= Math.PI / 6 + 1e-6; })());
           if (!next) break;
           const other = k(next[0]) === k(tip) ? next[1] : next[0];
-          const dirN = other.clone().sub(tip).normalize();
-          if (prevDir.angleTo(dirN) > Math.PI / 6 + 1e-6) break;
-          chain.push(next); prevDir = dirN; tip = other; cur = next;
+          prevDir = other.clone().sub(tip).normalize();
+          chain.push(next); tip = other;
         }
-        void cur;
       }
-      if (chain.length >= 3) edges = chain;
+      if (aligned ? chain.length >= 2 : chain.length >= 3) edges = chain;
     } else {
       // contorno (e piso do contorno): as arestas da face ligadas (pelas pontas) à mais próxima do clique
       const k = v => `${v.x.toFixed(4)},${v.y.toFixed(4)},${v.z.toFixed(4)}`;

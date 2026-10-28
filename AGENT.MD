@@ -187,7 +187,8 @@ flowchart LR
 | 2026-10-28 | 2.57.0 | `24493dd` | Carregando com o ícone do BoxBim enquanto o terreno é recalculado |
 | 2026-10-28 | 2.58.0 | `c0124f0` | Prévia do Canto (laranja/amarelo/verde) e ponteiro verde sobre linha válida |
 | 2026-10-28 | 2.59.0 | `dc2f757` | Canto arredondado do piso vira uma linha curva única na edição do contorno |
-| 2026-10-28 | 2.60.0 | este commit | Linhas do sólido copia curvas como arco/círculo único (polylineArcs) |
+| 2026-10-28 | 2.60.0 | `b44f6e9` | Linhas do sólido copia curvas como arco/círculo único (polylineArcs) |
+| 2026-10-28 | 2.60.1 | este commit | Linhas do sólido: aresta reta subdividida vira um segmento único |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.60.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.60.1</a>
