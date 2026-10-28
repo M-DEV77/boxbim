@@ -310,6 +310,8 @@ export function subdivide(geo, maxLen, { d3 = false } = {}) {
     const end = Math.min(gr.start + gr.count, count);
     for (let i = gr.start; i + 2 < end; i += 3) T.push(i, i + 1, i + 2, gi);
   });
+  // triângulos prontos (nenhuma aresta a dividir) saem da fila: as passadas seguintes só olham os novos
+  const done = [];
   for (let pass = 0; pass < 24; pass++) {
     // arestas a dividir, pelos pontos das pontas: as duas faces vizinhas concordam
     const marked = new Set();
@@ -325,7 +327,7 @@ export function subdivide(geo, maxLen, { d3 = false } = {}) {
       const a = T[t], b = T[t + 1], c = T[t + 2], gi = T[t + 3];
       const mab = marked.has(EK(pids[a], pids[b])), mbc = marked.has(EK(pids[b], pids[c])), mca = marked.has(EK(pids[c], pids[a]));
       const n = mab + mbc + mca;
-      if (!n) { N.push(a, b, c, gi); continue; }
+      if (!n) { done.push(a, b, c, gi); continue; }
       if (n === 3) {
         const p = midOf(a, b), q = midOf(b, c), r = midOf(c, a);
         N.push(a, p, r, gi, p, b, q, gi, r, q, c, gi, p, q, r, gi);
@@ -343,9 +345,11 @@ export function subdivide(geo, maxLen, { d3 = false } = {}) {
     }
     T = N;
   }
+  for (let t = 0; t < done.length; t++) T.push(done[t]);
   // saída por grupo (mesma ordem dos grupos)
   const nTri = T.length / 4;
   const out = sizes.map(n => new Float32Array(nTri * 3 * n));
+  const pointIds = new Int32Array(nTri * 3);
   const res = new THREE.BufferGeometry();
   let w = 0;
   groups.forEach((gr, gi) => {
@@ -354,12 +358,14 @@ export function subdivide(geo, maxLen, { d3 = false } = {}) {
       if (T[t + 3] !== gi) continue;
       for (let k = 0; k < 3; k++, w++) {
         const v = T[t + k];
+        pointIds[w] = pids[v];
         data.forEach((arr, j) => { const n = sizes[j]; for (let m = 0; m < n; m++) out[j][w * n + m] = arr[v * n + m]; });
       }
     }
     if (g.groups.length) res.addGroup(start, w - start, gr.materialIndex);
   });
   names.forEach((k, j) => res.setAttribute(k, new THREE.BufferAttribute(out[j], sizes[j])));
+  res.pointIds = pointIds; // número do ponto de cada canto (mesmo lugar = mesmo número); fora do userData: não vai nas cópias
   return res;
 }
 

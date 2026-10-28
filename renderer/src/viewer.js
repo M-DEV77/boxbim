@@ -786,27 +786,40 @@ export class Viewer extends EventTarget {
  * usadas por um triângulo só (junções em T do corte booleano) não são desenhadas.
  */
 function creaseEdges(geo, thresholdDeg) {
-  const pos = geo.attributes.position, n = pos.count;
+  const pos = geo.attributes.position, n = pos.count, P = pos.array;
   const cos = Math.cos(thresholdDeg * Math.PI / 180);
-  const q = i => `${Math.round(pos.getX(i) * 1e4)},${Math.round(pos.getY(i) * 1e4)},${Math.round(pos.getZ(i) * 1e4)}`;
+  // cada ponto ganha um número (o mesmo para cantos no mesmo lugar); aresta = par de números, sem textos por aresta
+  const ids = new Int32Array(n), byKey = new Map();
+  for (let i = 0; i < n; i++) {
+    const k = `${Math.round(P[i * 3] * 1e4)},${Math.round(P[i * 3 + 1] * 1e4)},${Math.round(P[i * 3 + 2] * 1e4)}`;
+    let id = byKey.get(k);
+    if (id === undefined) byKey.set(k, id = byKey.size);
+    ids[i] = id;
+  }
+  const nT = Math.floor(n / 3), N = new Float32Array(nT * 3), ok = new Uint8Array(nT);
+  for (let t = 0; t < nT; t++) {
+    const a = t * 9;
+    const ux = P[a + 6] - P[a + 3], uy = P[a + 7] - P[a + 4], uz = P[a + 8] - P[a + 5];
+    const vx = P[a] - P[a + 3], vy = P[a + 1] - P[a + 4], vz = P[a + 2] - P[a + 5];
+    const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, L = Math.hypot(nx, ny, nz);
+    if (L * L < 1e-14) continue;
+    N[t * 3] = nx / L; N[t * 3 + 1] = ny / L; N[t * 3 + 2] = nz / L; ok[t] = 1;
+  }
+  // aresta → [vértice i, vértice j, 1º triângulo, 2º triângulo, quantos]
   const map = new Map();
-  const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
-  for (let t = 0; t + 2 < n; t += 3) {
-    a.fromBufferAttribute(pos, t); b.fromBufferAttribute(pos, t + 1); c.fromBufferAttribute(pos, t + 2);
-    const nrm = new THREE.Vector3().subVectors(c, b).cross(new THREE.Vector3().subVectors(a, b));
-    if (nrm.lengthSq() < 1e-14) continue;
-    nrm.normalize();
-    for (const [i, j] of [[t, t + 1], [t + 1, t + 2], [t + 2, t]]) {
-      const ki = q(i), kj = q(j);
-      const k = ki < kj ? `${ki}|${kj}` : `${kj}|${ki}`;
+  for (let t = 0; t < nT; t++) {
+    if (!ok[t]) continue;
+    for (let s = 0; s < 3; s++) {
+      const i = t * 3 + s, j = t * 3 + (s + 1) % 3, a = ids[i], b = ids[j];
+      const k = a < b ? a * 67108864 + b : b * 67108864 + a;
       const e = map.get(k);
-      if (e) e.normals.push(nrm); else map.set(k, { i, j, normals: [nrm] });
+      if (e) { if (e[4] === 1) e[3] = t; e[4]++; } else map.set(k, [i, j, t, -1, 1]);
     }
   }
   const out = [];
-  for (const e of map.values()) {
-    if (e.normals.length !== 2 || e.normals[0].dot(e.normals[1]) > cos) continue;
-    out.push(pos.getX(e.i), pos.getY(e.i), pos.getZ(e.i), pos.getX(e.j), pos.getY(e.j), pos.getZ(e.j));
+  for (const [i, j, t1, t2, c] of map.values()) {
+    if (c !== 2 || N[t1 * 3] * N[t2 * 3] + N[t1 * 3 + 1] * N[t2 * 3 + 1] + N[t1 * 3 + 2] * N[t2 * 3 + 2] > cos) continue;
+    out.push(P[i * 3], P[i * 3 + 1], P[i * 3 + 2], P[j * 3], P[j * 3 + 1], P[j * 3 + 2]);
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(out, 3));

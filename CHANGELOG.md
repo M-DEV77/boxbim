@@ -6,12 +6,26 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.61.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.62.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.62.0] — 2026-10-28 · Terreno mais rápido e sem travar a página
+
+### Alterado
+- **Recálculo do terreno ficou mais rápido**: num terreno de 30×30 m com talude, caiu de **7,2 s para 2,6 s**.
+  - **Subdivisão**: a distância ao contorno é calculada só com contas, sem criar objetos nem testar dentro/fora em
+    cada aresta.
+  - **Perfil do talude**: é calculado uma vez por ponto, e não em cada um dos ~6 cantos que se repetem.
+  - Vértices fora do alcance do talude são pulados.
+  - **Corte booleano**: só os triângulos perto do piso que corta passam pelo booleano. O resto da malha volta igual.
+  - **Arestas do desenho**: as quinas do terreno cortado são achadas com números em vez de textos (2× mais rápido).
+- **Sem "Página sem resposta"**: o recálculo do terreno roda em etapas, uma camada por vez, devolvendo a vez ao
+  navegador entre elas. O "carregando" continua animado e a maior trava caiu de 7 s para menos de 1 s. Se algo mudar
+  durante o cálculo, ele refaz o que ficou para trás.
 
 ## [2.61.0] — 2026-10-28 · Puxar a linha sem descolar as outras
 

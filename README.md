@@ -171,6 +171,8 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
   **distância entre instâncias** (berma plana). Recalcula sozinho ao mover ou editar o piso ou o terreno.
   **Material do talude** reveste a superfície do corte e do aterro (grama, pedra…).
   **Suavizar** (com raio) arredonda a crista, o pé, as bordas das bermas e o encontro com o terreno natural.
+  O recálculo do terreno roda em etapas, uma camada por vez, com o "carregando" na tela. A página continua
+  respondendo mesmo num terreno grande.
 - **Copiar** (2D no plano do nível ou 3D sobre os sólidos), com repetições, para outro nível ou por distância.
 - **Telhado**: perfil desenhado num eixo de trabalho vertical, extrudado; tipos de telhado com camadas (telha, ripas, caibros…).
 - **Espelhar** por uma linha (2D ou 3D; vertical, horizontal ou perpendicular ao eixo de trabalho).
@@ -470,4 +472,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.61.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.62.0</a>

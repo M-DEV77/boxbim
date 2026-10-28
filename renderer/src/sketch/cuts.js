@@ -32,6 +32,51 @@ function compact(geo) {
   return out;
 }
 
+/**
+ * Separa os triângulos (geometria normalizada: não indexada, position/normal/uv) que tocam a caixa dos vazios dos que
+ * ficam longe. Só os de perto passam pelo booleano — num terreno grande, a maior parte da malha nem encosta no piso
+ * que corta, e o booleano custa pelo tamanho da malha inteira.
+ */
+function splitNear(g, box) {
+  const P = g.attributes.position.array, nT = P.length / 9;
+  const near = new Uint8Array(nT);
+  let count = 0;
+  for (let t = 0; t < nT; t++) {
+    const o = t * 9;
+    const x0 = Math.min(P[o], P[o + 3], P[o + 6]), x1 = Math.max(P[o], P[o + 3], P[o + 6]);
+    const y0 = Math.min(P[o + 1], P[o + 4], P[o + 7]), y1 = Math.max(P[o + 1], P[o + 4], P[o + 7]);
+    const z0 = Math.min(P[o + 2], P[o + 5], P[o + 8]), z1 = Math.max(P[o + 2], P[o + 5], P[o + 8]);
+    if (x1 < box.min.x || x0 > box.max.x || y1 < box.min.y || y0 > box.max.y || z1 < box.min.z || z0 > box.max.z) continue;
+    near[t] = 1; count++;
+  }
+  if (count === nT || !count) return null;
+  const part = want => {
+    const out = new THREE.BufferGeometry();
+    for (const k of ['position', 'normal', 'uv']) {
+      const a = g.attributes[k], s = a.itemSize * 3, arr = new Float32Array((want ? count : nT - count) * s);
+      let w = 0;
+      for (let t = 0; t < nT; t++) if (!!near[t] === want) { arr.set(a.array.subarray(t * s, t * s + s), w); w += s; }
+      out.setAttribute(k, new THREE.BufferAttribute(arr, a.itemSize));
+    }
+    return out;
+  };
+  return { near: part(true), far: part(false) };
+}
+
+/** Junta duas geometrias não indexadas (position/normal/uv). */
+function joinGeometries(a, b) {
+  const out = new THREE.BufferGeometry();
+  for (const k of ['position', 'normal', 'uv']) {
+    const x = a.attributes[k], y = b.attributes[k];
+    if (!x || !y) continue;
+    const arr = new Float32Array(x.count * x.itemSize + y.count * y.itemSize);
+    arr.set(x.array.subarray(0, x.count * x.itemSize)); arr.set(y.array.subarray(0, y.count * y.itemSize), x.count * x.itemSize);
+    out.setAttribute(k, new THREE.BufferAttribute(arr, x.itemSize));
+  }
+  out.computeBoundingBox(); out.computeBoundingSphere();
+  return out;
+}
+
 /** Área do contorno de um piso (m²). */
 const areaOf = el => Math.abs(THREE.ShapeUtils.area(el.userData.bim.slab.points.map(p => new THREE.Vector2(p[0], p[1]))));
 
@@ -86,11 +131,33 @@ export class Cuts {
     clearTimeout(this._t);
     this._t = setTimeout(() => {
       // terreno (taludes, cortes de pisos, sobreposto) demora: mostra o "carregando" antes e calcula no quadro seguinte
-      if (this.update(false, true)) {
-        busy(true, 'Recalculando o terreno…');
-        setTimeout(() => { try { this.update(); } finally { busy(false); } }, 40);
-      } else this.update();
+      if (this._running) { this._again = true; return; }
+      if (this.update(false, true)) this.updateAsync();
+      else this.update();
     }, 150);
+  }
+
+  /**
+   * Recalcula em ETAPAS (uma malha por vez, ~60 ms por etapa, devolvendo a vez ao navegador entre elas): a página
+   * continua respondendo ("carregando" animado) e o navegador não acusa "Página sem resposta" num terreno grande.
+   */
+  updateAsync() {
+    this._running = true;
+    busy(true, 'Recalculando o terreno…');
+    const gen = this.steps(false);
+    const tick = () => {
+      const t0 = performance.now();
+      let r = { done: false };
+      try {
+        do r = gen.next(); while (!r.done && performance.now() - t0 < 60);
+      } catch (err) { console.warn('terreno', err); r = { done: true }; }
+      if (!r.done) { setTimeout(tick, 0); return; }
+      this._running = false;
+      busy(false);
+      // mudou algo durante o cálculo: recalcula o que ficou para trás
+      if (this._again) { this._again = false; this.schedule(); }
+    };
+    setTimeout(tick, 40);
   }
 
   /** Marca os alvos para serem cortados pelos vazios. */
@@ -193,6 +260,24 @@ export class Cuts {
 
   /** Recalcula os cortes que mudaram. check = true: só diz se há trabalho pesado (terreno) a fazer, sem fazer. */
   update(force = false, check = false) {
+    if (check) return this.needsWork(force);
+    if (this._running) this._again = true; // o cálculo em etapas que está rodando pode ter ficado velho
+    const gen = this.steps(force);
+    let r;
+    do r = gen.next(); while (!r.done);
+    return r.value;
+  }
+
+  /** Há trabalho pesado (terreno) a fazer? */
+  needsWork(force) {
+    const gen = this.steps(force, true);
+    let r;
+    do r = gen.next(); while (!r.done);
+    return r.value;
+  }
+
+  /** O recálculo em passos (gerador): cada yield é um ponto em que dá para devolver a vez ao navegador. */
+  *steps(force = false, check = false) {
     const v = this.viewer;
     let changed = false;
     // os sobrepostos por último: o hospedeiro já tem a malha final (cortes, taludes) quando eles deitam sobre ele
@@ -213,7 +298,7 @@ export class Cuts {
       if (!force && sig === el.userData._cutSig) continue;
       if (check) { if (el.userData.bim.slab?.terreno || drape || slopes.length) return true; continue; }
       el.userData._cutSig = sig;
-      this.apply(el, voids, pads, deepen, slopes, drape);
+      yield* this.applySteps(el, voids, pads, deepen, slopes, drape);
       changed = true;
     }
     if (check) return false;
@@ -222,6 +307,11 @@ export class Cuts {
   }
 
   apply(el, voids, pads = [], deepen = null, slopes = [], drape = null) {
+    const gen = this.applySteps(el, voids, pads, deepen, slopes, drape);
+    while (!gen.next().done);
+  }
+
+  *applySteps(el, voids, pads = [], deepen = null, slopes = [], drape = null) {
     this.clearSkins(el);
     const skins = [];
     const ownBottom = deepen !== null ? worldBox(el).min.z : null;
@@ -235,25 +325,33 @@ export class Cuts {
       voidBrushes.push(b);
     }
     for (const m of meshesOf(el)) {
+      yield; // uma camada por etapa
       const orig = m.userData._csgOrig || m.geometry;
       m.userData._csgOrig = orig;
       m.updateMatrixWorld(true);
       let base = deepen !== null ? deepened(orig, m.matrixWorld, ownBottom, deepen) : orig;
       if (slopes.length) { base = applySlopes(base === orig ? orig.clone() : base, el, slopes); skins.push(...(base.userData.taludeSkins || [])); }
+      if (slopes.length || drape) yield;
       if (drape) base = drapeGeometry(base === orig ? orig.clone() : base, m.matrixWorld, el.userData.bim.slab, drape);
       if (!voidBrushes.length) { m.geometry = base; this.refreshEdges(m); continue; }
       try {
-        let a = new Brush(normalizeGeometry(base.clone()));
+        // só a parte da malha perto dos vazios entra no booleano; o resto volta igual no fim
+        const whole = normalizeGeometry(base.clone());
+        const vbox = new THREE.Box3();
+        for (const vb of voidBrushes) vbox.union(new THREE.Box3().setFromObject(vb));
+        const parts = splitNear(whole, vbox.applyMatrix4(m.matrixWorld.clone().invert()).expandByScalar(0.01));
+        let a = new Brush(parts ? parts.near : whole);
         m.matrixWorld.decompose(a.position, a.quaternion, a.scale);
         a.updateMatrixWorld(true);
         for (const vb of voidBrushes) {
           // só corta o que encosta (caixas que não se tocam ficam como estão)
           const ba = new THREE.Box3().setFromObject(a), bb = new THREE.Box3().setFromObject(vb);
           if (!ba.intersectsBox(bb)) continue;
+          yield;
           a = evaluator.evaluate(a, vb, SUBTRACTION);
           a.updateMatrixWorld(true);
         }
-        m.geometry = compact(a.geometry);
+        m.geometry = parts ? joinGeometries(compact(a.geometry), parts.far) : compact(a.geometry);
       } catch (e) {
         console.warn('corte', el.name, e);
         m.geometry = orig;

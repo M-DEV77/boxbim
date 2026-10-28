@@ -59,26 +59,25 @@ export function slopeRiseSmooth(d, c, r) {
 const smin = (a, b, k) => { if (!(k > 0)) return Math.min(a, b); const h = Math.max(k - Math.abs(a - b), 0) / k; return Math.min(a, b) - h * h * k / 4; };
 const smax = (a, b, k) => -smin(-a, -b, k);
 
-const inside = (x, y, poly) => {
-  let r = false;
-  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    const [xi, yi] = poly[i], [xj, yj] = poly[j];
-    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) r = !r;
-  }
-  return r;
-};
-
-/** Ponto mais perto no contorno e a distância até ele (planta); dentro do contorno a distância é 0. */
-function nearestOnPoly(x, y, poly) {
-  let best = Infinity, nx = x, ny = y;
-  for (let i = 0; i < poly.length; i++) {
-    const [ax, ay] = poly[i], [bx, by] = poly[(i + 1) % poly.length];
-    const dx = bx - ax, dy = by - ay, L2 = dx * dx + dy * dy || 1;
-    const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / L2));
-    const px = ax + dx * t, py = ay + dy * t, dd = Math.hypot(px - x, py - y);
+/**
+ * Ponto mais perto no contorno e a distância até ele (planta); dentro do contorno a distância é 0. F = contorno em
+ * lista plana [x0, y0, x1, y1, …] (sem objetos por lado: roda para cada ponto da malha).
+ */
+function nearestOnPoly(x, y, F) {
+  let best = Infinity, nx = x, ny = y, inn = false;
+  const n = F.length;
+  for (let i = 0, j = n - 2; i < n; j = i, i += 2) {
+    const ax = F[i], ay = F[i + 1], k = (i + 2) % n, dx = F[k] - ax, dy = F[k + 1] - ay, L2 = dx * dx + dy * dy || 1;
+    let u = ((x - ax) * dx + (y - ay) * dy) / L2;
+    u = u < 0 ? 0 : u > 1 ? 1 : u;
+    const px = ax + dx * u, py = ay + dy * u, dd = (px - x) * (px - x) + (py - y) * (py - y);
     if (dd < best) { best = dd; nx = px; ny = py; }
+    // dentro/fora (par/ímpar) com o lado j → i
+    const xj = F[j], yj = F[j + 1];
+    if ((ay > y) !== (yj > y) && x < (xj - ax) * (y - ay) / (yj - ay) + ax) inn = !inn;
   }
-  return inside(x, y, poly) ? { d: 0, x, y, edge: best } : { d: best, x: nx, y: ny, edge: best };
+  best = Math.sqrt(best);
+  return inn ? { d: 0, x, y, edge: best } : { d: best, x: nx, y: ny, edge: best };
 }
 
 /** Pisos com talude ligado (menos o próprio terreno). */
@@ -128,10 +127,24 @@ export function applySlopes(geo, terrainEl, floors) {
     const reach = (c, need) => { if (!c.ativo || need <= 0) return 0; let d = 0; while (d < 2000 && slopeRise(d, c) < need) d += 0.25; return d; };
     t.reach = Math.max(reach(t.cfg.corte, zTop - fmin), reach(t.cfg.aterro, fmax - zLow)) + t.r + 0.5;
   }
+  // distância até o contorno (só a conta, sem objetos nem teste de dentro/fora: roda para cada aresta da malha)
+  for (const t of tops) t.flat = Float64Array.from(t.poly.flat());
+  const edgeDist = (x, y, F) => {
+    let best = Infinity;
+    const n = F.length;
+    for (let i = 0; i < n; i += 2) {
+      const ax = F[i], ay = F[i + 1], j = (i + 2) % n, dx = F[j] - ax, dy = F[j + 1] - ay, L2 = dx * dx + dy * dy || 1;
+      let u = ((x - ax) * dx + (y - ay) * dy) / L2;
+      u = u < 0 ? 0 : u > 1 ? 1 : u;
+      const px = ax + dx * u - x, py = ay + dy * u - y, dd = px * px + py * py;
+      if (dd < best) best = dd;
+    }
+    return Math.sqrt(best);
+  };
   const out = subdivide(geo, (cx, cy, cz, m) => {
     if (cz <= zb0 + 1e-4) return Infinity;
     let e = Infinity, reach = 0;
-    for (const t of tops) { const q = nearestOnPoly(cx, cy, t.poly).edge - m; if (q < e) e = q; if (q < t.reach) reach = 1; }
+    for (const t of tops) { const q = edgeDist(cx, cy, t.flat) - m; if (q < e) e = q; if (q < t.reach) reach = 1; }
     return !reach ? Infinity : e < 0.4 ? near : e < 1.5 ? mid : far;
   });
   const pos = out.attributes.position;
@@ -139,17 +152,28 @@ export function applySlopes(geo, terrainEl, floors) {
   for (let i = 0; i < pos.count; i++) zb = Math.min(zb, pos.getZ(i));
   // quem mudou cada vértice da SUPERFÍCIE (índice do piso do talude; -1 = ninguém, -2 = dentro de um piso)
   const who = new Int32Array(pos.count).fill(-1);
+  // caixa de alcance de cada talude (contorno + alcance): vértice fora dela não é tocado por ele
+  for (const t of tops) {
+    const xs = t.poly.map(p => p[0]), ys = t.poly.map(p => p[1]);
+    t.box = [Math.min(...xs) - t.reach, Math.min(...ys) - t.reach, Math.max(...xs) + t.reach, Math.max(...ys) + t.reach];
+  }
+  // a malha não é indexada: o mesmo ponto aparece em ~6 cantos — calcula uma vez por ponto
+  const memo = new Map(), pidOf = out.pointIds;
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
     if (z <= zb + 1e-4) continue; // fundo fica
+    const mk = pidOf ? pidOf[i] : `${x.toFixed(5)},${y.toFixed(5)},${z.toFixed(5)}`;
+    const hit = memo.get(mk);
+    if (hit) { who[i] = hit[1]; if (hit[0] !== null) pos.setZ(i, hit[0]); continue; }
     const top0 = s.elevation + (f ? f(x, y) : 0);
     const onTop = Math.abs(z - top0) < 1e-4; // vértice da superfície de cima (não de uma camada de dentro)
     let top = top0;
     for (let ti = 0; ti < tops.length; ti++) {
       const t = tops[ti];
+      if (x < t.box[0] || y < t.box[1] || x > t.box[2] || y > t.box[3]) continue;
       const before = top;
       // o talude sai da ARESTA do piso: cota do topo do piso no ponto mais perto do contorno
-      const n = nearestOnPoly(x, y, t.poly), d = n.d, z0 = t.zAt(n.x, n.y);
+      const n = nearestOnPoly(x, y, t.flat), d = n.d, z0 = t.zAt(n.x, n.y);
       if (d === 0) {
         if (onTop) who[i] = -2;
         // dentro do piso: o perfil continua um pouco para dentro (a faixa da malha fina), assim a superfície cruza a
@@ -170,10 +194,12 @@ export function applySlopes(geo, terrainEl, floors) {
       } else top = Math.min(Math.max(top, lo), hi);
       if (onTop && who[i] !== -2 && Math.abs(top - before) > 1e-6) who[i] = ti;
     }
-    if (Math.abs(top - top0) < 1e-6) continue;
+    if (Math.abs(top - top0) < 1e-6) { memo.set(mk, [null, who[i]]); continue; }
     top = Math.max(top, zb + 0.01);
     const k = (z - zb) / (top0 - zb || 1);
-    pos.setZ(i, zb + k * (top - zb));
+    const nz = zb + k * (top - zb);
+    pos.setZ(i, nz);
+    memo.set(mk, [nz, who[i]]);
   }
   pos.needsUpdate = true;
   out.computeVertexNormals(); out.computeBoundingBox(); out.computeBoundingSphere();
