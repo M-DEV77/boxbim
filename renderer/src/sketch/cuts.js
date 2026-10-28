@@ -14,6 +14,7 @@ import { normalizeGeometry } from './forms.js';
 import { applySlopes, slopeFloors, slopeSignature } from '../slopes.js';
 import { drapeGeometry, hostSignature } from '../drape.js';
 import { materialByName } from '../elements.js';
+import { busy } from '../ui.js';
 
 const evaluator = new Evaluator();
 evaluator.useGroups = false;
@@ -83,7 +84,13 @@ export class Cuts {
 
   schedule() {
     clearTimeout(this._t);
-    this._t = setTimeout(() => this.update(), 150);
+    this._t = setTimeout(() => {
+      // terreno (taludes, cortes de pisos, sobreposto) demora: mostra o "carregando" antes e calcula no quadro seguinte
+      if (this.update(false, true)) {
+        busy(true, 'Recalculando o terreno…');
+        setTimeout(() => { try { this.update(); } finally { busy(false); } }, 40);
+      } else this.update();
+    }, 150);
   }
 
   /** Marca os alvos para serem cortados pelos vazios. */
@@ -184,8 +191,8 @@ export class Cuts {
     return b;
   }
 
-  /** Recalcula os cortes que mudaram. */
-  update(force = false) {
+  /** Recalcula os cortes que mudaram. check = true: só diz se há trabalho pesado (terreno) a fazer, sem fazer. */
+  update(force = false, check = false) {
     const v = this.viewer;
     let changed = false;
     // os sobrepostos por último: o hospedeiro já tem a malha final (cortes, taludes) quando eles deitam sobre ele
@@ -204,11 +211,14 @@ export class Cuts {
       const sig = this.signature(el, voids) + (pads.length ? `#${this.padSignature(pads)}` : '') + (deepen !== null ? `~${deepen.toFixed(5)}` : '')
         + (slopes.length ? `^${slopeSignature(slopes)}` : '') + (drape ? `@${hostSignature(drape)}:${JSON.stringify(el.userData.bim.slab)}` : '');
       if (!force && sig === el.userData._cutSig) continue;
+      if (check) { if (el.userData.bim.slab?.terreno || drape || slopes.length) return true; continue; }
       el.userData._cutSig = sig;
       this.apply(el, voids, pads, deepen, slopes, drape);
       changed = true;
     }
+    if (check) return false;
     if (changed) { v._prepare2D(v.model); v._bucketsDirty = true; }
+    return changed;
   }
 
   apply(el, voids, pads = [], deepen = null, slopes = [], drape = null) {

@@ -196,3 +196,19 @@ export function floatBar(bar, key) {
   });
   return bar;
 }
+
+/**
+ * "Carregando" sobre a vista: o ícone do BoxBim girando/pulsando e um texto. Contagem de pedidos — só some quando o
+ * último termina. busy(true, 'texto') / busy(false).
+ */
+let busyCount = 0, busyEl = null;
+export function busy(on, text = 'Carregando…') {
+  busyCount = Math.max(0, busyCount + (on ? 1 : -1));
+  if (!busyEl) {
+    busyEl = h('div', { class: 'busy-overlay', hidden: true },
+      h('div', { class: 'busy-card' }, h('img', { class: 'busy-icon', src: '/assets/icon.svg', alt: '' }), h('span', { class: 'busy-text' })));
+    (document.querySelector('.center') || document.body).append(busyEl); // por cima da vista e das barras flutuantes
+  }
+  if (on) busyEl.querySelector('.busy-text').textContent = text;
+  busyEl.hidden = busyCount === 0;
+}
