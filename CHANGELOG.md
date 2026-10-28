@@ -6,12 +6,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.58.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.59.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.59.0] — 2026-10-28 · Canto arredondado como uma curva só
+
+### Mudado
+- Ao editar o contorno do piso (clique duplo), cada **canto arredondado** abre como **uma linha curva única** (um
+  arco) em vez de vários pedacinhos retos: sequências de 3+ lados iguais com a mesma curva são reconhecidas como
+  arco (ringToSegments). Dá para aparar, estender, refazer o canto e copiar como qualquer arco.
 
 ## [2.58.0] — 2026-10-28 · Prévia do Canto
 
