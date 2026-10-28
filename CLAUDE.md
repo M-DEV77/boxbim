@@ -1,5 +1,9 @@
 # BoxBim — regras do projeto
 
+## Idioma
+- **Sempre em português (Brasil)**: respostas ao usuário, resumos, perguntas, mensagens de commit, documentação,
+  comentários no código e textos da interface.
+
 ## Toda atualização vira um commit
 - Cada pedido concluído (funcionalidade, correção, documentação) termina com **um commit** neste repositório,
   depois de testado. Não acumular várias atualizações num commit só.

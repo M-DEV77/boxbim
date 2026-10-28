@@ -170,7 +170,8 @@ flowchart LR
 | 2026-10-28 | 2.49.0 | `2f3d3a3` | Copiar linhas 2D e arestas de sólidos no contorno do piso; neon fino e rosa |
 | 2026-10-28 | 2.49.1 | `d7f1f73` | Ferramentas 2D no plano das linhas do contorno do piso (qualquer cota) |
 | 2026-10-28 | 2.50.0 | `c26635e` | Ponteiro próprio em cada ferramenta (cursors.js) e barras flutuantes quadradas e compactas |
-| 2026-10-28 | 2.51.0 | este commit | Copiar contorno (e furos) de outro piso no Editar contorno do piso |
+| 2026-10-28 | 2.51.0 | `7e4da61` | Copiar contorno (e furos) de outro piso no Editar contorno do piso |
+| 2026-10-28 | 2.51.1 | este commit | Regra do idioma no CLAUDE.md: sempre em português |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.51.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.51.1</a>
