@@ -6,12 +6,25 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.53.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.54.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.54.0] — 2026-10-28 · Contorno do piso fecha sem falhas
+
+### Corrigido
+- Perfis desenhados fechados apareciam como **abertos**: pontas que diferiam em décimos de milímetro (arcos do Canto,
+  cópias, arredondamentos) não se encontravam. Agora as pontas a menos de **5 mm** viram o mesmo ponto, trechos
+  repetidos ou de tamanho zero saem e uma ponta que cai no meio de outra linha divide essa linha ali.
+
+### Adicionado
+- O vermelho usa a mesma conta do Concluir: **X** nas pontas soltas e **○** nos cruzamentos de 3+ linhas (o que deve
+  ser aparado); o painel diz quantos são.
+- Botão **⟷ Fechar pontas**: liga cada ponta solta à mais próxima com uma linha nova (aparece quando há pontas
+  soltas).
 
 ## [2.53.0] — 2026-10-28 · Contorno aberto em vermelho
 

@@ -124,7 +124,8 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
   enquanto isso — edite com as ferramentas 2D da faixa (Linha, Aparar, Estender, Canto, Offset, Mover…) e
   **✔ Concluir** (Enter) refaz o piso com os contornos fechados; **✖ Cancelar** (Esc) volta como estava. As linhas do
   esboço ficam só na sua tela, só elas podem ser selecionadas durante a edição e aparecem em **neon rosa** (o que falta fechar fica em
-  **vermelho**, com um X nas pontas soltas) (o contorno dos pontos de elevação também). No painel,
+  **vermelho**, com um X nas pontas soltas e ○ nos cruzamentos; **⟷ Fechar pontas** liga as pontas soltas mais
+  próximas; pontas a menos de 5 mm se juntam sozinhas) (o contorno dos pontos de elevação também). No painel,
   **⧉ Copiar linhas** (clique numa linha 2D: entram cópias dela e das ligadas) e **⧉ Copiar arestas de sólidos**
   (clique nas arestas dos sólidos: entram projetadas na planta) e **⧉ Copiar contorno de piso** (clique na face de
   outro piso: entram o contorno e os furos dele) para montar o contorno.
@@ -460,4 +461,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.53.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.54.0</a>

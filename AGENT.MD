@@ -178,7 +178,8 @@ flowchart LR
 | 2026-10-28 | 2.52.1 | `c4635c6` | Seleção bloqueada (só as linhas do contorno) durante a edição do piso |
 | 2026-10-28 | 2.52.2 | `8e8546e` | Clique seleciona cada linha do contorno (atravessa o bloqueado; linha ganha da superfície) |
 | 2026-10-28 | 2.52.3 | `0e4da5d` | Copiar contorno/linhas de um clique: não trava mais as ferramentas da edição do piso |
-| 2026-10-28 | 2.53.0 | este commit | Contorno do piso aberto em vermelho, com X nas pontas soltas |
+| 2026-10-28 | 2.53.0 | `e4c2231` | Contorno do piso aberto em vermelho, com X nas pontas soltas |
+| 2026-10-28 | 2.54.0 | este commit | Contorno do piso: solda de pontas (5 mm), T divide a linha, ○ nos cruzamentos e Fechar pontas |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.53.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.54.0</a>
