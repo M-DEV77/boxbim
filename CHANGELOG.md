@@ -6,12 +6,30 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.51.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.52.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.52.0] — 2026-10-28 · Snap, cotas guias e correção do Offset
+
+### Adicionado
+- **Snap do projeto** (osnap.js): **ponta**, **meio** e **perpendicular** em linhas 2D, lados de pisos e furos,
+  eixos de paredes e vigas — no desenho 2D (Linha, Retângulo, Círculo…), na Parede, nos pontos das linhas/paredes e
+  dos pisos e na Cota. Marcador por tipo: quadrado (ponta), triângulo (meio), ⊥ (perpendicular).
+- **Cotas guias** (guide-dims.js): na edição do contorno do piso, em todas as linhas; no projeto todo, nas linhas,
+  paredes e vigas selecionadas (duas ou mais). Arraste para mudar a posição (guardada por elemento), clique no
+  número para digitar o comprimento, duplo clique volta ao padrão.
+- Linhas do contorno **selecionadas** mudam de cor (neon ciano).
+
+### Corrigido
+- **Offset** de contorno para dentro com um lado curto (ex.: chanfro menor que a distância) gerava um contorno
+  cruzado: os trechos que somem no deslocamento saem e os vizinhos se encontram (offsetPolylineClean).
+
+### Mudado
+- Barras flutuantes das ferramentas na **vertical** (uma coluna), quadradas e menores.
 
 ## [2.51.1] — 2026-10-28 · Regra do idioma
 

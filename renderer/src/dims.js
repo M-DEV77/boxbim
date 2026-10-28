@@ -12,6 +12,7 @@ import * as THREE from 'three';
 import { h, modal, toast, floatBar } from './ui.js';
 import { getUnit, UNITS, toUnit, fromUnit, unitLabel, unitStep } from './units.js';
 import { toolCursor } from './cursors.js';
+import { snapSegments, snapPick, showSnapMarker } from './osnap.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 const svg = (tag, attrs = {}) => { const e = document.createElementNS(SVGNS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
@@ -319,19 +320,17 @@ export class Dimensions {
     if (!p) return null;
     this.marker.hidden = true;
     if (!e.shiftKey) {
+      // snap do projeto: pontas/quinas, meios e perpendicular (a partir do 1º ponto da cota)
       this.tool.snaps ||= this.snapPoints();
-      const v = this.app.viewer, r = v.renderer.domElement.getBoundingClientRect();
-      let best = null, bd = SNAP_PX;
-      for (const s of this.tool.snaps) {
-        const q = s.clone().project(v.camera), sx = (q.x + 1) / 2 * r.width + r.left, sy = (1 - q.y) / 2 * r.height + r.top;
-        const d = Math.hypot(sx - e.clientX, sy - e.clientY);
-        if (d < bd) { bd = d; best = { s, sx, sy }; }
-      }
+      this.tool.segs ||= snapSegments(this.app, { level: this.tool.level });
+      const v = this.app.viewer, r = v.renderer.domElement.getBoundingClientRect(), z = this.tool.z;
+      const toS = q => { const s = new THREE.Vector3(q[0], q[1], z).project(v.camera); return [(s.x + 1) / 2 * r.width + r.left, (1 - s.y) / 2 * r.height + r.top]; };
+      const first = this.tool.pts[0];
+      const best = snapPick({ segs: this.tool.segs, points: this.tool.snaps.map(s => ({ p: [s.x, s.y], kind: 'ponta' })), toScreen: toS, cursor: [e.clientX, e.clientY], from: first ? [first.x, first.y] : null });
       if (best) {
-        p = best.s.clone();
-        const pr = this.marker.parentElement.getBoundingClientRect();
-        Object.assign(this.marker.style, { left: `${best.sx - pr.left}px`, top: `${best.sy - pr.top}px` });
-        this.marker.hidden = false;
+        p = new THREE.Vector3(best.p[0], best.p[1], z);
+        const pr = this.marker.parentElement.getBoundingClientRect(), [sx, sy] = toS(best.p);
+        showSnapMarker(this.marker, best.kind, sx - pr.left, sy - pr.top);
       } else { p.x = Math.round(p.x * 100) / 100; p.y = Math.round(p.y * 100) / 100; }
     }
     return p;

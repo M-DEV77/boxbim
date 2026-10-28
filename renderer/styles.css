@@ -939,3 +939,37 @@ img.tb-ico, .obj-icon.tb-ico { object-fit: contain; font-size: 15px; }
 .floating-bar select { padding: 1px 3px; font-size: 11px; height: 20px; border-radius: 2px; max-width: 150px; }
 .floating-bar button { padding: 1px 7px; font-size: 11px; height: 20px; border-radius: 2px; line-height: 1; }
 .floating-bar .float-grip { font-size: 13px; padding: 0 1px 0 0; }
+
+/* barras flutuantes em COLUNA (vertical): alça em cima, um item por linha */
+.draw-bar.floating-bar, .ribbon-context .draw-bar.floating-bar { flex-direction: column; align-items: stretch; flex-wrap: nowrap; width: 188px;
+  max-width: 188px; max-height: calc(100% - 20px); overflow-y: auto; white-space: normal; gap: 4px; padding: 4px 6px 6px; }
+.floating-bar > * { min-width: 0; }
+.floating-bar .float-grip { text-align: center; padding: 0; margin: 0 -6px 2px; border-bottom: 1px solid var(--hair-2); letter-spacing: 2px; }
+.floating-bar > strong { display: block; }
+.floating-bar label { justify-content: space-between; width: 100%; }
+.floating-bar label input:not([type=checkbox]), .floating-bar label select { flex: 0 1 96px; width: 96px; max-width: 96px; }
+.floating-bar > select, .floating-bar > input:not([type=checkbox]) { width: 100%; max-width: 100%; }
+.floating-bar > button { width: 100%; }
+.floating-bar .muted, .floating-bar span.muted { white-space: normal; font-size: 10px; }
+
+/* marcador do snap por tipo (osnap.js): ponta = quadrado, meio = triângulo, perpendicular = ⊥ */
+.snap-marker[data-kind="meio"] { border: 0; background: none; width: 16px; height: 14px; margin: -9px 0 0 -8px;
+  clip-path: none; background: linear-gradient(#ff9f1a, #ff9f1a) bottom/100% 2px no-repeat; }
+.snap-marker[data-kind="meio"]::before { content: ''; position: absolute; inset: 0; background: #ff9f1a;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%, 50% 0, 50% 18%, 14% 88%, 86% 88%, 50% 18%); }
+.snap-marker[data-kind="perpendicular"] { border: 0; background: none; width: 14px; height: 14px; margin: -7px 0 0 -7px;
+  border-left: 2px solid #ff9f1a; border-bottom: 2px solid #ff9f1a; }
+.snap-marker[data-kind="perpendicular"]::before { content: ''; position: absolute; left: 3px; bottom: 3px; width: 5px; height: 5px;
+  border-right: 2px solid #ff9f1a; border-top: 2px solid #ff9f1a; }
+.snap-marker[data-kind="centro"] { border-radius: 50%; }
+
+/* cotas guias (guide-dims.js): medida das linhas na tela; arraste para mudar a posição */
+.guide-dims { position: absolute; inset: 0; z-index: 5; pointer-events: none; overflow: hidden; }
+.guide-dims-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.guide-dim-line { stroke: #7fd7ff; stroke-width: 1; fill: none; }
+.guide-dim-hit { stroke: transparent; stroke-width: 10; fill: none; pointer-events: stroke; cursor: move; }
+.guide-dim-hit:hover + .guide-dim-line, .guide-dim-hit:hover { stroke: rgba(127, 215, 255, .25); }
+.guide-dim-label { position: absolute; pointer-events: auto; padding: 0 4px; min-width: 0; font-size: 11px; line-height: 15px; font-weight: 500;
+  color: #bfeaff; background: rgba(15, 19, 23, .78); border: 1px solid transparent; border-radius: 2px; cursor: move; white-space: nowrap;
+  font-variant-numeric: tabular-nums; }
+.guide-dim-label:hover { border-color: #7fd7ff; color: #fff; }

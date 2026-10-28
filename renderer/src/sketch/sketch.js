@@ -358,13 +358,44 @@ export function offsetPolyline(pts, d, closed) {
 }
 
 /**
+ * OFFSET LIMPO: como offsetPolyline, mas os trechos que "somem" no deslocamento (ficam invertidos ou com tamanho zero
+ * — ex.: um chanfro curto num offset para dentro maior que ele) saem, e os vizinhos se encontram direto. Evita o
+ * contorno cruzado (laço). Pode devolver menos trechos que a polilinha original.
+ */
+export function offsetPolylineClean(pts, d, closed) {
+  let P = pts.map(p => [...p]);
+  for (let guard = 0; guard < pts.length; guard++) {
+    const out = offsetPolyline(P, d, closed);
+    const n = P.length;
+    // trecho invertido (ou nulo) em relação ao original
+    const bad = out.findIndex((s, i) => {
+      if (!closed && (i === 0 || i === out.length - 1) && out.length > 1) return false; // pontas da aberta: ficam
+      const a = P[i], b = P[(i + 1) % n];
+      const ox = b[0] - a[0], oy = b[1] - a[1], nx = s.b[0] - s.a[0], ny = s.b[1] - s.a[1];
+      return ox * nx + oy * ny <= 1e-9;
+    });
+    if (bad < 0) return out;
+    if ((closed && n <= 3) || (!closed && n <= 2)) return out;
+    // tira o trecho: os pontos dele viram o encontro das retas vizinhas (a polilinha perde um ponto)
+    const A = P[(bad - 1 + n) % n], B = P[bad], C = P[(bad + 1) % n], D = P[(bad + 2) % n];
+    const d1 = [B[0] - A[0], B[1] - A[1]], d2 = [C[0] - D[0], C[1] - D[1]], den = d1[0] * d2[1] - d1[1] * d2[0];
+    let X;
+    if (Math.abs(den) < 1e-12) X = [(B[0] + C[0]) / 2, (B[1] + C[1]) / 2];
+    else { const t = ((D[0] - A[0]) * d2[1] - (D[1] - A[1]) * d2[0]) / den; X = [A[0] + d1[0] * t, A[1] + d1[1] * t]; }
+    P = P.filter((_, k) => k !== bad && k !== (bad + 1) % n);
+    P.splice(Math.min(bad, P.length), 0, X);
+  }
+  return offsetPolyline(P, d, closed);
+}
+
+/**
  * Offset de um contorno fechado para FORA da região (d > 0 cresce, d < 0 encolhe). hole = true: o contorno é um
  * furo (para fora da região = para dentro do furo). Devolve os pontos.
  */
 export function offsetLoop(pts, d, hole = false) {
   const sgn = Math.sign(area(pts)) || 1;
   const dl = (hole ? d : -d) * sgn; // anti-horário: o lado de dentro é a esquerda
-  return offsetPolyline(pts, dl, true).map(s => s.a);
+  return offsetPolylineClean(pts, dl, true).map(s => s.a);
 }
 
 // ---------------------------------------------------------------- contornos (para extrudar e varrer)

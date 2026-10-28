@@ -16,6 +16,10 @@ import { toolCursor } from './cursors.js';
 const NEON_CORE = new LineMaterial({ color: 0xffd6f6, linewidth: 1.3, depthTest: false, transparent: true });
 const NEON_GLOW = new LineMaterial({ color: 0xff2bd6, linewidth: 4, depthTest: false, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending });
 const NEON_HALO = new LineMaterial({ color: 0xff4fe0, linewidth: 8, depthTest: false, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending });
+// selecionadas: ciano (a cor muda ao selecionar, para ver o que vai ser editado)
+const SEL_CORE = new LineMaterial({ color: 0xd9fbff, linewidth: 1.8, depthTest: false, transparent: true });
+const SEL_GLOW = new LineMaterial({ color: 0x00e5ff, linewidth: 6, depthTest: false, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending });
+const SEL_HALO = new LineMaterial({ color: 0x00b3ff, linewidth: 12, depthTest: false, transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending });
 
 const r6 = v => +v.toFixed(6);
 const keyOf = p => `${p[0].toFixed(4)},${p[1].toFixed(4)}`;
@@ -86,6 +90,8 @@ export class FloorSketch {
     this.refreshInfo();
     this.neon();
     this._chg = () => { this.refreshInfo(); this.neon(); };
+    this._sel = () => this.neon(); // a cor das selecionadas muda
+    this.viewer.addEventListener('select', this._sel);
     this.viewer.addEventListener('change', this._chg);
   }
 
@@ -96,22 +102,25 @@ export class FloorSketch {
     for (const c of [...this.neonGroup.children]) { this.neonGroup.remove(c); c.geometry.dispose(); }
     if (!this.active) { this.neonGroup.parent?.remove(this.neonGroup); return; }
     if (!this.neonGroup.parent) v.overlay.add(this.neonGroup);
-    const arr = [];
+    const arr = [], sel = [];
     for (const e of v.elements().filter(x => this.isTemp(x) && x.visible)) {
-      const pts = worldPoints(e.userData.bim.linha);
-      for (let i = 1; i < pts.length; i++) arr.push(pts[i - 1].x, pts[i - 1].y, pts[i - 1].z + 0.01, pts[i].x, pts[i].y, pts[i].z + 0.01);
+      const pts = worldPoints(e.userData.bim.linha), out = v.selected.has(e) ? sel : arr;
+      for (let i = 1; i < pts.length; i++) out.push(pts[i - 1].x, pts[i - 1].y, pts[i - 1].z + 0.01, pts[i].x, pts[i].y, pts[i].z + 0.01);
     }
-    if (!arr.length) return;
     const size = v.renderer.getSize(new THREE.Vector2());
-    for (const mat of [NEON_HALO, NEON_GLOW, NEON_CORE]) {
-      mat.resolution.set(size.x, size.y);
-      const l = new LineSegments2(new LineSegmentsGeometry().setPositions(arr), mat);
-      l.renderOrder = 999;
-      this.neonGroup.add(l);
-    }
+    const draw = (pos, mats) => {
+      if (!pos.length) return;
+      for (const mat of mats) {
+        mat.resolution.set(size.x, size.y);
+        const l = new LineSegments2(new LineSegmentsGeometry().setPositions(pos), mat);
+        l.renderOrder = 999;
+        this.neonGroup.add(l);
+      }
+    };
+    draw(arr, [NEON_HALO, NEON_GLOW, NEON_CORE]);
+    draw(sel, [SEL_HALO, SEL_GLOW, SEL_CORE]);
   }
 
-  /** Copiar arestas dos sólidos: a ferramenta "Linhas do sólido", projetando na planta (as linhas novas entram no contorno). */
   /** Copiar contorno de piso: cada clique na face de outro piso põe o contorno e os furos dele no esboço. Esc termina. */
   pickFloorOutline() {
     if (!this.active) return;
@@ -151,6 +160,7 @@ export class FloorSketch {
     this.app.status('Copiar contorno · clique na face de outro piso (entram o contorno e os furos) · Esc termina.');
   }
 
+  /** Copiar arestas dos sólidos: a ferramenta "Linhas do sólido", projetando na planta (as linhas novas entram no contorno). */
   pickSolidEdges() {
     const st = this.app.sketchTool;
     st.edgeProject = true;
@@ -260,6 +270,7 @@ export class FloorSketch {
     // tira as linhas do esboço (nunca foram para o servidor)
     for (const e of this.viewer.elements().filter(x => this.isTemp(x))) this.viewer.remove(e);
     this.viewer.removeEventListener('change', this._chg);
+    this.viewer.removeEventListener('select', this._sel);
     this.panel?.remove(); this.panel = null;
     this.active = null;
     this.neon(); // tira o neon

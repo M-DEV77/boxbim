@@ -23,6 +23,7 @@ import { fmtLen, fromUnit, toUnit, unitLabel } from './units.js';
 import { isSketch, bake, distToSeg, offsetPolyline } from './sketch/sketch.js';
 import { fixTees } from './sketch/linear.js';
 import { toolCursor } from './cursors.js';
+import { snapSegments, snapPick, showSnapMarker } from './osnap.js';
 
 const SNAP_PX = 12;      // raio do snap de ponta, em pixels
 const GRID = 0.01;       // arredondamento sem snap: 1 cm
@@ -327,13 +328,8 @@ export class WallDrawTool extends EventTarget {
     const raw = this._worldAt(e);
     if (!raw) return null;
     const rs = this._toScreen(raw);
-    let best = null, bestD = SNAP_PX;
-    for (const c of this._snapCandidates()) {
-      if (this.last && Math.hypot(c.p[0] - this.last[0], c.p[1] - this.last[1]) < 1e-6) continue;
-      const s = this._toScreen(c.p);
-      const d = Math.hypot(s[0] - rs[0], s[1] - rs[1]);
-      if (d < bestD) { bestD = d; best = c; }
-    }
+    // snap do projeto: ponta, meio e perpendicular (a partir do último ponto da parede)
+    const best = snapPick({ segs: snapSegments(this.app, { level: this.level }), points: this._snapCandidates(), toScreen: p => this._toScreen(p), cursor: rs, from: this.last || null, tol: SNAP_PX });
     if (best) return { p: [...best.p], snap: best.kind };
     let p = raw;
     const ortho = this.ortho !== !!e.shiftKey; // Shift inverte o ORTO, como no AutoCAD
@@ -453,8 +449,7 @@ export class WallDrawTool extends EventTarget {
     const pr = this.tip.parentElement.getBoundingClientRect();
     let [sx, sy] = this._toScreen(res.p);
     sx += cr.left - pr.left; sy += cr.top - pr.top;
-    this.marker.hidden = !res.snap;
-    if (res.snap) Object.assign(this.marker.style, { left: `${sx}px`, top: `${sy}px` });
+    showSnapMarker(this.marker, res.snap, sx, sy);
 
     this._clearPreview();
     let text;

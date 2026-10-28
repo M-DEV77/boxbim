@@ -8,6 +8,7 @@ import { LevelEditor } from './levels-edit.js';
 import { WorkPlanes } from './workplanes.js';
 import { Environments } from './environments.js';
 import { Grips } from './grips.js';
+import { GuideDims } from './guide-dims.js';
 import { FloorPoints } from './floor-points.js';
 import { FloorSketch } from './floor-sketch.js';
 import { SmartDims } from './smart-dims.js';
@@ -106,6 +107,7 @@ class App {
     this.viewer.onAdd = el => this.envs.onAdd(el);
     this.envs.addEventListener('change', () => { this.renderBrowser(); if (this.viewer.selected.size) this.renderProps(); });
     this.grips = new Grips(this);
+    this.guideDims = new GuideDims(this); // cotas guias (contorno do piso e seleção), posição arrastável
     this.floorPoints = new FloorPoints(this);
     this.floorSketch = new FloorSketch(this);
     this.smartDims = new SmartDims(this); // cotas até as peças paralelas da seleção

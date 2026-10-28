@@ -129,6 +129,12 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
   outro piso: entram o contorno e os furos dele) para montar o contorno.
 - **Barras das ferramentas flutuantes** (desenho 2D, Canto, Aparar, Mover/Girar, Cota…), quadradas e compactas: arraste
   pela alça **⠿** para onde quiser na vista; a posição fica guardada e o duplo clique na alça devolve ao lugar.
+- **Snap do projeto** (osnap.js) em todas as ferramentas que pegam pontos (desenho 2D, parede, pontos de linhas,
+  paredes e pisos, cota): **ponta** (canto), **meio** e **perpendicular** (a partir do último ponto) — em linhas 2D,
+  lados de pisos e furos, eixos de paredes e vigas; o marcador mostra o tipo (quadrado, triângulo, ⊥).
+- **Cotas guias**: na edição do contorno do piso, a medida de cada linha aparece ao lado dela (e nas linhas, paredes
+  e vigas selecionadas em todo o projeto); **arraste** a cota para mudar a posição dela, **clique** no número para
+  digitar o comprimento e dê duplo clique para voltar à posição padrão.
 - **Ponteiro de cada ferramenta**: ao usar uma ferramenta o ponteiro vira uma mira fina (o ponto exato do clique no
   centro) com o ícone dela — Aparar, Estender, Canto, Offset, Linha, Retângulo, Círculo, Parede, Piso, Telhado, Cota,
   Copiar, Espelhar, Inserir objeto e as escolhas na vista.
@@ -453,4 +459,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.51.1</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.52.0</a>

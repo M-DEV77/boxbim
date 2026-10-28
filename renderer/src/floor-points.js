@@ -17,6 +17,7 @@ import { rebuildElement, slabShapeFn } from './elements.js';
 import { slopeConfig } from './slopes.js';
 import { fmtLen, fromUnit, toUnit, unitLabel, unitStep } from './units.js';
 import { toolCursor } from './cursors.js';
+import { snapSegments, snapPick, showSnapMarker } from './osnap.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 const SNAP_PX = 12;
@@ -353,12 +354,13 @@ export class FloorPoints {
     ray.setFromCamera(ndc, this.viewer.camera);
     const hit = ray.ray.intersectPlane(d.plane, new THREE.Vector3());
     if (!hit) return;
-    let p = d.toData(hit), snapped = false, best = SNAP_PX;
-    for (const c of d.snaps) {
-      const sc = this.screen(c);
-      const dd = Math.hypot(sc.cx - e.clientX, sc.cy - e.clientY);
-      if (dd < best) { best = dd; p = d.toData(c); snapped = true; }
-    }
+    let p = d.toData(hit), snapped = false, kind = null;
+    // snap do projeto: ponta, meio e perpendicular (a partir do ponto anterior do contorno)
+    const toS = q => { const s = this.screen(new THREE.Vector3(q[0], q[1], hit.z)); return [s.cx, s.cy]; };
+    let from = null;
+    if (d.prev) { const w = new THREE.Vector3(d.prev[0], d.prev[1], 0).applyMatrix4(d.el.matrixWorld); from = [w.x, w.y]; }
+    const best = snapPick({ segs: snapSegments(this.app, { except: [d.el] }), toScreen: toS, cursor: [e.clientX, e.clientY], from });
+    if (best) { p = d.toData(new THREE.Vector3(best.p[0], best.p[1], hit.z)); snapped = true; kind = best.kind; }
     if (!snapped) {
       if (d.prev && this.app.wallTool.ortho !== !!e.shiftKey) {
         const dx = p[0] - d.prev[0], dy = p[1] - d.prev[1];
@@ -375,9 +377,8 @@ export class FloorPoints {
     this.rebuild(d.el, true);
     const pr = this.box.parentElement.getBoundingClientRect();
     const sc = this.screen(this.world(d.kind, d.i, d.el, d.r));
-    this.marker.hidden = !snapped;
-    if (snapped) Object.assign(this.marker.style, { left: `${sc.x}px`, top: `${sc.y}px` });
-    this.tip.textContent = d.prev ? `${fmtLen(Math.hypot(p[0] - d.prev[0], p[1] - d.prev[1]), { suffix: true })}${snapped ? '  ◻ ponto' : ''}` : (snapped ? '◻ ponto' : 'ponto de forma');
+    showSnapMarker(this.marker, snapped ? kind : null, sc.x, sc.y);
+    this.tip.textContent = d.prev ? `${fmtLen(Math.hypot(p[0] - d.prev[0], p[1] - d.prev[1]), { suffix: true })}${snapped ? `  ◻ ${kind}` : ''}` : (snapped ? `◻ ${kind}` : 'ponto de forma');
     Object.assign(this.tip.style, { left: `${e.clientX - pr.left + 16}px`, top: `${e.clientY - pr.top + 14}px` });
     this.tip.hidden = false;
   }

@@ -8,6 +8,7 @@ import { h, toast } from './ui.js';
 import { isSketch, bake, rebuildSketch, planeMatrix, frameOf, worldPoints } from './sketch/sketch.js';
 import { rebuildElement } from './elements.js';
 import { fmtLen, fromUnit, toUnit, unitLabel, unitStep } from './units.js';
+import { snapSegments, snapPick, showSnapMarker } from './osnap.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 const SNAP_PX = 12;
@@ -153,13 +154,17 @@ export class Grips {
     ray.setFromCamera(ndc, this.viewer.camera);
     const hit = ray.ray.intersectPlane(d.plane, new THREE.Vector3());
     if (!hit) return;
-    let p = d.toData(hit), snapped = false;
-    // snap nas pontas e meios dos outros (na tela, até 12 px)
-    let best = SNAP_PX;
-    for (const c of d.snaps) {
-      const s = this.screen(c);
-      const dd = Math.hypot(s.cx - e.clientX, s.cy - e.clientY);
-      if (dd < best) { best = dd; p = d.toData(c); snapped = true; }
+    let p = d.toData(hit), snapped = false, kind = null;
+    // snap do projeto: ponta, meio e perpendicular (a partir da outra ponta) — em planta, nos outros elementos
+    const toS = q => { const s = this.screen(new THREE.Vector3(q[0], q[1], hit.z)); return [s.cx, s.cy]; };
+    const wFrom = d.fromData(d.other);
+    if (Math.abs(d.plane.normal.z) > 0.999) {
+      const best = snapPick({ segs: snapSegments(this.app, { except: [d.el] }), toScreen: toS, cursor: [e.clientX, e.clientY], from: [wFrom.x, wFrom.y] });
+      if (best) { p = d.toData(new THREE.Vector3(best.p[0], best.p[1], hit.z)); snapped = true; kind = best.kind; }
+    } else {
+      // linha num eixo de trabalho (plano inclinado/vertical): pontas e meios dos outros, como antes
+      let bd = 12;
+      for (const c of d.snaps) { const s = this.screen(c), dd = Math.hypot(s.cx - e.clientX, s.cy - e.clientY); if (dd < bd) { bd = dd; p = d.toData(c); snapped = true; kind = 'ponta'; } }
     }
     if (!snapped) {
       const ortho = this.app.wallTool.ortho !== !!e.shiftKey;
@@ -176,10 +181,9 @@ export class Grips {
     // dica e marcador de snap
     const pr = this.box.parentElement.getBoundingClientRect();
     const s = this.screen(d.fromData(p));
-    this.marker.hidden = !snapped;
-    if (snapped) Object.assign(this.marker.style, { left: `${s.x}px`, top: `${s.y}px` });
+    showSnapMarker(this.marker, snapped ? kind : null, s.x, s.y);
     const L = Math.hypot(p[0] - d.other[0], p[1] - d.other[1]);
-    this.tip.textContent = `${fmtLen(L, { suffix: true })}${snapped ? '  ◻ ponta' : ''}`;
+    this.tip.textContent = `${fmtLen(L, { suffix: true })}${snapped ? `  ◻ ${kind}` : ''}`;
     Object.assign(this.tip.style, { left: `${e.clientX - pr.left + 16}px`, top: `${e.clientY - pr.top + 14}px` });
     this.tip.hidden = false;
   }

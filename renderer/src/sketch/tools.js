@@ -16,7 +16,7 @@
 // Extrudar, Varrer e Cortar com vazio são comandos sobre a seleção (sketchCommands).
 import * as THREE from 'three';
 import { h, toast, formDialog, floatBar } from '../ui.js';
-import { createSketch, rebuildSketch, isSketch, bake, trim, extend, corner, snapPointsOf, distToSeg, chainSegments, outerWithHoles, dist, segPoints, planeMatrix, frameOf, samePlane, toFrame, worldPoints, offsetPolyline, offsetLoop, area, pointInPoly, isCircle } from './sketch.js';
+import { createSketch, rebuildSketch, isSketch, bake, trim, extend, corner, snapPointsOf, distToSeg, chainSegments, outerWithHoles, dist, segPoints, planeMatrix, frameOf, samePlane, toFrame, worldPoints, offsetPolyline, offsetPolylineClean, offsetLoop, area, pointInPoly, isCircle } from './sketch.js';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { createForm, isVoid, isForm, rebuildForm } from './forms.js';
 import { createOnLevel } from '../modeling.js';
@@ -27,6 +27,7 @@ import { sweepFromGroups } from './sweep.js';
 import { handlesOf, linearKind, offsetPlan, offsetLinear, KIND_LABEL } from './linear.js';
 import { fmtLen, fromUnit, toUnit, unitLabel, unitStep } from '../units.js';
 import { toolCursor } from '../cursors.js';
+import { snapSegments, snapPick, showSnapMarker } from '../osnap.js';
 
 const SNAP_PX = 12;
 const GRID = 0.01;
@@ -275,14 +276,11 @@ export class SketchTool extends EventTarget {
     const raw = this.worldAt(e);
     if (!raw) return null;
     const rs = this.toScreen(raw);
-    let best = null, bestD = SNAP_PX;
     const last = this.pts[this.pts.length - 1];
-    for (const c of this.snapCandidates()) {
-      if (last && dist(c.p, last) < 1e-6) continue;
-      const s = this.toScreen(c.p);
-      const d = Math.hypot(s[0] - rs[0], s[1] - rs[1]);
-      if (d < bestD) { bestD = d; best = c; }
-    }
+    // snap do projeto: ponta, meio e perpendicular (a partir do último ponto) — no plano horizontal, em todos os
+    // trechos do nível (linhas, pisos, paredes, vigas); num eixo de trabalho, só as linhas deste plano
+    const segs = this.frame.plano ? [] : snapSegments(this.app, { level: this.level });
+    const best = snapPick({ segs, points: this.snapCandidates(), toScreen: p => this.toScreen(p), cursor: rs, from: last || null });
     if (best) return { p: [...best.p], snap: best.kind };
     let p = raw;
     // ORTO não vale para círculo nem retângulo (os lados do retângulo já são 0°/90°; travar zeraria uma medida)
@@ -369,8 +367,7 @@ export class SketchTool extends EventTarget {
     const cr = this.viewer.renderer.domElement.getBoundingClientRect(), pr = this.tip.parentElement.getBoundingClientRect();
     let [sx, sy] = this.toScreen(res.p);
     sx += cr.left - pr.left; sy += cr.top - pr.top;
-    this.marker.hidden = !res.snap;
-    if (res.snap) Object.assign(this.marker.style, { left: `${sx}px`, top: `${sy}px` });
+    showSnapMarker(this.marker, res.snap, sx, sy);
     this.tip.textContent = text + (this.typed ? `  ⌨ ${this.typed.replace('.', ',')} ${unitLabel()}` : '') + (res.snap ? `  ◻ ${res.snap}` : res.ortho ? '  ORTO' : '');
     this.tip.hidden = false;
     Object.assign(this.tip.style, { left: `${sx + 16}px`, top: `${sy + 14}px` });
@@ -793,7 +790,7 @@ export class SketchTool extends EventTarget {
       const a = ch.pts[s], b = ch.pts[s + 1];
       dl = ((b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0])) >= 0 ? d : -d;
     }
-    const segs = offsetPolyline(ch.pts, dl, ch.closed).map(x => ({ a: x.a, b: x.b, arco: null, estilo: style }));
+    const segs = offsetPolylineClean(ch.pts, dl, ch.closed).map(x => ({ a: x.a, b: x.b, arco: null, estilo: style }));
     return { segs, src: hit.el };
   }
 

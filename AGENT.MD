@@ -43,6 +43,8 @@ flowchart LR
     FPTS --> ELEM
     SLAB --> FSK["floor-sketch.js<br/>contorno do piso como linhas 2D (clique duplo)"]
     FSK --> FPTS
+    FSK --> GDIMS["guide-dims.js<br/>cotas guias arrastáveis"]
+    SNAPX["osnap.js<br/>snap ponta, meio, perpendicular"] --> FSK
     SLAB --> FEDIT["floor-edit.js<br/>Editar piso: linhas e furos em planta"]
     FEDIT --> FPTS
     FPTS -->|"slab.talude"| SLOPES["slopes.js<br/>talude: corte e aterro com bermas"]
@@ -171,7 +173,8 @@ flowchart LR
 | 2026-10-28 | 2.49.1 | `d7f1f73` | Ferramentas 2D no plano das linhas do contorno do piso (qualquer cota) |
 | 2026-10-28 | 2.50.0 | `c26635e` | Ponteiro próprio em cada ferramenta (cursors.js) e barras flutuantes quadradas e compactas |
 | 2026-10-28 | 2.51.0 | `7e4da61` | Copiar contorno (e furos) de outro piso no Editar contorno do piso |
-| 2026-10-28 | 2.51.1 | este commit | Regra do idioma no CLAUDE.md: sempre em português |
+| 2026-10-28 | 2.51.1 | `3376215` | Regra do idioma no CLAUDE.md: sempre em português |
+| 2026-10-28 | 2.52.0 | este commit | Snap do projeto (ponta, meio, perpendicular), cotas guias arrastáveis, offset sem laço, barras verticais |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.51.1</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.52.0</a>
