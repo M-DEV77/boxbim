@@ -67,6 +67,7 @@ export class SketchTool extends EventTarget {
 
   start(mode) {
     if (this.active) this.stop();
+    this.app.floorSketch?.picking?.(); // uma cópia em andamento (Copiar linhas/contorno) termina ao pegar outra ferramenta
     const v = this.app.views.active;
     const wp = mode === 'eixo' ? null : this.app.workPlanes?.active;
     if (v.kind === 'elevation' && !wp) { toast('O desenho 2D é no plano do nível ou de um eixo de trabalho: abra uma planta, a vista 3D ou ative um eixo.', 'error'); return; }

@@ -6,12 +6,20 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.52.2** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.52.3** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.52.3] — 2026-10-28 · Edição do piso não trava depois de copiar
+
+### Corrigido
+- Depois de **Copiar contorno de piso** ou **Copiar linhas**, a cópia continuava ligada e pegava todos os cliques da
+  vista — seleção, Offset, Canto, Estender e Aparar paravam de funcionar até apertar Esc. Agora a cópia é de **um
+  clique**: termina sozinha depois de copiar, ao clicar fora de um piso/linha (o clique segue normal), com o botão
+  direito, com Esc ou ao escolher outra ferramenta.
 
 ## [2.52.2] — 2026-10-28 · Seleção individual das linhas do contorno
 

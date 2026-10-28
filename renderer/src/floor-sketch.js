@@ -134,12 +134,14 @@ export class FloorSketch {
     const key = e => { if (e.key === 'Escape') { e.stopPropagation(); stop(); this.app.status('Copiar contorno terminado.'); } };
     const owner = o => { while (o && !o.userData?.bim) o = o.parent; return o; };
     const down = e => {
+      if (e.button === 2) { stop(); this.app.status('Copiar contorno terminado.'); return; }
       if (e.button !== 0) return;
-      e.preventDefault(); e.stopPropagation();
       const r = cv.getBoundingClientRect(), ray = new THREE.Raycaster();
       ray.setFromCamera(new THREE.Vector2((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1), v.camera);
       const hit = ray.intersectObject(v.model, true).map(x => owner(x.object)).find(o => o?.visible && o.userData.bim.slab && o !== this.active.el);
-      if (!hit) { this.app.status('Copiar contorno · clique na face de um piso · Esc termina.'); return; }
+      // fora de um piso: termina a cópia e o clique segue normal (seleção, ferramentas)
+      if (!hit) { stop(); this.app.status('Copiar contorno terminado (o clique não pegou um piso).'); return; }
+      e.preventDefault(); e.stopPropagation();
       hit.updateMatrixWorld(true);
       const s = hit.userData.bim.slab;
       const W = ([x, y]) => { const p = new THREE.Vector3(x, y, s.elevation).applyMatrix4(hit.matrixWorld); return [r6(p.x), r6(p.y)]; };
@@ -153,13 +155,14 @@ export class FloorSketch {
         });
       }
       v.changed();
-      this.app.status(`Contorno de "${hit.userData.bim.name || 'Piso'}" copiado (${n} linha(s)) · clique em outro · Esc termina.`);
+      stop(); // um clique por vez: as ferramentas (seleção, aparar, canto…) voltam a funcionar
+      this.app.status(`Contorno de "${hit.userData.bim.name || 'Piso'}" copiado (${n} linha(s)). Para copiar outro, clique de novo em "Copiar contorno de piso".`);
     };
     cv.addEventListener('pointerdown', down, true);
     document.addEventListener('keydown', key, true);
     cv.style.cursor = toolCursor('copiar-contorno');
     this.picking = stop;
-    this.app.status('Copiar contorno · clique na face de outro piso (entram o contorno e os furos) · Esc termina.');
+    this.app.status('Copiar contorno · clique na face de outro piso (entram o contorno e os furos) · um clique · Esc cancela.');
   }
 
   /** Copiar arestas dos sólidos: a ferramenta "Linhas do sólido", projetando na planta (as linhas novas entram no contorno). */
@@ -186,8 +189,8 @@ export class FloorSketch {
     const screen = p => { const q = p.clone().project(v.camera), r = cv.getBoundingClientRect(); return [(q.x + 1) / 2 * r.width + r.left, (1 - q.y) / 2 * r.height + r.top]; };
     const distSeg = (p, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], L = dx * dx + dy * dy || 1, t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L)); return Math.hypot(a[0] + dx * t - p[0], a[1] + dy * t - p[1]); };
     const down = e => {
+      if (e.button === 2) { stop(); this.app.status('Copiar linhas terminado.'); return; }
       if (e.button !== 0) return;
-      e.preventDefault(); e.stopPropagation();
       // linha do desenho mais perto do clique (até 10 px), fora do esboço
       const lines = v.elements().filter(x => isSketch(x) && x.visible && !this.isTemp(x));
       let best = null, bd = 10;
@@ -195,7 +198,8 @@ export class FloorSketch {
         const pts = worldPoints(x.userData.bim.linha).map(screen);
         for (let i = 1; i < pts.length; i++) { const d = distSeg([e.clientX, e.clientY], pts[i - 1], pts[i]); if (d < bd) { bd = d; best = x; } }
       }
-      if (!best) { this.app.status('Copiar linhas · clique sobre uma linha 2D do desenho · Esc termina.'); return; }
+      if (!best) { stop(); this.app.status('Copiar linhas terminado (o clique não pegou uma linha).'); return; }
+      e.preventDefault(); e.stopPropagation();
       // a linha e as ligadas a ela pelas pontas (no mesmo plano horizontal)
       const key2 = p => `${p.x.toFixed(4)},${p.y.toFixed(4)},${p.z.toFixed(3)}`;
       const ends = x => { const w = worldPoints(x.userData.bim.linha); return [w[0], w[w.length - 1]]; };
@@ -216,13 +220,14 @@ export class FloorSketch {
         }
       }
       v.changed();
-      this.app.status(`${n} linha(s) copiada(s) para o contorno · clique em outras · Esc termina.`);
+      stop(); // um clique por vez: as ferramentas voltam a funcionar
+      this.app.status(`${n} linha(s) copiada(s) para o contorno. Para copiar outras, clique de novo em "Copiar linhas".`);
     };
     cv.addEventListener('pointerdown', down, true);
     document.addEventListener('keydown', key, true);
     cv.style.cursor = toolCursor('copiar-linhas');
     this.picking = stop;
-    this.app.status('Copiar linhas · clique numa linha 2D do desenho (entram ela e as ligadas) · Esc termina.');
+    this.app.status('Copiar linhas · clique numa linha 2D do desenho (entram ela e as ligadas) · um clique · Esc cancela.');
   }
 
   /** Linhas do esboço (no modelo) e os contornos que elas fecham. */
