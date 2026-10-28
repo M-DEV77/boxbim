@@ -118,8 +118,9 @@ export function applySlopes(geo, terrainEl, floors) {
   // (o fundo, plano e escondido, não precisa ser subdividido)
   geo.computeBoundingBox();
   const zb0 = geo.boundingBox.min.z;
-  const far = Math.max(0.4, size / 80), near = Math.min(far, 0.2);
-  const band = near * 1.37;
+  // malha: 10 cm junto da aresta (a dobra do talude fica bem desenhada), 20 cm até 1,5 m, e grossa longe
+  const far = Math.max(0.4, size / 80), near = Math.min(far, 0.1), mid = Math.min(far, 0.2);
+  const band = mid * 1.37; // faixa do perfil que entra no piso (maior que a malha fina)
   // até onde cada talude pode chegar (onde o perfil já passou de toda a altura do terreno): fora disso nada muda
   const zTop = geo.boundingBox.max.z, zLow = s.elevation + Math.min(0, ...((s.alturas || []).concat((s.forma || []).map(p => p[2])).filter(Number.isFinite)));
   for (const t of tops) {
@@ -131,7 +132,7 @@ export function applySlopes(geo, terrainEl, floors) {
     if (cz <= zb0 + 1e-4) return Infinity;
     let e = Infinity, reach = 0;
     for (const t of tops) { const q = nearestOnPoly(cx, cy, t.poly).edge - m; if (q < e) e = q; if (q < t.reach) reach = 1; }
-    return !reach ? Infinity : e < 1 ? near : far;
+    return !reach ? Infinity : e < 0.4 ? near : e < 1.5 ? mid : far;
   });
   const pos = out.attributes.position;
   let zb = Infinity;

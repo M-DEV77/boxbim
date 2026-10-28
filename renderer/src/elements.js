@@ -252,41 +252,114 @@ export function slabShapeFn(s) {
 }
 
 /**
- * Subdivide os triângulos (arestas até maxLen no plano XY) mantendo os grupos de material e todos os atributos.
- * Devolve uma geometria NÃO indexada.
+ * Subdivide os triângulos até as arestas ficarem com no máximo maxLen (no plano XY; d3: no espaço), mantendo os
+ * grupos de material e todos os atributos. Devolve uma geometria NÃO indexada.
+ * A decisão de dividir é POR ARESTA (pelas duas pontas), não por triângulo: os dois triângulos que dividem uma aresta
+ * a dividem juntos — a malha continua FECHADA, sem rachaduras em "T" (que estragavam os cortes booleanos e deixavam
+ * dentes na união do talude com o piso). maxLen pode ser uma função (mx, my, mz, comprimento) do meio da aresta.
  */
 export function subdivide(geo, maxLen, { d3 = false } = {}) {
   const g = geo.index ? geo.toNonIndexed() : geo;
   const names = Object.keys(g.attributes);
   const src = names.map(k => g.attributes[k]);
+  const sizes = src.map(a => a.itemSize);
   const count = g.attributes.position.count;
   const groups = g.groups.length ? g.groups : [{ start: 0, count, materialIndex: 0 }];
-  const out = names.map(() => []), outGroups = [];
-  const vert = i => src.map(a => Array.from({ length: a.itemSize }, (_, k) => a.array[i * a.itemSize + k]));
-  const mid = (u, v) => u.map((arr, j) => arr.map((x, k) => (x + v[j][k]) / 2));
-  const pi = names.indexOf('position');
-  // comprimento em planta (pisos/terrenos) ou no espaço (d3: paredes e qualquer face, ex.: displacement)
-  const lenXY = d3 ? (u, v) => Math.hypot(u[pi][0] - v[pi][0], u[pi][1] - v[pi][1], u[pi][2] - v[pi][2]) : (u, v) => Math.hypot(u[pi][0] - v[pi][0], u[pi][1] - v[pi][1]);
-  let written = 0;
-  const emit = (a, b, c) => { for (const t of [a, b, c]) t.forEach((arr, j) => out[j].push(...arr)); written += 3; };
-  const split = (a, b, c, depth) => {
-    const ab = lenXY(a, b), bc = lenXY(b, c), ca = lenXY(c, a), m = Math.max(ab, bc, ca);
-    // maxLen pode ser uma função do centro do triângulo (malha mais fina onde precisa)
-    const lim = typeof maxLen === 'function' ? maxLen((a[pi][0] + b[pi][0] + c[pi][0]) / 3, (a[pi][1] + b[pi][1] + c[pi][1]) / 3, (a[pi][2] + b[pi][2] + c[pi][2]) / 3, m) : maxLen;
-    if (m <= lim || depth > 30) return emit(a, b, c);
-    if (m === ab) { const p = mid(a, b); split(a, p, c, depth + 1); split(p, b, c, depth + 1); }
-    else if (m === bc) { const p = mid(b, c); split(a, b, p, depth + 1); split(a, p, c, depth + 1); }
-    else { const p = mid(c, a); split(a, b, p, depth + 1); split(p, b, c, depth + 1); }
-  };
-  for (const gr of groups) {
-    const start = written;
-    const end = Math.min(gr.start + gr.count, count);
-    for (let i = gr.start; i + 2 < end; i += 3) split(vert(i), vert(i + 1), vert(i + 2), 0);
-    outGroups.push({ start, count: written - start, materialIndex: gr.materialIndex });
+  // vértices: atributos em listas planas; pid = ponto (posição) — cantos de faces diferentes no mesmo ponto têm o
+  // mesmo pid, e é por ele que as arestas são reconhecidas
+  const data = src.map(a => Array.from(a.array));
+  const pid = new Int32Array(count);
+  const pidOf = new Map();
+  const P = data[names.indexOf('position')];
+  let nPid = 0;
+  for (let i = 0; i < count; i++) {
+    const k = `${P[i * 3].toFixed(6)},${P[i * 3 + 1].toFixed(6)},${P[i * 3 + 2].toFixed(6)}`;
+    let id = pidOf.get(k);
+    if (id === undefined) pidOf.set(k, id = nPid++);
+    pid[i] = id;
   }
+  const pids = Array.from(pid);
+  const midPid = new Map(), midVert = new Map();
+  const EK = (a, b) => (a < b ? a * 67108864 + b : b * 67108864 + a);
+  const midOf = (u, v) => {
+    const kv = u < v ? u * 67108864 + v : v * 67108864 + u;
+    let w = midVert.get(kv);
+    if (w !== undefined) return w;
+    w = pids.length;
+    data.forEach((arr, j) => { const n = sizes[j]; for (let k = 0; k < n; k++) arr.push((arr[u * n + k] + arr[v * n + k]) / 2); });
+    const kp = EK(pids[u], pids[v]);
+    let q = midPid.get(kp);
+    if (q === undefined) midPid.set(kp, q = nPid++);
+    pids.push(q);
+    midVert.set(kv, w);
+    return w;
+  };
+  const len = (u, v) => {
+    const dx = P[u * 3] - P[v * 3], dy = P[u * 3 + 1] - P[v * 3 + 1];
+    return d3 ? Math.hypot(dx, dy, P[u * 3 + 2] - P[v * 3 + 2]) : Math.hypot(dx, dy);
+  };
+  const fn = typeof maxLen === 'function';
+  const over = (u, v) => {
+    const L = len(u, v);
+    const lim = fn ? maxLen((P[u * 3] + P[v * 3]) / 2, (P[u * 3 + 1] + P[v * 3 + 1]) / 2, (P[u * 3 + 2] + P[v * 3 + 2]) / 2, L) : maxLen;
+    return L > lim;
+  };
+  // triângulos: [a, b, c, grupo] em lista plana
+  let T = [];
+  groups.forEach((gr, gi) => {
+    const end = Math.min(gr.start + gr.count, count);
+    for (let i = gr.start; i + 2 < end; i += 3) T.push(i, i + 1, i + 2, gi);
+  });
+  for (let pass = 0; pass < 24; pass++) {
+    // arestas a dividir, pelos pontos das pontas: as duas faces vizinhas concordam
+    const marked = new Set();
+    for (let t = 0; t < T.length; t += 4) {
+      const a = T[t], b = T[t + 1], c = T[t + 2];
+      if (over(a, b)) marked.add(EK(pids[a], pids[b]));
+      if (over(b, c)) marked.add(EK(pids[b], pids[c]));
+      if (over(c, a)) marked.add(EK(pids[c], pids[a]));
+    }
+    if (!marked.size) break;
+    const N = [];
+    for (let t = 0; t < T.length; t += 4) {
+      const a = T[t], b = T[t + 1], c = T[t + 2], gi = T[t + 3];
+      const mab = marked.has(EK(pids[a], pids[b])), mbc = marked.has(EK(pids[b], pids[c])), mca = marked.has(EK(pids[c], pids[a]));
+      const n = mab + mbc + mca;
+      if (!n) { N.push(a, b, c, gi); continue; }
+      if (n === 3) {
+        const p = midOf(a, b), q = midOf(b, c), r = midOf(c, a);
+        N.push(a, p, r, gi, p, b, q, gi, r, q, c, gi, p, q, r, gi);
+        continue;
+      }
+      // gira o triângulo para o padrão: 1 aresta marcada = AB; 2 arestas = AB e BC
+      let A = a, B = b, C = c;
+      if (n === 1) { if (mbc) [A, B, C] = [b, c, a]; else if (mca) [A, B, C] = [c, a, b]; }
+      else if (mbc && mca) [A, B, C] = [b, c, a];
+      else if (mca && mab) [A, B, C] = [c, a, b];
+      const p = midOf(A, B);
+      if (n === 1) { N.push(A, p, C, gi, p, B, C, gi); continue; }
+      const q = midOf(B, C);
+      N.push(A, p, C, gi, p, B, q, gi, p, q, C, gi);
+    }
+    T = N;
+  }
+  // saída por grupo (mesma ordem dos grupos)
+  const nTri = T.length / 4;
+  const out = sizes.map(n => new Float32Array(nTri * 3 * n));
   const res = new THREE.BufferGeometry();
-  names.forEach((k, j) => res.setAttribute(k, new THREE.Float32BufferAttribute(out[j], src[j].itemSize)));
-  if (g.groups.length) for (const gr of outGroups) res.addGroup(gr.start, gr.count, gr.materialIndex);
+  let w = 0;
+  groups.forEach((gr, gi) => {
+    const start = w;
+    for (let t = 0; t < T.length; t += 4) {
+      if (T[t + 3] !== gi) continue;
+      for (let k = 0; k < 3; k++, w++) {
+        const v = T[t + k];
+        data.forEach((arr, j) => { const n = sizes[j]; for (let m = 0; m < n; m++) out[j][w * n + m] = arr[v * n + m]; });
+      }
+    }
+    if (g.groups.length) res.addGroup(start, w - start, gr.materialIndex);
+  });
+  names.forEach((k, j) => res.setAttribute(k, new THREE.BufferAttribute(out[j], sizes[j])));
   return res;
 }
 

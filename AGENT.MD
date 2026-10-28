@@ -188,7 +188,8 @@ flowchart LR
 | 2026-10-28 | 2.58.0 | `c0124f0` | Prévia do Canto (laranja/amarelo/verde) e ponteiro verde sobre linha válida |
 | 2026-10-28 | 2.59.0 | `dc2f757` | Canto arredondado do piso vira uma linha curva única na edição do contorno |
 | 2026-10-28 | 2.60.0 | `b44f6e9` | Linhas do sólido copia curvas como arco/círculo único (polylineArcs) |
-| 2026-10-28 | 2.60.1 | este commit | Linhas do sólido: aresta reta subdividida vira um segmento único |
+| 2026-10-28 | 2.60.1 | `368e5e5` | Linhas do sólido: aresta reta subdividida vira um segmento único |
+| 2026-10-28 | 2.60.2 | este commit | Talude: subdivisão por aresta (malha fechada, sem dentes na união com o piso) e malha mais fina junto do contorno |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.60.1</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.60.2</a>

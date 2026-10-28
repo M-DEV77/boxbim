@@ -6,12 +6,22 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.60.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.60.2** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.60.2] — 2026-10-28 · Talude sem deformação na união com o piso
+
+### Corrigido
+- **Talude**: a malha do terreno deformava na união do piso com o talude (bordas dentadas no piso e pontas
+  triangulares nas laterais). A subdivisão dividia cada triângulo por conta própria, e vizinhos ficavam com pontos
+  soltos no meio da aresta (rachaduras em "T") que estragavam o corte booleano. Agora a divisão é **por aresta**: as
+  duas faces que dividem uma aresta a dividem juntas e a malha fica fechada. Também ficou cerca de 10× mais rápida.
+- **Mais triângulos na união**: malha de 10 cm até 0,4 m do contorno do piso, de 20 cm até 1,5 m e mais grossa longe
+  dele. A dobra do talude fica bem desenhada.
 
 ## [2.60.1] — 2026-10-28 · Linhas do sólido: reta num segmento só
 
