@@ -73,6 +73,9 @@ export class SketchTool extends EventTarget {
     if (this.app.transformTool.mode) this.app.transformTool.stop();
     this.mode = mode;
     this.level = this.app.views.activeLevel() || this.app.levels.list[0];
+    // editando o contorno de um piso: o nível é o do piso (o plano fica na cota do topo dele — ver setFrame)
+    const fs = this.app.floorSketch?.active;
+    if (fs && !wp) this.level = this.app.levels.ofElement(fs.el) || this.level;
     this.setFrame(wp);
     this.active = true;
     this.pts = [];         // pontos da operação em curso
@@ -128,10 +131,14 @@ export class SketchTool extends EventTarget {
     this.dispatchEvent(new Event('change'));
   }
 
-  /** Plano do desenho: o eixo de trabalho dado ou o horizontal do nível. */
+  /**
+   * Plano do desenho: o eixo de trabalho dado ou o horizontal do nível. Editando o contorno de um piso (clique duplo),
+   * o horizontal fica na cota das linhas do contorno — Aparar, Estender, Canto, Offset… trabalham nelas.
+   */
   setFrame(wp) {
     this.workPlane = wp || null;
-    this.frame = wp ? { plano: this.app.workPlanes.frameOf(wp), z: 0 } : { plano: null, z: this.level.elevation };
+    const fs = this.app.floorSketch?.active;
+    this.frame = wp ? { plano: this.app.workPlanes.frameOf(wp), z: 0 } : { plano: null, z: fs ? fs.z : this.level.elevation };
     this.matrix = planeMatrix(this.frame.plano || { o: [0, 0, this.frame.z], u: [1, 0, 0], v: [0, 1, 0] });
     this.inverse = this.matrix.clone().invert();
   }

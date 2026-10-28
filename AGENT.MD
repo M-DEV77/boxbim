@@ -167,7 +167,8 @@ flowchart LR
 | 2026-10-27 | 2.46.1 | `2d8b188` | Tirado o bloco Edição 2D do contorno das Propriedades do piso |
 | 2026-10-27 | 2.47.0 | `159849d` | Piso sobreposto: acompanha o relevo do piso hospedeiro (escolhido na vista) |
 | 2026-10-28 | 2.48.0 | `84abe3e` | Neon no contorno do piso em edição e barras das ferramentas flutuantes e arrastáveis |
-| 2026-10-28 | 2.49.0 | este commit | Copiar linhas 2D e arestas de sólidos no contorno do piso; neon fino e rosa |
+| 2026-10-28 | 2.49.0 | `2f3d3a3` | Copiar linhas 2D e arestas de sólidos no contorno do piso; neon fino e rosa |
+| 2026-10-28 | 2.49.1 | este commit | Ferramentas 2D no plano das linhas do contorno do piso (qualquer cota) |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.49.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.49.1</a>

@@ -6,12 +6,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.49.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.49.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.49.1] — 2026-10-28 · Ferramentas 2D no contorno do piso em qualquer cota
+
+### Corrigido
+- **Aparar, Estender, Canto, Offset…** não pegavam as linhas do contorno do piso (clique duplo) quando o topo do piso
+  não estava na cota do nível (piso com deslocamento, terreno): durante a edição do contorno, o plano das ferramentas
+  2D fica na cota das linhas do contorno e no nível do piso.
 
 ## [2.49.0] — 2026-10-28 · Copiar linhas e arestas no contorno do piso
 
