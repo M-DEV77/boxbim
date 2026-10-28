@@ -51,6 +51,7 @@ flowchart LR
     SLOPES --> CUTS
     FPTS -->|"slab.sobrepor"| DRAPE["drape.js<br/>piso sobreposto acompanha o hospedeiro"]
     DRAPE --> CUTS
+    FPTS -->|"slab.rodape"| SKIRT["skirting.js<br/>rodapé com objeto de perfil"]
     FPTS -->|"slab.terreno"| CUTS["sketch/cuts.js<br/>vazios e pisos cortando o terreno (CSG)"]
     MODEL --> ROOF["roof-tool.js telhado"]
     MODEL --> WALLED["wall-edit.js editar parede / até o telhado"]
@@ -179,7 +180,8 @@ flowchart LR
 | 2026-10-28 | 2.52.2 | `8e8546e` | Clique seleciona cada linha do contorno (atravessa o bloqueado; linha ganha da superfície) |
 | 2026-10-28 | 2.52.3 | `0e4da5d` | Copiar contorno/linhas de um clique: não trava mais as ferramentas da edição do piso |
 | 2026-10-28 | 2.53.0 | `e4c2231` | Contorno do piso aberto em vermelho, com X nas pontas soltas |
-| 2026-10-28 | 2.54.0 | este commit | Contorno do piso: solda de pontas (5 mm), T divide a linha, ○ nos cruzamentos e Fechar pontas |
+| 2026-10-28 | 2.54.0 | `6d6faec` | Contorno do piso: solda de pontas (5 mm), T divide a linha, ○ nos cruzamentos e Fechar pontas |
+| 2026-10-28 | 2.55.0 | este commit | Displacement real nos materiais (Render) e rodapé no piso com objeto de perfil |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.54.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.55.0</a>

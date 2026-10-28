@@ -1,5 +1,6 @@
 // SISTEMA DE MATERIAIS: padrões procedurais (sem arquivos de imagem). Cada padrão gera os seus mapas — cor,
-// relevo fino (bump), normal, oclusão ambiente (AO), deslocamento (altura, por paralaxe), rugosidade (o brilho/
+// relevo fino (bump), normal, oclusão ambiente (AO), deslocamento (altura, por paralaxe), displacement (o mapa de
+// altura MOVE a geometria no Render — a malha é subdividida), rugosidade (o brilho/
 // glossiness é 1 − rugosidade), metal, especular, opacidade (recorte) e emissão — e o material da biblioteca
 // escolhe quais usar e com que intensidade (tipos.json › materials[nome].render).
 //
@@ -23,7 +24,7 @@ export const MAPS = {
 /** Valores de um material sem nada gravado. */
 const BASE = {
   textura: 'nenhuma', escala: 1, rugosidade: 0.8, metal: 0, transmissao: 0,
-  relevo: 0.5, normal: 1, ao: 1, deslocamento: 0,
+  relevo: 0.5, normal: 1, ao: 1, deslocamento: 0, displacement: 0,
   mapaRugosidade: true, mapaMetal: false,
   especular: 1, corEspecular: '#ffffff', mapaEspecular: false,
   mapaOpacidade: false,
@@ -651,6 +652,10 @@ export function applyMaterial(m, name, def = {}) {
     if (plx) m.defines.USE_PARALLAX = 1; else delete m.defines.USE_PARALLAX;
     m.needsUpdate = true;
   }
+  // DISPLACEMENT: o mapa de altura empurra os vértices (cm, para fora da face); no Render a malha é subdividida
+  setMap(m, 'displacementMap', kind, p.displacement > 0 && 'deslocamento', rep);
+  m.displacementScale = (p.displacement || 0) / 100;
+  m.displacementBias = 0;
 
   // superfície
   m.roughness = p.rugosidade;

@@ -137,11 +137,16 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
 - **Cotas guias**: na edição do contorno do piso, a medida de cada linha aparece ao lado dela (e nas linhas, paredes
   e vigas selecionadas em todo o projeto); **arraste** a cota para mudar a posição dela, **clique** no número para
   digitar o comprimento e dê duplo clique para voltar à posição padrão.
+- **Displacement nos materiais** (editor de materiais e Propriedades › material): o mapa de altura do padrão
+  **move a geometria** no estilo Render (a malha é subdividida só ali); o "Deslocamento" continua como paralaxe.
 - **Ponteiro de cada ferramenta**: ao usar uma ferramenta o ponteiro vira uma mira fina (o ponto exato do clique no
   centro) com o ícone dela — Aparar, Estender, Canto, Offset, Linha, Retângulo, Círculo, Parede, Piso, Telhado, Cota,
   Copiar, Espelhar, Inserir objeto e as escolhas na vista.
 - **Canto da faixa (Desenho › Canto) no piso**: clique dois lados do mesmo contorno do piso (ou de um furo) — vivo
   (os lados se encontram), raio ou chanfro, como nas linhas 2D; desfaz arredondamentos e chanfros com o vivo.
+- **Rodapé** (Propriedades do piso): liga o rodapé no contorno (e, se quiser, nos furos) usando um **objeto de perfil**
+  da biblioteca — o de fábrica "Rodapé" tem altura, espessura, perfil (reto, chanfrado, boleado, com friso) e
+  material; **Editar perfil…** abre o objeto no editor para desenhar outro perfil.
 - **Sobrepor** (Propriedades do piso): ligue e clique no piso **hospedeiro** na vista — o piso deita sobre ele e
   **acompanha o relevo** (o fundo encosta na superfície do hospedeiro, com pontos de altura, taludes e cortes);
   calçadas, revestimentos e pavimentos sobre terreno ou rampa. Recalcula sozinho quando o hospedeiro muda.
@@ -461,4 +466,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.54.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.55.0</a>

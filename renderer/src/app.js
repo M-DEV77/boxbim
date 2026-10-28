@@ -11,6 +11,7 @@ import { Grips } from './grips.js';
 import { GuideDims } from './guide-dims.js';
 import { FloorPoints } from './floor-points.js';
 import { FloorSketch } from './floor-sketch.js';
+import { Skirting } from './skirting.js';
 import { SmartDims } from './smart-dims.js';
 import { icon } from './icons.js';
 import { Display } from './display.js';
@@ -110,6 +111,7 @@ class App {
     this.guideDims = new GuideDims(this); // cotas guias (contorno do piso e seleção), posição arrastável
     this.floorPoints = new FloorPoints(this);
     this.floorSketch = new FloorSketch(this);
+    this.skirting = new Skirting(this); // rodapé dos pisos (perfil de objeto)
     this.smartDims = new SmartDims(this); // cotas até as peças paralelas da seleção
     // widget de eixos (orbitar em X/Y/Z) no canto da vista 3D
     const axes = new AxisWidget({ getCamera: () => this.viewer.camera, getControls: () => this.viewer.controls });
@@ -1077,6 +1079,7 @@ class App {
           slider('transmissao', 'Vidro (transmissão)', 0, 1, 0.01),
           slider('normal', 'Normal', 0, 3, 0.05),
           slider('deslocamento', 'Deslocamento (cm)', 0, 5, 0.1),
+          slider('displacement', 'Displacement (cm)', 0, 10, 0.1),
           h('tr', {}, h('td', {}, 'Padrão'), h('td', {}, h('select', { style: 'width:100%', onchange: e => set('textura', e.target.value) },
             Object.entries(patternList()).map(([k, l]) => h('option', { value: k, selected: k === p.textura }, l))))),
           h('tr', {}, h('td', {}, `Escala (${unitLabel()})`), h('td', {}, h('input', { type: 'number', step: unitStep(), min: toUnit(0.05), value: toUnit(p.escala), style: 'width:100%',
@@ -1231,7 +1234,7 @@ class App {
       h('button', { onclick: () => this.floorSketch.start(o), title: 'O contorno vira linhas 2D para editar com as ferramentas 2D (também com clique duplo no piso)' }, 'Editar contorno (linhas 2D)'),
       h('button', { onclick: () => editFloor(this, o), title: 'Nome, tipo, cota do topo e contorno num diálogo' }, 'Diálogo do piso…'),
       h('button', { onclick: () => this.floorPoints.showPoints(o), title: 'Pontos de elevação na vista (também com dois cliques pausados no piso)' }, 'Pontos de elevação')),
-      ...this.floorPoints.propsSection(o), ...this.floorPoints.slopeSection(o), ...this.floorPoints.overlaySection(o));
+      ...this.floorPoints.propsSection(o), ...this.floorPoints.slopeSection(o), ...this.floorPoints.overlaySection(o), ...this.floorPoints.skirtSection(o));
     this.renderTypeProps(root, o);
     this.renderObjectProps(root, o);
     this.renderMaterialProps(root, o);

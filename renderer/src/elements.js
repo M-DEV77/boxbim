@@ -250,7 +250,7 @@ export function slabShapeFn(s) {
  * Subdivide os triângulos (arestas até maxLen no plano XY) mantendo os grupos de material e todos os atributos.
  * Devolve uma geometria NÃO indexada.
  */
-export function subdivide(geo, maxLen) {
+export function subdivide(geo, maxLen, { d3 = false } = {}) {
   const g = geo.index ? geo.toNonIndexed() : geo;
   const names = Object.keys(g.attributes);
   const src = names.map(k => g.attributes[k]);
@@ -260,7 +260,8 @@ export function subdivide(geo, maxLen) {
   const vert = i => src.map(a => Array.from({ length: a.itemSize }, (_, k) => a.array[i * a.itemSize + k]));
   const mid = (u, v) => u.map((arr, j) => arr.map((x, k) => (x + v[j][k]) / 2));
   const pi = names.indexOf('position');
-  const lenXY = (u, v) => Math.hypot(u[pi][0] - v[pi][0], u[pi][1] - v[pi][1]);
+  // comprimento em planta (pisos/terrenos) ou no espaço (d3: paredes e qualquer face, ex.: displacement)
+  const lenXY = d3 ? (u, v) => Math.hypot(u[pi][0] - v[pi][0], u[pi][1] - v[pi][1], u[pi][2] - v[pi][2]) : (u, v) => Math.hypot(u[pi][0] - v[pi][0], u[pi][1] - v[pi][1]);
   let written = 0;
   const emit = (a, b, c) => { for (const t of [a, b, c]) t.forEach((arr, j) => out[j].push(...arr)); written += 3; };
   const split = (a, b, c, depth) => {

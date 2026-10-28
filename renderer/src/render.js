@@ -14,6 +14,7 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { WebGLPathTracer, ProceduralEquirectTexture } from 'three-gpu-pathtracer';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { PATTERNS, materialProps, applyMaterial, createMaterial, boxUv, restoreUv } from './materials.js';
+import { subdivide } from './elements.js';
 
 const DEG = Math.PI / 180;
 const LINE_LAYER = 1;
@@ -351,6 +352,24 @@ export class RenderMode extends EventTarget {
       ud._flatMat = cur;
       const rm = this.renderFor(cur);
       if (selected) ud._origMat = rm; else o.material = rm;
+      // displacement: a geometria precisa de vértices para o mapa empurrar — malha subdividida (a original volta)
+      if ([].concat(rm).some(m => m?.displacementMap && m.displacementScale > 0) && !ud._dispOrig) {
+        const g = o.geometry;
+        // densidade: ~30 mil triângulos por malha no máximo (e nunca abaixo de 4 cm)
+        const pos = g.attributes.position, A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3();
+        let area = 0;
+        const idx = g.index;
+        const tri = idx ? idx.count / 3 : pos.count / 3;
+        for (let t = 0; t < tri; t++) {
+          const i0 = idx ? idx.getX(t * 3) : t * 3, i1 = idx ? idx.getX(t * 3 + 1) : t * 3 + 1, i2 = idx ? idx.getX(t * 3 + 2) : t * 3 + 2;
+          A.fromBufferAttribute(pos, i0); B.fromBufferAttribute(pos, i1); C.fromBufferAttribute(pos, i2);
+          area += B.sub(A).cross(C.sub(A)).length() / 2;
+        }
+        ud._dispOrig = g;
+        o.geometry = subdivide(g, Math.max(0.04, Math.sqrt(area * 2 / 30000) * 1.4), { d3: true });
+        o.geometry.computeVertexNormals();
+        boxUv(o.geometry);
+      }
     });
   }
 
@@ -358,6 +377,7 @@ export class RenderMode extends EventTarget {
     this.viewer.model.traverse(o => {
       const ud = o.userData;
       if (ud._hiddenByRender) { o.visible = true; delete ud._hiddenByRender; }
+      if (o.isMesh && ud._dispOrig) { o.geometry.dispose(); o.geometry = ud._dispOrig; delete ud._dispOrig; }
       if (o.isMesh) restoreUv(o.geometry);
       if (!o.isMesh || !ud._flatMat) return;
       if (ud._origMat) ud._origMat = ud._flatMat; else o.material = ud._flatMat;

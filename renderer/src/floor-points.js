@@ -18,6 +18,8 @@ import { slopeConfig } from './slopes.js';
 import { fmtLen, fromUnit, toUnit, unitLabel, unitStep } from './units.js';
 import { toolCursor } from './cursors.js';
 import { snapSegments, snapPick, showSnapMarker } from './osnap.js';
+import { skirtConfig } from './skirting.js';
+import { optionList } from './objects/objects.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 const SNAP_PX = 12;
@@ -486,6 +488,49 @@ export class FloorPoints {
     if (r) s.holes[r - 1] = next; else s.points = next;
     this.rebuildHandles(); this._key = this.shapeKey(s);
     return this.commit(el);
+  }
+
+  // ------------------------------------------------------------ rodapé (perfil de objeto ao longo do contorno)
+
+  /** Seção "Rodapé": liga, escolhe o objeto do perfil e os parâmetros dele (altura, espessura, perfil, material…). */
+  skirtSection(el) {
+    const s = el.userData.bim.slab, cfg = skirtConfig(s);
+    const save = patch => {
+      const cur = this.live(el), cs = cur.userData.bim.slab;
+      cs.rodape = { ...skirtConfig(cs), ...patch };
+      this.commit(cur);
+    };
+    const lib = this.app.objects;
+    // perfis: os objetos marcados como rodapé (ou de revestimento) — o padrão é o "Rodapé" de fábrica
+    const profs = lib.items.filter(o => !o.broken && (o.rodape || o.id === 'rodape' || o.category === 'IfcCovering'));
+    const def = lib.get(cfg.objeto) || lib.get('rodape');
+    const rows = [];
+    if (cfg.ativo && def) {
+      for (const p of def.parameters.filter(x => x.name !== 'comprimento')) {
+        const val = cfg.params[p.name] ?? p.default;
+        const set = v => save({ params: { ...cfg.params, [p.name]: v } });
+        let input;
+        if (p.type === 'comprimento') input = h('input', { type: 'number', step: unitStep(), value: toUnit(val), onchange: e => { const x = fromUnit(e.target.value); if (x > 0) set(x); } });
+        else if (p.type === 'opcao') input = h('select', { onchange: e => set(e.target.value) }, optionList(p).map(x => h('option', { value: x, selected: x === val }, x)));
+        else if (p.type === 'material') input = h('select', { onchange: e => set(e.target.value) }, Object.keys(this.app.types.materials).map(m => h('option', { value: m, selected: m === val }, m)));
+        else if (p.type === 'booleano') input = h('input', { type: 'checkbox', checked: !!val, onchange: e => set(e.target.checked) });
+        else input = h('input', { value: val ?? '', onchange: e => set(p.type === 'numero' || p.type === 'inteiro' || p.type === 'angulo' ? Number(e.target.value) : e.target.value) });
+        input.style.width = '100%';
+        rows.push(h('tr', {}, h('td', {}, `${p.label || p.name}${p.type === 'comprimento' ? ` (${unitLabel()})` : ''}`), h('td', {}, input)));
+      }
+    }
+    return [
+      h('h4', {}, 'Rodapé'),
+      h('label', { class: 'inline', title: 'Coloca o rodapé ao longo do contorno do piso, com o perfil de um objeto da biblioteca' },
+        h('input', { type: 'checkbox', checked: cfg.ativo, onchange: e => save({ ativo: e.target.checked }) }), 'Rodapé no contorno'),
+      cfg.ativo ? h('table', { class: 'slope-table' },
+        h('tr', {}, h('td', {}, 'Perfil (objeto)'), h('td', {}, h('select', { style: 'width:100%', onchange: e => save({ objeto: e.target.value, params: {} }) },
+          (profs.length ? profs : [{ id: 'rodape', name: 'Rodapé' }]).map(o => h('option', { value: o.id, selected: o.id === (def?.id || cfg.objeto) }, o.name))))),
+        ...rows,
+        h('tr', {}, h('td', { colspan: 2 }, h('label', { class: 'inline', title: 'Também em volta dos furos do piso' },
+          h('input', { type: 'checkbox', checked: cfg.furos, onchange: e => save({ furos: e.target.checked }) }), 'Também nos furos')))) : null,
+      cfg.ativo && def ? h('div', { class: 'row-buttons' }, h('button', { onclick: () => import('./objects/editor.js').then(m => m.openObjectEditor(this.app, def)), title: 'Abre o objeto do perfil no editor (desenho do perfil, parâmetros)' }, 'Editar perfil…')) : null,
+    ];
   }
 
   // ------------------------------------------------------------ sobrepor (piso deitado sobre outro)

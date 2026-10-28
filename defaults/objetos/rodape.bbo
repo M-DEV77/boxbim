@@ -1,0 +1,57 @@
+{
+  "format": "boxbim-objeto",
+  "version": 1,
+  "revision": 1,
+  "author": "BoxBim",
+  "created": "2026-10-28",
+  "id": "rodape",
+  "name": "Rodapé",
+  "category": "IfcCovering",
+  "rodape": true,
+  "description": "Perfil de rodapé usado pelo piso (Propriedades do piso › Rodapé): uma peça por lado do contorno, extrudada ao longo do lado. Perfis: reto, chanfrado, boleado e com friso.",
+  "parameters": [
+    {
+      "name": "comprimento",
+      "label": "Comprimento (o piso preenche)",
+      "type": "comprimento",
+      "default": 1,
+      "min": 0.01,
+      "max": 1000,
+      "group": "Prévia no editor"
+    },
+    {
+      "name": "altura",
+      "label": "Altura",
+      "type": "comprimento",
+      "default": 0.07,
+      "min": 0.02,
+      "max": 0.3,
+      "group": "Perfil"
+    },
+    {
+      "name": "espessura",
+      "label": "Espessura",
+      "type": "comprimento",
+      "default": 0.015,
+      "min": 0.005,
+      "max": 0.05,
+      "group": "Perfil"
+    },
+    {
+      "name": "perfil",
+      "label": "Perfil",
+      "type": "opcao",
+      "default": "Reto",
+      "options": "Reto, Chanfrado, Boleado, Com friso",
+      "group": "Perfil"
+    },
+    {
+      "name": "material",
+      "label": "Material",
+      "type": "material",
+      "default": "Genérico",
+      "group": "Materiais"
+    }
+  ],
+  "script": "// RODAPÉ — perfil usado pelo piso (Propriedades do piso › Rodapé). O piso coloca uma peça por lado do contorno:\n//   X = ao longo do lado (de 0 até p.comprimento, já com a sobra nos cantos)\n//   Y = para dentro do piso (a partir da face da parede, Y = 0)\n//   Z = para cima, a partir do topo do piso (Z = 0)\n// O perfil é desenhado no plano YZ e extrudado ao longo de X. Troque o desenho do perfil à vontade (editor de Objetos).\nconst e = p.espessura, a = p.altura;\nlet perfil;\nif (p.perfil === 'Chanfrado') {\n  const c = Math.min(e * 0.8, a * 0.5);\n  perfil = [[0, 0], [e, 0], [e, a - c], [e - c, a], [0, a]];\n} else if (p.perfil === 'Boleado') {\n  const r = Math.min(e, a * 0.5), n = 8;\n  perfil = [[0, 0], [e, 0], [e, a - r]];\n  for (let i = 1; i <= n; i++) {\n    const t = i / n * Math.PI / 2;\n    perfil.push([e - r + r * Math.cos(t), a - r + r * Math.sin(t)]);\n  }\n  perfil.push([0, a]);\n} else if (p.perfil === 'Com friso') {\n  const f = Math.min(0.006, e * 0.4);\n  perfil = [[0, 0], [e, 0], [e, a * 0.7], [e - f, a * 0.72], [e - f, a * 0.78], [e, a * 0.8], [e, a], [0, a]];\n} else {\n  perfil = [[0, 0], [e, 0], [e, a], [0, a]];\n}\ng.extrude(perfil, p.comprimento, { plane: 'yz', x: 0, material: p.material, name: 'Rodapé' });\n"
+}

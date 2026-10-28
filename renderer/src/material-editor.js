@@ -176,6 +176,7 @@ export function openMaterialEditor(app, startName) {
         slider('normal', 'Normal', 0, 3, 0.05, { title: 'Mapa normal: relevo das peças e juntas (0 = desligado)' }),
         slider('relevo', 'Bump', 0, 3, 0.05, { title: 'Relevo fino (poros, veios, escovado) — 0 = desligado' }),
         slider('deslocamento', 'Deslocamento (cm)', 0, 5, 0.1, { title: 'Profundidade das juntas pelo mapa de altura (paralaxe; tempo real) — 0 = desligado' }),
+        slider('displacement', 'Displacement (cm)', 0, 10, 0.1, { title: 'Mapa de deslocamento de verdade: o relevo do padrão empurra a geometria no estilo Render (a malha é subdividida) — 0 = desligado' }),
         slider('ao', 'Oclusão (AO)', 0, 2, 0.05, { title: 'Escurece juntas e cavidades do padrão — 0 = desligado' })),
       section('Transparência',
         slider('opacidade', 'Opacidade', 0.05, 1, 0.01, { title: 'Opacidade do material inteiro' }),

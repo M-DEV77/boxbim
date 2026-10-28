@@ -6,12 +6,25 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.54.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.55.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.55.0] — 2026-10-28 · Displacement nos materiais e rodapé no piso
+
+### Adicionado
+- **Displacement** nos materiais (editor de materiais, Propriedades e IA `set_material`, cm 0–10): o mapa de
+  altura do padrão empurra a geometria de verdade no estilo **Render** — as malhas com esse material são
+  subdivididas (até ~30 mil triângulos cada) e voltam ao normal fora do Render. O "Deslocamento" (paralaxe)
+  continua para o tempo real.
+- **Rodapé no piso** (Propriedades do piso › Rodapé; dado `slab.rodape`): uma peça por lado do contorno (e dos furos,
+  se marcado), feita por um **objeto de perfil** da biblioteca. Objeto de fábrica **Rodapé** (IfcCovering): altura,
+  espessura, perfil (reto, chanfrado, boleado, com friso) e material; desenha o perfil no plano YZ e extruda ao
+  longo do lado. As peças ficam do lado de dentro, acompanham a inclinação do piso e sobram a espessura nos
+  cantos. **Editar perfil…** abre o objeto no editor.
 
 ## [2.54.0] — 2026-10-28 · Contorno do piso fecha sem falhas
 
