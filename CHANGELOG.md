@@ -6,12 +6,21 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.59.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.60.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.60.0] — 2026-10-28 · Linhas do sólido com curvas únicas
+
+### Mudado
+- **Linhas do sólido** copia as **curvas como uma linha única**: no modo Aresta, clicar numa aresta de uma curva
+  (borda de cilindro, canto arredondado) pega a curva inteira e cria **um arco** (ou um **círculo**, na volta
+  inteira); no Contorno da face, os trechos curvos do contorno também viram arcos. Retas continuam retas.
+- A detecção de arcos ficou em sketch.js (polylineArcs, contornos abertos ou fechados) e é a mesma do contorno do
+  piso.
 
 ## [2.59.0] — 2026-10-28 · Canto arredondado como uma curva só
 

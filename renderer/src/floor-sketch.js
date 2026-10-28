@@ -5,7 +5,7 @@
 // As linhas do esboço (e as que surgirem durante a edição) ficam só nesta tela: não vão para o servidor.
 import * as THREE from 'three';
 import { h, toast } from './ui.js';
-import { createSketch, isSketch, worldPoints, chainSegments, outerWithHoles, area } from './sketch/sketch.js';
+import { createSketch, isSketch, worldPoints, chainSegments, outerWithHoles, area, polylineArcs } from './sketch/sketch.js';
 import { slabShapeFn } from './elements.js';
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
@@ -28,59 +28,8 @@ const SEL_HALO = new LineMaterial({ color: 0x00b3ff, linewidth: 12, depthTest: f
 const r6 = v => +v.toFixed(6);
 const keyOf = p => `${p[0].toFixed(4)},${p[1].toFixed(4)}`;
 
-/**
- * Trechos de um contorno fechado, reconhecendo os ARCOS: o piso guarda o canto arredondado como vários pontos; uma
- * sequência de 3+ lados iguais com a mesma curva (até 30° por lado) volta a ser UM arco. Devolve
- * [{ a, b, arco: null | { c, r, a0, a1 } }] no formato das linhas 2D (arco anti-horário de a0 a a1).
- */
-export function ringToSegments(pts) {
-  const n = pts.length;
-  if (n < 3) return pts.map((p, i) => ({ a: p, b: pts[(i + 1) % n], arco: null }));
-  const P = k => pts[((k % n) + n) % n];
-  const len = k => Math.hypot(P(k + 1)[0] - P(k)[0], P(k + 1)[1] - P(k)[1]);
-  const dir = k => Math.atan2(P(k + 1)[1] - P(k)[1], P(k + 1)[0] - P(k)[0]);
-  const turn = k => { let t = dir(k + 1) - dir(k); while (t > Math.PI) t -= 2 * Math.PI; while (t < -Math.PI) t += 2 * Math.PI; return t; }; // no ponto k+1
-  // dois lados seguidos "do mesmo arco": mesmo tamanho e mesma curva que o anterior
-  const same = k => {
-    const t1 = turn(k - 1), t0 = turn(k - 2);
-    return Math.abs(len(k) - len(k - 1)) <= Math.max(1e-4, len(k) * 0.01)
-      && Math.abs(t1) > 1e-4 && Math.abs(t1) < Math.PI / 6 && Math.abs(t1 - t0) < 0.01 && Math.abs(len(k - 1) - len(k - 2)) <= Math.max(1e-4, len(k) * 0.01);
-  };
-  // começa num lado que não continua um arco (senão o arco ficaria partido no começo)
-  let s = 0;
-  for (let k = 0; k < n; k++) if (!same(k)) { s = k; break; }
-  const out = [];
-  let k = 0;
-  while (k < n) {
-    const i = s + k;
-    // quantos lados seguidos formam arco a partir de i (precisa de 3+)
-    let m = 1;
-    while (k + m < n && Math.abs(len(i + m) - len(i)) <= Math.max(1e-4, len(i) * 0.01)
-      && Math.abs(turn(i + m - 1)) > 1e-4 && Math.abs(turn(i + m - 1)) < Math.PI / 6
-      && (m === 1 || Math.abs(turn(i + m - 1) - turn(i + m - 2)) < 0.01)) m++;
-    if (m >= 3) {
-      const A = P(i), B = P(i + 1), C = P(i + m);
-      // centro: circuncentro de três pontos do arco
-      const M = P(i + Math.floor(m / 2));
-      const d = 2 * (A[0] * (M[1] - C[1]) + M[0] * (C[1] - A[1]) + C[0] * (A[1] - M[1]));
-      if (Math.abs(d) > 1e-12) {
-        const a2 = A[0] ** 2 + A[1] ** 2, m2 = M[0] ** 2 + M[1] ** 2, c2 = C[0] ** 2 + C[1] ** 2;
-        const c = [(a2 * (M[1] - C[1]) + m2 * (C[1] - A[1]) + c2 * (A[1] - M[1])) / d, (a2 * (C[0] - M[0]) + m2 * (A[0] - C[0]) + c2 * (M[0] - A[0])) / d];
-        const r = Math.hypot(A[0] - c[0], A[1] - c[1]);
-        const ccw = (B[0] - A[0]) * (c[1] - A[1]) - (B[1] - A[1]) * (c[0] - A[0]) > 0; // centro à esquerda = anti-horário
-        const angA = Math.atan2(A[1] - c[1], A[0] - c[0]), angC = Math.atan2(C[1] - c[1], C[0] - c[0]);
-        let a0 = ccw ? angA : angC, a1 = ccw ? angC : angA;
-        while (a1 <= a0) a1 += 2 * Math.PI;
-        out.push({ a: ccw ? A : C, b: ccw ? C : A, arco: { c, r, a0, a1 } });
-        k += m;
-        continue;
-      }
-    }
-    out.push({ a: P(i), b: P(i + 1), arco: null });
-    k += 1;
-  }
-  return out;
-}
+/** Trechos de um contorno fechado com os cantos arredondados de volta a arcos (ver polylineArcs em sketch.js). */
+export const ringToSegments = pts => polylineArcs(pts, true);
 
 export class FloorSketch {
   constructor(app) {

@@ -16,7 +16,7 @@
 // Extrudar, Varrer e Cortar com vazio são comandos sobre a seleção (sketchCommands).
 import * as THREE from 'three';
 import { h, toast, formDialog, floatBar } from '../ui.js';
-import { createSketch, rebuildSketch, isSketch, bake, trim, extend, corner, snapPointsOf, distToSeg, chainSegments, outerWithHoles, dist, segPoints, planeMatrix, frameOf, samePlane, toFrame, worldPoints, offsetPolyline, offsetPolylineClean, offsetLoop, area, pointInPoly, isCircle } from './sketch.js';
+import { createSketch, rebuildSketch, isSketch, bake, trim, extend, corner, snapPointsOf, distToSeg, chainSegments, outerWithHoles, dist, segPoints, planeMatrix, frameOf, samePlane, toFrame, worldPoints, offsetPolyline, offsetPolylineClean, offsetLoop, area, polylineArcs, pointInPoly, isCircle } from './sketch.js';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { createForm, isVoid, isForm, rebuildForm } from './forms.js';
 import { createOnLevel } from '../modeling.js';
@@ -697,7 +697,27 @@ export class SketchTool extends EventTarget {
     let best = null, bestD = Infinity;
     for (const ed of onFace) { seg.set(ed[0], ed[1]); const d = seg.closestPointToPoint(hit.point, true, tmp).distanceTo(hit.point); if (d < bestD) { bestD = d; best = ed; } }
     let edges = [best];
-    if (this.edgeMode !== 'aresta') {
+    if (this.edgeMode === 'aresta') {
+      // aresta de uma CURVA (borda de cilindro, canto arredondado): pega a curva inteira — os trechos ligados de mesmo
+      // tamanho e com pouca virada (até 30°) — para virar uma linha curva única
+      const k = v => `${v.x.toFixed(4)},${v.y.toFixed(4)},${v.z.toFixed(4)}`;
+      const L0 = best[0].distanceTo(best[1]);
+      const similar = ed => Math.abs(ed[0].distanceTo(ed[1]) - L0) <= Math.max(1e-4, L0 * 0.02);
+      const chain = [best];
+      for (const end of [1, 0]) {
+        let cur = best, tip = best[end], prevDir = best[1].clone().sub(best[0]).normalize().multiplyScalar(end ? 1 : -1);
+        for (let guard = 0; guard < 720; guard++) {
+          const next = onFace.find(ed => !chain.includes(ed) && similar(ed) && (k(ed[0]) === k(tip) || k(ed[1]) === k(tip)));
+          if (!next) break;
+          const other = k(next[0]) === k(tip) ? next[1] : next[0];
+          const dirN = other.clone().sub(tip).normalize();
+          if (prevDir.angleTo(dirN) > Math.PI / 6 + 1e-6) break;
+          chain.push(next); prevDir = dirN; tip = other; cur = next;
+        }
+        void cur;
+      }
+      if (chain.length >= 3) edges = chain;
+    } else {
       // contorno (e piso do contorno): as arestas da face ligadas (pelas pontas) à mais próxima do clique
       const k = v => `${v.x.toFixed(4)},${v.y.toFixed(4)},${v.z.toFixed(4)}`;
       const seen = new Set([best]), queue = [best];
@@ -744,14 +764,20 @@ export class SketchTool extends EventTarget {
       return;
     }
     let made = 0;
+    // arestas → trechos 2D (no plano escolhido), encadeados; as curvas viram UMA linha curva (polylineArcs)
+    const toArcs = pairs2d => {
+      const { loops, chains } = chainSegments(pairs2d.map(([a, b]) => ({ a, b, arco: null })));
+      return [...loops.map(p => polylineArcs(p, true)), ...chains.map(p => polylineArcs(p, false))].flat();
+    };
     if (this.edgeProject) {
       // no plano do desenho (nível ou eixo ativo): só a projeção
+      const pairs = [];
       for (const [a, b] of r.edges) {
         const pa = a.clone().applyMatrix4(this.inverse), pb = b.clone().applyMatrix4(this.inverse);
         if (Math.hypot(pb.x - pa.x, pb.y - pa.y) < 1e-4) continue; // aresta perpendicular ao plano: vira ponto
-        this.addSeg({ a: [pa.x, pa.y], b: [pb.x, pb.y] });
-        made++;
+        pairs.push([[pa.x, pa.y], [pb.x, pb.y]]);
       }
+      for (const sg of toArcs(pairs)) { this.addSeg(sg); made++; }
     } else {
       // no plano da própria face (horizontal = plano de nível na cota da face; senão, um plano como o de um eixo)
       const n = r.normal;
@@ -764,9 +790,9 @@ export class SketchTool extends EventTarget {
       }
       const inv = planeMatrix(target.plano || { o: [0, 0, target.z], u: [1, 0, 0], v: [0, 1, 0] }).invert();
       const level = this.app.levels.forZ(r.point.z);
-      for (const [a, b] of r.edges) {
-        const pa = a.clone().applyMatrix4(inv), pb = b.clone().applyMatrix4(inv);
-        const data = { a: [+pa.x.toFixed(6), +pa.y.toFixed(6)], b: [+pb.x.toFixed(6), +pb.y.toFixed(6)], arco: null, z: target.z };
+      const pairs = r.edges.map(([a, b]) => { const pa = a.clone().applyMatrix4(inv), pb = b.clone().applyMatrix4(inv); return [[+pa.x.toFixed(6), +pa.y.toFixed(6)], [+pb.x.toFixed(6), +pb.y.toFixed(6)]]; });
+      for (const sg of toArcs(pairs)) {
+        const data = { a: sg.a.map(v => +v.toFixed(6)), b: sg.b.map(v => +v.toFixed(6)), arco: sg.arco, z: target.z };
         if (target.plano) data.plano = target.plano;
         if (this.newStyle) data.estilo = this.newStyle;
         this.viewer.add(createSketch(data, level));

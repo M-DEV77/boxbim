@@ -460,6 +460,60 @@ export function outerWithHoles(loops) {
   return outers.map(o => ({ perfil: o.pts, furos: o.holes }));
 }
 
+/**
+ * ARCOS numa polilinha (fechada ou aberta): curvas guardadas como vários trechos retos — canto arredondado do piso,
+ * arestas de cilindros e furos redondos — voltam a ser UM arco. Uma sequência de 3+ trechos do mesmo tamanho com a
+ * mesma curva (até 30° por trecho) vira arco. Devolve [{ a, b, arco: null | { c, r, a0, a1 } }] (arco anti-horário
+ * de a0 a a1, como nas linhas 2D). Uma volta inteira vira um círculo.
+ */
+export function polylineArcs(pts, closed) {
+  const n = pts.length, m = closed ? n : n - 1; // m trechos
+  if (m < 1) return [];
+  const P = k => pts[closed ? ((k % n) + n) % n : k];
+  const len = k => Math.hypot(P(k + 1)[0] - P(k)[0], P(k + 1)[1] - P(k)[1]);
+  const dirOf = k => Math.atan2(P(k + 1)[1] - P(k)[1], P(k + 1)[0] - P(k)[0]);
+  const turn = k => { let t = dirOf(k + 1) - dirOf(k); while (t > Math.PI) t -= 2 * Math.PI; while (t < -Math.PI) t += 2 * Math.PI; return t; }; // no ponto k+1
+  const eqLen = (i, j) => Math.abs(len(i) - len(j)) <= Math.max(1e-4, len(i) * 0.02);
+  const okTurn = t => Math.abs(t) > 1e-4 && Math.abs(t) < Math.PI / 6;
+  // trecho k continua o arco do anterior? (contorno fechado)
+  const cont = k => eqLen(k, k - 1) && okTurn(turn(k - 1)) && Math.abs(turn(k - 1) - turn(k - 2)) < 0.02; // (só na fechada)
+  // volta inteira (círculo): todos os trechos iguais e com a mesma curva
+  if (closed && n >= 6 && [...Array(n).keys()].every(k => eqLen(k, 0) && okTurn(turn(k)) && Math.abs(turn(k) - turn(0)) < 0.02)) {
+    const cx = pts.reduce((s, p) => s + p[0], 0) / n, cy = pts.reduce((s, p) => s + p[1], 0) / n;
+    const r = pts.reduce((s, p) => s + Math.hypot(p[0] - cx, p[1] - cy), 0) / n;
+    return [{ a: [cx + r, cy], b: [cx + r, cy], arco: { c: [cx, cy], r, a0: 0, a1: 2 * Math.PI } }];
+  }
+  // fechada: começa num trecho que não continua um arco
+  let s = 0;
+  if (closed) for (let k = 0; k < m; k++) if (!cont(k)) { s = k; break; }
+  const out = [];
+  let k = 0;
+  while (k < m) {
+    const i = s + k;
+    let q = 1;
+    while (k + q < m && eqLen(i + q, i) && okTurn(turn(i + q - 1)) && (q === 1 || Math.abs(turn(i + q - 1) - turn(i + q - 2)) < 0.02)) q++;
+    if (q >= 3) {
+      const A = P(i), B = P(i + 1), C = P(i + q), M = P(i + Math.floor(q / 2));
+      const d = 2 * (A[0] * (M[1] - C[1]) + M[0] * (C[1] - A[1]) + C[0] * (A[1] - M[1]));
+      if (Math.abs(d) > 1e-12) {
+        const a2 = A[0] ** 2 + A[1] ** 2, m2 = M[0] ** 2 + M[1] ** 2, c2 = C[0] ** 2 + C[1] ** 2;
+        const c = [(a2 * (M[1] - C[1]) + m2 * (C[1] - A[1]) + c2 * (A[1] - M[1])) / d, (a2 * (C[0] - M[0]) + m2 * (A[0] - C[0]) + c2 * (M[0] - A[0])) / d];
+        const r = Math.hypot(A[0] - c[0], A[1] - c[1]);
+        const ccw = (B[0] - A[0]) * (c[1] - A[1]) - (B[1] - A[1]) * (c[0] - A[0]) > 0; // centro à esquerda = anti-horário
+        const angA = Math.atan2(A[1] - c[1], A[0] - c[0]), angC = Math.atan2(C[1] - c[1], C[0] - c[0]);
+        let a0 = ccw ? angA : angC, a1 = ccw ? angC : angA;
+        while (a1 <= a0) a1 += 2 * Math.PI;
+        out.push({ a: ccw ? A : C, b: ccw ? C : A, arco: { c, r, a0, a1 } });
+        k += q;
+        continue;
+      }
+    }
+    out.push({ a: P(i), b: P(i + 1), arco: null });
+    k += 1;
+  }
+  return out;
+}
+
 // pontos de encaixe das linhas: pontas, meios e centros
 export function snapPointsOf(l) {
   if (!l.arco) return [{ p: l.a, kind: 'ponta' }, { p: l.b, kind: 'ponta' }, { p: mul(add(l.a, l.b), 0.5), kind: 'meio' }];
