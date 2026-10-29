@@ -732,7 +732,27 @@ export class FloorPoints {
           Object.keys(this.app.types.materials).map(m => h('option', { value: m, selected: m === cfg.material }, m)))))) : null,
       cfg.ativo ? part('corte', 'Corte') : null,
       cfg.ativo ? part('aterro', 'Aterro') : null,
+      cfg.ativo && vol ? this.balanceTable(vol, cfg, save, m3) : null,
     ];
+  }
+
+  /** Restante (corte − aterro), metros da caçamba e o total de caminhões sobrando ou faltando. */
+  balanceTable(vol, cfg, save, m3) {
+    const rest = vol.corte - vol.aterro, cap = cfg.caminhao;
+    const sinal = rest > 0.005 ? 'pos' : rest < -0.005 ? 'neg' : '';
+    const trucks = cap > 0 ? Math.abs(rest) / cap : null;
+    const fmt1 = v => v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    return h('table', { class: 'slope-table slope-balance' },
+      h('tr', { title: 'Corte − aterro. Positivo (verde): sobra terra para levar embora. Negativo (vermelho): falta terra para trazer.' },
+        h('td', {}, 'Restante'), h('td', {}, h('output', { class: sinal }, `${rest > 0.005 ? '+' : ''}${m3(rest)}`))),
+      h('tr', { title: 'Quantos metros cúbicos cabem na caçamba de cada caminhão' },
+        h('td', {}, 'Metros caminhões (m³)'),
+        h('td', {}, h('input', { type: 'number', min: 0, step: 'any', value: cap || '', placeholder: 'ex.: 12', style: 'width:100%',
+          onchange: e => { const x = Number(e.target.value); save({ caminhao: x > 0 ? x : 0 }); } }))),
+      h('tr', { title: 'Restante ÷ metros do caminhão (entre parênteses, arredondado para cima: viagens inteiras)' },
+        h('td', {}, rest < -0.005 ? 'Total de caminhões faltante' : 'Total de caminhões sobrando'),
+        h('td', {}, trucks === null ? h('span', { class: 'muted' }, 'informe os metros do caminhão')
+          : h('output', { class: sinal }, `${fmt1(trucks)} `, h('span', { class: 'muted' }, `(${Math.ceil(trucks - 1e-9)} viagens)`)))));
   }
 
   /** Volumes de corte e aterro do talude deste piso (somados nos terrenos), guardados até o piso ou o terreno mudar. */

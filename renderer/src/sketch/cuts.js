@@ -11,7 +11,7 @@
 import * as THREE from 'three';
 import { Brush, Evaluator, SUBTRACTION } from 'three-bvh-csg';
 import { normalizeGeometry } from './forms.js';
-import { applySlopes, slopeFloors, slopeSignature } from '../slopes.js';
+import { applySlopes, slopeFloors, slopeSignature, slabKey } from '../slopes.js';
 import { drapeGeometry, hostSignature } from '../drape.js';
 import { materialByName } from '../elements.js';
 import { busy } from '../ui.js';
@@ -238,7 +238,7 @@ export class Cuts {
   }
 
   padSignature(pads) {
-    return pads.map(p => { p.updateMatrixWorld(true); return `${p.userData.bim.guid}:${p.matrixWorld.elements.map(x => x.toFixed(5)).join(',')}:${JSON.stringify(p.userData.bim.slab)}`; }).join('|');
+    return pads.map(p => { p.updateMatrixWorld(true); return `${p.userData.bim.guid}:${p.matrixWorld.elements.map(x => x.toFixed(5)).join(',')}:${slabKey(p.userData.bim.slab)}`; }).join('|');
   }
 
   /** Volume que o piso tira do terreno: o contorno dele, do ponto mais baixo do piso para cima. */
@@ -294,7 +294,7 @@ export class Cuts {
       if (!ids.length && !pads.length && deepen === null && !slopes.length && !drape) { if (el.userData._cutSig) this.restore(el); continue; }
       const voids = ids.map(id => v.findById(id)).filter(Boolean);
       const sig = this.signature(el, voids) + (pads.length ? `#${this.padSignature(pads)}` : '') + (deepen !== null ? `~${deepen.toFixed(5)}` : '')
-        + (slopes.length ? `^${slopeSignature(slopes)}` : '') + (drape ? `@${hostSignature(drape)}:${JSON.stringify(el.userData.bim.slab)}` : '');
+        + (slopes.length ? `^${slopeSignature(slopes)}` : '') + (drape ? `@${hostSignature(drape)}:${slabKey(el.userData.bim.slab)}` : '');
       if (!force && sig === el.userData._cutSig) continue;
       if (check) { if (el.userData.bim.slab?.terreno || drape || slopes.length) return true; continue; }
       el.userData._cutSig = sig;

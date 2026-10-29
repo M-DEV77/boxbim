@@ -25,6 +25,7 @@ export function slopeConfig(s) {
     ativo: !!t.ativo,
     suavizar: !!t.suavizar,
     material: t.material || '',
+    caminhao: Number(t.caminhao) > 0 ? Number(t.caminhao) : 0, // m³ da caçamba (só para a conta de caminhões)
     raio: Number.isFinite(Number(t.raio)) && Number(t.raio) > 0 ? Number(t.raio) : 1,
     corte: { ...SLOPE_DEFAULTS.corte, ...(t.corte || {}) },
     aterro: { ...SLOPE_DEFAULTS.aterro, ...(t.aterro || {}) },
@@ -83,8 +84,11 @@ function nearestOnPoly(x, y, F) {
 /** Pisos com talude ligado (menos o próprio terreno). */
 export const slopeFloors = (elements, except) => elements.filter(o => o !== except && o.userData.bim.slab && slopeConfig(o.userData.bim.slab).ativo);
 
+/** Dados do piso que mudam a geometria (a caçamba do caminhão é só para a conta: fica fora, sem recalcular à toa). */
+export const slabKey = s => JSON.stringify(s?.talude?.caminhao ? { ...s, talude: { ...s.talude, caminhao: 0 } } : s);
+
 export function slopeSignature(floors) {
-  return floors.map(o => { o.updateMatrixWorld(true); return `${o.userData.bim.guid}:${o.matrixWorld.elements.map(x => x.toFixed(5)).join(',')}:${JSON.stringify(o.userData.bim.slab)}`; }).join('|');
+  return floors.map(o => { o.updateMatrixWorld(true); return `${o.userData.bim.guid}:${o.matrixWorld.elements.map(x => x.toFixed(5)).join(',')}:${slabKey(o.userData.bim.slab)}`; }).join('|');
 }
 
 /** O piso do talude nas coordenadas locais do terreno: contorno, cota do topo em cada ponto, configuração. */

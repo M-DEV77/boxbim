@@ -178,6 +178,10 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
   **Material do talude** reveste a superfície do corte e do aterro (grama, pedra…).
   **Volume de corte** e **Volume de aterro** (m³) aparecem embaixo de cada um. Contam o talude mais a plataforma (sob
   o piso, até o fundo dele), e entre parênteses só o talude. São recalculados quando o piso ou o terreno muda.
+  Abaixo vêm três linhas:
+  - **Restante** (corte − aterro): verde se sobra terra, vermelho se falta.
+  - **Metros caminhões** (m³ da caçamba).
+  - **Total de caminhões sobrando / faltante**: restante ÷ caçamba, com as viagens inteiras entre parênteses.
   **Suavizar** (com raio) arredonda a crista, o pé, as bordas das bermas e o encontro com o terreno natural.
   O recálculo do terreno roda em etapas, uma camada por vez, com o "carregando" na tela. A página continua
   respondendo mesmo num terreno grande.
@@ -480,4 +484,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.64.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.65.0</a>

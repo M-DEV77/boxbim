@@ -1234,7 +1234,8 @@ class App {
       h('button', { onclick: () => this.floorSketch.start(o), title: 'O contorno vira linhas 2D para editar com as ferramentas 2D (também com clique duplo no piso)' }, 'Editar contorno (linhas 2D)'),
       h('button', { onclick: () => editFloor(this, o), title: 'Nome, tipo, cota do topo e contorno num diálogo' }, 'Diálogo do piso…'),
       h('button', { onclick: () => this.floorPoints.showPoints(o), title: 'Pontos de elevação na vista (também com dois cliques pausados no piso)' }, 'Pontos de elevação')),
-      ...this.floorPoints.propsSection(o), ...this.floorPoints.slopeSection(o), ...this.floorPoints.overlaySection(o), ...this.floorPoints.skirtSection(o));
+      // (as seções têm itens condicionais = null: fora, senão o append escreve "null" na tela)
+      ...[...this.floorPoints.propsSection(o), ...this.floorPoints.slopeSection(o), ...this.floorPoints.overlaySection(o), ...this.floorPoints.skirtSection(o)].filter(Boolean));
     this.renderTypeProps(root, o);
     this.renderObjectProps(root, o);
     this.renderMaterialProps(root, o);

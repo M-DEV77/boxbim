@@ -610,6 +610,10 @@ table.budget tr.muted td { color: var(--muted); }
 .slope-table { width: 100%; margin: 4px 0 8px; }
 .slope-volume td { padding-top: 3px; font-variant-numeric: tabular-nums; }
 .slope-volume output { font-weight: 600; color: #1fbf3b; }
+.slope-balance { border-top: 1px solid #ffffff14; padding-top: 4px; }
+.slope-balance output { font-weight: 600; font-variant-numeric: tabular-nums; }
+.slope-balance output.pos { color: #1fbf3b; }
+.slope-balance output.neg { color: #ff4d4d; }
 /* nível do piso selecionado (floor-points.js) */
 .floor-level-tag { position: absolute; left: 0; top: 0; z-index: 6; display: flex; align-items: center; gap: 2px; padding: 0 4px;
   font-size: 11px; line-height: 16px; color: #dfe5ec; background: rgba(15, 19, 23, .55); border-radius: 3px; pointer-events: auto; white-space: nowrap; }

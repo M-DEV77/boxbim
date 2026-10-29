@@ -6,12 +6,26 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.64.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.65.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.65.0] — 2026-10-29 · Restante e caminhões no talude
+
+### Adicionado
+- **Restante** na seção Talude: corte − aterro em m³. **Verde** quando sobra terra (positivo), **vermelho** quando
+  falta (negativo).
+- **Metros caminhões (m³)**: quantos metros cúbicos cabem na caçamba. É guardado no piso (`talude.caminhao`) e não
+  recalcula o terreno.
+- **Total de caminhões sobrando** (restante positivo) ou **Total de caminhões faltante** (negativo): restante ÷ metros
+  do caminhão, com as viagens inteiras (arredondado para cima) entre parênteses.
+
+### Corrigido
+- Propriedades do piso: os itens que não aparecem (por exemplo, com o rodapé ou o sobrepor desligado) escreviam
+  "null" ao lado do texto ("Sobrepor a outro pisonull", "Rodapé no contornonullnull").
 
 ## [2.64.0] — 2026-10-29 · Nível do piso na vista e volumes de corte e aterro
 
