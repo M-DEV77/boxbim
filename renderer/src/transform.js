@@ -81,12 +81,14 @@ export class TransformTool extends EventTarget {
   onSelect() {
     const busy = this.app.wallTool?.active || this.app.placeTool?.active || (this.app.sketchTool?.active && this.app.sketchTool.mode !== 'selecao');
     const has = this.viewer.selected.size > 0;
+    // só paredes selecionadas: sem o gizmo automático (a parede tem os pontos de cima, baixo, esquerda e direita)
+    const onlyWalls = has && [...this.viewer.selected].every(o => o.userData.bim?.wall);
     if (this.mode) {
-      if (!has && this.auto) this.stop();
+      if ((!has || onlyWalls) && this.auto) this.stop();
       else this.attach();
       return;
     }
-    if (has && this.autoOnSelect && !busy) this.start(this.lastMode, { auto: true });
+    if (has && this.autoOnSelect && !busy && !onlyWalls) this.start(this.lastMode, { auto: true });
   }
 
   start(mode, opts = {}) {

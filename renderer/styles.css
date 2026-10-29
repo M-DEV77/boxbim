@@ -583,6 +583,12 @@ table.budget tr.muted td { color: var(--muted); }
 .grip-point.grip-mid { width: 14px; height: 14px; margin: -7px 0 0 -7px; border: 0; box-shadow: none; background: #2f9bff;
   clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
 .grip-point.grip-mid:hover { background: #ff9f1a; }
+/* setas da parede (grips.js): triângulo apontando para fora */
+.grip-arrow { position: absolute; left: 0; top: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px; pointer-events: auto;
+  background: #2f9bff; clip-path: polygon(0 0, 100% 50%, 0 100%, 25% 50%); filter: drop-shadow(0 0 1px #000); }
+.grip-arrow.up, .grip-arrow.down { cursor: ns-resize; }
+.grip-arrow.left, .grip-arrow.right { cursor: ew-resize; }
+.grip-arrow:hover { background: #ff9f1a; }
 .grip-label { position: absolute; pointer-events: auto; padding: 0 5px; min-width: 0; font-size: 12px; line-height: 17px; font-weight: 600;
   color: #2f9bff; background: rgba(15, 19, 23, .75); border: 1px solid transparent; border-radius: 3px; cursor: text; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .grip-label:hover { border-color: #2f9bff; }

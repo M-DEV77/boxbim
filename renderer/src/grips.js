@@ -6,6 +6,8 @@
 //   pegar a linha (ou o losango do meio) e puxar ... a linha anda paralela a si mesma; as linhas LIGADAS nas pontas
 //                            esticam/encolhem até ela (na direção delas) e os arcos dos cantos vão junto — nada descola
 //   nas linhas 2D, arrastar uma ponta leva junto as pontas das outras linhas ligadas nela
+//   PAREDE: setas em cima, embaixo, na esquerda e na direita — cima muda a altura, baixo desce/sobe a base (o topo
+//           fica), esquerda/direita alongam ou encurtam a parede na direção dela (a outra ponta fica)
 // Tudo em DOM/SVG por cima do canvas: os pontos ficam sempre do mesmo tamanho na tela.
 import * as THREE from 'three';
 import { h, toast } from './ui.js';
@@ -53,7 +55,15 @@ export class Grips {
     const mid = h('div', { class: 'grip-point grip-mid', title: 'Arraste para puxar a linha (as linhas ligadas acompanham)' });
     mid.addEventListener('pointerdown', e => this.startDrag(e, 2));
     this.points.push(mid);
-    this.box = h('div', { class: 'grips', hidden: true }, this.svg, this.label, ...this.points);
+    // setas da parede: cima, baixo, esquerda (início) e direita (fim)
+    const ARROW = { up: 'Arraste para cima ou para baixo: altura da parede', down: 'Arraste: base da parede (o topo fica)',
+      left: 'Arraste: alonga ou encurta a parede pelo início', right: 'Arraste: alonga ou encurta a parede pelo fim' };
+    this.arrows = Object.fromEntries(Object.entries(ARROW).map(([k, title]) => {
+      const a = h('div', { class: `grip-arrow ${k}`, title, hidden: true });
+      a.addEventListener('pointerdown', e => this.startWallDrag(e, k));
+      return [k, a];
+    }));
+    this.box = h('div', { class: 'grips', hidden: true }, this.svg, this.label, ...this.points, ...Object.values(this.arrows));
     // pegar a própria linha selecionada (perto dela, na tela) também puxa
     const cv = app.viewer.renderer.domElement;
     cv.addEventListener('pointerdown', e => { if (e.button === 0 && this.nearLine(e)) this.startDrag(e, 2); }, true);
@@ -107,6 +117,7 @@ export class Grips {
     this.points[1].style.transform = `translate(${b.x}px, ${b.y}px)`;
     this.points[2].hidden = !el.userData.bim.linha;
     this.points[2].style.transform = `translate(${(a.x + b.x) / 2}px, ${(a.y + b.y) / 2}px)`;
+    this.placeArrows(el);
     // cota paralela à linha, afastada 22 px (para o lado de cima da tela)
     let nx = -(b.y - a.y), ny = b.x - a.x;
     const L = Math.hypot(nx, ny) || 1;
@@ -166,6 +177,89 @@ export class Grips {
     (this.points[i] || this.viewer.renderer.domElement).setPointerCapture?.(e.pointerId);
     if (i === 2) this.viewer.renderer.domElement.style.cursor = toolCursor('puxar');
     this.viewer.controls.enabled = false;
+  }
+
+  // ------------------------------------------------------------ setas da parede
+
+  /** Pontos (modelo) das setas da parede e a direção de "fora" de cada uma. */
+  wallHandles(el) {
+    const w = el.userData.bim.wall, m = el.matrixWorld, top = w.base + w.height, mid = w.base + w.height / 2;
+    const P = (p, z) => new THREE.Vector3(p[0], p[1], z).applyMatrix4(m);
+    const cx = (w.start[0] + w.end[0]) / 2, cy = (w.start[1] + w.end[1]) / 2;
+    return {
+      up: [P([cx, cy], top), P([cx, cy], top + 1)],
+      down: [P([cx, cy], w.base), P([cx, cy], w.base - 1)],
+      left: [P(w.start, mid), P([2 * w.start[0] - w.end[0], 2 * w.start[1] - w.end[1]], mid)],
+      right: [P(w.end, mid), P([2 * w.end[0] - w.start[0], 2 * w.end[1] - w.start[1]], mid)],
+    };
+  }
+
+  placeArrows(el) {
+    const w = el.userData.bim.wall;
+    // parede com perfil próprio (desenhado): cima e baixo ficam no editor do perfil
+    const show = { up: !!w && !w.perfil?.length, down: !!w && !w.perfil?.length, left: !!w, right: !!w };
+    if (!w) { for (const a of Object.values(this.arrows)) if (!a.hidden) a.hidden = true; return; }
+    const hs = this.wallHandles(el);
+    for (const [k, a] of Object.entries(this.arrows)) {
+      const [p, q] = hs[k], s = this.screen(p), t = this.screen(q);
+      if (!show[k] || s.behind) { a.hidden = true; continue; }
+      a.hidden = false;
+      const ang = Math.atan2(t.y - s.y, t.x - s.x) * 180 / Math.PI;
+      // um pouco para fora (10 px), apontando para fora
+      const L = Math.hypot(t.x - s.x, t.y - s.y) || 1, ox = (t.x - s.x) / L * 12, oy = (t.y - s.y) / L * 12;
+      a.style.transform = `translate(${s.x + ox}px, ${s.y + oy}px) rotate(${ang}deg)`;
+    }
+  }
+
+  startWallDrag(e, k) {
+    if (e.button !== 0 || !this.el?.userData.bim.wall) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    const el = this.el, w = el.userData.bim.wall;
+    el.updateMatrixWorld(true);
+    const inv = el.matrixWorld.clone().invert();
+    const [p] = this.wallHandles(el)[k];
+    let plane;
+    if (k === 'up' || k === 'down') {
+      // plano vertical de frente para a câmera, passando pela seta
+      const n = new THREE.Vector3().subVectors(this.viewer.camera.position, p); n.z = 0;
+      if (n.lengthSq() < 1e-9) n.set(0, 1, 0);
+      plane = new THREE.Plane().setFromNormalAndCoplanarPoint(n.normalize(), p);
+    } else plane = new THREE.Plane().setFromNormalAndCoplanarPoint(new THREE.Vector3(0, 0, 1).transformDirection(el.matrixWorld), p);
+    this.drag = { wall: k, el, plane, inv, start: [...w.start], end: [...w.end], base: w.base, height: w.height, moved: false };
+    this.arrows[k].setPointerCapture?.(e.pointerId);
+    this.viewer.controls.enabled = false;
+  }
+
+  moveWall(e) {
+    const d = this.drag, w = d.el.userData.bim.wall;
+    const hit = this.rayHit(e, d.plane);
+    if (!hit) return;
+    const q = hit.clone().applyMatrix4(d.inv);
+    const snap = v => Math.round(v / GRID) * GRID;
+    let text;
+    if (d.wall === 'up') {
+      w.height = Math.max(0.05, snap(q.z - d.base));
+      text = `altura ${fmtLen(w.height, { suffix: true })}`;
+    } else if (d.wall === 'down') {
+      const top = d.base + d.height;
+      w.base = Math.min(top - 0.05, snap(q.z));
+      w.height = +(top - w.base).toFixed(6);
+      text = `base ${fmtLen(w.base, { suffix: true })} · altura ${fmtLen(w.height, { suffix: true })}`;
+    } else {
+      // ao longo do eixo: a outra ponta fica; comprimento novo pela projeção do ponteiro
+      const fixed = d.wall === 'left' ? d.end : d.start, moving = d.wall === 'left' ? d.start : d.end;
+      const ux = moving[0] - fixed[0], uy = moving[1] - fixed[1], L0 = Math.hypot(ux, uy) || 1;
+      const L = Math.max(0.05, snap(((q.x - fixed[0]) * ux + (q.y - fixed[1]) * uy) / L0));
+      const p = [fixed[0] + ux / L0 * L, fixed[1] + uy / L0 * L].map(v => +v.toFixed(6));
+      w[d.wall === 'left' ? 'start' : 'end'] = p;
+      text = `comprimento ${fmtLen(L, { suffix: true })}`;
+    }
+    d.moved = true;
+    this.rebuild(d.el, true);
+    const pr = this.box.parentElement.getBoundingClientRect();
+    this.tip.textContent = text;
+    Object.assign(this.tip.style, { left: `${e.clientX - pr.left + 16}px`, top: `${e.clientY - pr.top + 14}px` });
+    this.tip.hidden = false;
   }
 
   /** O ponteiro está sobre a linha 2D selecionada (a menos de 6 px dela, longe das pontas)? */
@@ -281,6 +375,7 @@ export class Grips {
   onMove(e) {
     const d = this.drag;
     if (!d) return;
+    if (d.wall) return this.moveWall(e);
     const r = this.viewer.renderer.domElement.getBoundingClientRect();
     const ndc = new THREE.Vector2((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
     const ray = new THREE.Raycaster();

@@ -6,12 +6,26 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.66.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.67.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.67.0] — 2026-10-29 · Setas da parede no lugar do gizmo
+
+### Alterado
+- **Parede selecionada não abre mais o gizmo de mover** ("Ao selecionar"). O comando Mover continua movendo.
+
+### Adicionado
+- **Setas da parede** (cima, baixo, esquerda e direita), apontando para fora:
+  - **cima**: arrasta a altura;
+  - **baixo**: arrasta a base, e o topo fica no lugar;
+  - **esquerda / direita**: alonga ou encurta a parede pelo início ou pelo fim, na direção dela, e a outra ponta fica.
+  - Passo de 1 cm, medida junto do ponteiro e ponteiro de redimensionar.
+  - As portas e janelas são refeitas no fim.
+  - Na parede com perfil próprio, cima e baixo ficam no editor do perfil.
 
 ## [2.66.0] — 2026-10-29 · Arame: seleção só pelas linhas
 
