@@ -17,6 +17,7 @@ const rpc = require('./rpc');
 const realtimeMod = require('./realtime');
 const library = require('./library');
 const mcp = require('./mcp');
+const geo = require('./geo');
 
 const ROOT = path.join(__dirname, '..', 'renderer');
 const PORT = Number(process.env.PORTA || process.env.PORT || 3000);
@@ -64,6 +65,7 @@ async function main() {
   rpc.routes(app, { requireUser: auth.requireUser, realtime });
   library.routes(app, { requireUser: auth.requireUser });
   mcp.routes(app, { requireUser: auth.requireUser, realtime }); // servidor MCP (/mcp) e tokens (/api/tokens)
+  geo.routes(app, { requireUser: auth.requireUser }); // mapa aberto: ladrilhos, busca de endereço, elevação (com cache)
 
   // verificação de saúde (Docker/Easypanel): sem login
   app.get('/api/saude', (req, res) => res.json({ ok: true, versao: require('../package.json').version }));

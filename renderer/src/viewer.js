@@ -208,7 +208,7 @@ export class Viewer extends EventTarget {
     let next = 2;
     this.model.traverse(o => {
       if (!o.isMesh || o.userData.isEdge) return;
-      if (o.userData.noCap) { o.layers.set(0); return; } // vazios não recebem preenchimento de corte
+      if (o.userData.noCap || o.userData.mapSkin) { o.layers.set(0); return; } // vazios e a textura do mapa não recebem preenchimento de corte
       const mat = [].concat(o.userData._origMat || o.material)[0];
       // material de verdade da peça (o estilo da vista troca o material; a hachura é do material da biblioteca)
       const base = [].concat(o.userData._styleBase || o.userData._origMat || o.material)[0];
@@ -515,7 +515,7 @@ export class Viewer extends EventTarget {
     if (!this.showEdges) return;
     let tris = 0;
     root.traverse(o => {
-      if (!o.isMesh || o.userData.isEdge || o.userData.edges) return;
+      if (!o.isMesh || o.userData.isEdge || o.userData.edges || o.userData.mapSkin) return;
       const g = o.geometry;
       tris += (g.index ? g.index.count : g.attributes.position?.count || 0) / 3;
       if (tris > MAX_EDGE_TRIS) return;
@@ -545,7 +545,7 @@ export class Viewer extends EventTarget {
     const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
     const cut = (p, q) => { const t = (z - p.z) / (q.z - p.z); return [p.x + (q.x - p.x) * t, p.y + (q.y - p.y) * t, z]; };
     this.model.traverseVisible(o => {
-      if (!o.isMesh || o.userData.isEdge || o.userData.noCap || !o.geometry?.attributes?.position) return;
+      if (!o.isMesh || o.userData.isEdge || o.userData.noCap || o.userData.mapSkin || !o.geometry?.attributes?.position) return;
       const g = o.geometry, pos = g.attributes.position, idx = g.index, m = o.matrixWorld;
       g.boundingBox || g.computeBoundingBox();
       const bb = g.boundingBox.clone().applyMatrix4(m);

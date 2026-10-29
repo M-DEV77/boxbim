@@ -168,6 +168,20 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
   comprimento, X/Y do ponto selecionado, **＋ Furo** / **Apagar furo** e **Retângulo**. As alturas dos pontos acompanham.
 - **Nível do piso na vista**: com um piso selecionado, uma etiqueta discreta **▲ cota** aparece embaixo dele, com a
   cota do topo no projeto. Clique nela, digite e Enter para subir ou descer o piso inteiro (Esc cancela).
+- **Piso do mapa (geolocalização)** — Modelar › Piso ▾ › *Piso do mapa*: num mapa aberto (OpenStreetMap, satélite
+  Sentinel‑2 cloudless 2016 da EOX, OpenTopoMap), busque o endereço (Nominatim) ou digite "lat, lon", desenhe a área
+  e escolha o que trazer:
+  - **localização**: latitude, longitude e altitude da origem do projeto;
+  - **elevação**: terreno com uma grade de pontos de altura do AWS Terrain Tiles (Terrarium);
+  - **textura**: a imagem do mapa recortada e desenhada por cima do terreno.
+  Tudo passa pelo servidor do BoxBim, com cache (`/api/mapa/*`). As próximas áreas entram no lugar certo em relação à
+  localização gravada. A imagem de satélite tem cerca de 10 m por pixel, então áreas pequenas ficam borradas.
+- **Orientações do projeto** — Vistas ▾ › *Orientações…*: o **norte verdadeiro** (ângulo) e quantas outras
+  orientações forem precisas (bloco girado, divisa…). Cada vista escolhe a sua na **rosa dos ventos** do canto. Nas
+  plantas a vista gira para aquele norte ficar para cima; a seta vermelha é sempre o norte verdadeiro.
+- **Piso por curvas de nível** — Modelar › Piso ▾ › *Piso por curvas*: selecione o DWG/DXF importado com as curvas (a
+  cota no Z de cada polilinha) e escolha o espaçamento dos pontos. O resultado é um terreno que passa pelas curvas,
+  com contorno pela envoltória ou pelo retângulo delas.
 - **Terreno** (opção do piso, em Propriedades › Pontos do piso ou no Editar piso): só a **superfície** se desloca com os
   pontos (o fundo fica plano, abaixo do ponto mais baixo) e os **outros pisos cortam o terreno** — sai o volume do
   contorno deles, do fundo do piso para cima (escavação). O corte acompanha quando o piso se move ou muda.
@@ -492,4 +506,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.67.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.68.0</a>

@@ -342,6 +342,7 @@ export class RenderMode extends EventTarget {
   applyMaterials() {
     this.viewer.model.traverse(o => {
       if (!o.isMesh || o.userData.isEdge) return;
+      if (o.userData.keepMaterial) { o.receiveShadow = true; return; } // textura do mapa: material e UV próprios
       if (o.userData.noCap) { o.visible = false; o.userData._hiddenByRender = true; return; } // vazio
       o.castShadow = o.receiveShadow = true;
       boxUv(o.geometry); // UVs em metros para os mapas (as originais voltam ao sair)

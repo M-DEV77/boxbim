@@ -53,6 +53,12 @@ local (localhost, 127.0.0.1, 192.168.x…). Para funcionar:
 - Servidor de IA em outra máquina da rede (ex.: `http://192.168.0.10:1234`): acrescente o endereço em
   `BOXBIM_CONNECT_SRC` (separados por espaço).
 
+## Mapa (Piso do mapa)
+O servidor precisa de saída HTTPS para `tile.openstreetmap.org`, `tiles.maps.eox.at`, `*.tile.opentopomap.org`,
+`s3.amazonaws.com` (elevação) e `nominatim.openstreetmap.org`. O navegador não fala com eles: tudo passa por
+`/api/mapa/*`. Os ladrilhos ficam em cache em `<dados>/.servidor/cache/mapa` e as texturas dos terrenos em
+`<dados>/.servidor/mapas`; as duas pastas entram no backup.
+
 ## MCP
 - **BoxBim como servidor MCP**: endereço `https://SEU-DOMINIO/mcp`. Cada usuário gera o próprio token em
   ⚙ Configurações › MCP e copia o comando pronto:
@@ -85,4 +91,4 @@ Copie o volume `/data` (por exemplo, com o backup de volumes do Easypanel). O ar
 | `BOXBIM_DEMO_MIN` | 5 | minutos da demonstração antes de o login cobrir a tela |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.67.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.68.0</a>

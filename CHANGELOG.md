@@ -6,12 +6,47 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.67.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.68.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.68.0] — 2026-10-29 · Geolocalização, orientações e curvas de nível
+
+### Adicionado
+- **Piso do mapa (geolocalização)**, em Piso ▾:
+  - Mapa leve e aberto (sem bibliotecas novas): OpenStreetMap, Sentinel‑2 cloudless 2016 (EOX, CC BY 4.0) ou
+    OpenTopoMap.
+  - Busca de endereço pelo Nominatim, ou digitando "lat, lon", e desenho da área com o mouse.
+  - Opções:
+    - **localização**: grava latitude, longitude e altitude da origem (`dados.geo`);
+    - **elevação**: terreno com grade de 4 a 45 pontos por lado, do AWS Terrain Tiles/Terrarium, em relação à
+      altitude da origem;
+    - **textura**: a imagem recortada, guardada no servidor e desenhada por cima do terreno (`slab.mapa`), refeita
+      quando a malha muda (pontos, cortes, taludes).
+  - Com a localização gravada, as próximas áreas entram no lugar certo: leste = +X, norte = +Y.
+- **Servidor `server/geo.js`** (`/api/mapa/tile`, `/busca`, `/imagem`):
+  - busca os serviços abertos com identificação (User-Agent);
+  - guarda os ladrilhos em cache em disco;
+  - limita o Nominatim a 1 pedido por segundo;
+  - o navegador continua falando só com o próprio BoxBim (CSP).
+- **Orientações do projeto** (Vistas ▾ › Orientações…):
+  - o norte verdadeiro, mais quantas orientações extras forem precisas, cada uma com nome e ângulo;
+  - a localização da origem, editável.
+- **Norte por vista**: cada vista escolhe a sua orientação na **rosa dos ventos** do canto da vista.
+  - Nas plantas, a vista gira para aquele norte ficar para cima.
+  - A seta vermelha mostra sempre o norte verdadeiro.
+- **Piso por curvas de nível** (Piso ▾): a partir das curvas de um DWG/DXF importado (cota no Z).
+  - Os pontos são tirados das curvas no espaçamento escolhido, até cerca de 2500.
+  - O contorno é a envoltória ou o retângulo das curvas.
+  - O terreno fica na cota da curva mais baixa.
+
+### Alterado
+- **Superfície do piso com muitos pontos**: a triangulação fica numa grade e em cache, então milhares de pontos
+  continuam rápidos. A malha fica mais fina quando há muitos pontos, e o fundo do terreno não é mais subdividido.
+- Propriedades do piso com mais de 80 pontos mostram só o resumo; a edição continua na vista.
 
 ## [2.67.0] — 2026-10-29 · Setas da parede no lugar do gizmo
 

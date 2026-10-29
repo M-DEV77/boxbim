@@ -82,6 +82,7 @@ export class ProjectSession extends EventTarget {
     if (dados.escalas || dados.pesos) this.app.drawing?.load(dados);
     if (dados.vistas) this.app.views?.loadViews(dados.vistas);
     if (dados.estilosCota) this.app.dims?.load(dados.estilosCota);
+    if ('geo' in dados || 'norte' in dados || dados.orientacoes || dados.orientacaoVistas) this.app.orientations?.load(dados);
   }
 
   loadLevels(niveis) {

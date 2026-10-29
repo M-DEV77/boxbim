@@ -12,6 +12,9 @@ import { GuideDims } from './guide-dims.js';
 import { FloorPoints } from './floor-points.js';
 import { FloorSketch } from './floor-sketch.js';
 import { Skirting } from './skirting.js';
+import { openMapFloor, MapSkins } from './geo/map-floor.js';
+import { Orientations } from './geo/orientations.js';
+import { floorFromContours } from './geo/contours.js';
 import { SmartDims } from './smart-dims.js';
 import { icon } from './icons.js';
 import { Display } from './display.js';
@@ -110,6 +113,8 @@ class App {
     this.grips = new Grips(this);
     this.guideDims = new GuideDims(this); // cotas guias (contorno do piso e seleção), posição arrastável
     this.floorPoints = new FloorPoints(this);
+    this.orientations = new Orientations(this); // norte verdadeiro, outras orientações e o norte de cada vista
+    this.mapSkins = new MapSkins(this);         // textura do mapa por cima do terreno (Piso do mapa)
     this.floorSketch = new FloorSketch(this);
     this.skirting = new Skirting(this); // rodapé dos pisos (perfil de objeto)
     this.smartDims = new SmartDims(this); // cotas até as peças paralelas da seleção
@@ -960,6 +965,8 @@ class App {
   offset3d() { return offset3dSelection(this); }
   wallsToRoof() { return attachToRoof(this); }
   floorFromLines() { return floorFromSelection(this); }
+  mapFloor() { return openMapFloor(this); }
+  floorFromContours() { return floorFromContours(this); }
   async fixJoints() {
     const r = await fixAllJoints(this);
     this.status(`Junções ajustadas: ${r.total} parede(s)/viga(s) verificadas, ${r.tees} ponta(s) em T paradas na face.`);

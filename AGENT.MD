@@ -47,6 +47,14 @@ flowchart LR
     SNAPX["osnap.js<br/>snap ponta, meio, perpendicular"] --> FSK
     SLAB --> FEDIT["floor-edit.js<br/>Editar piso: linhas e furos em planta"]
     FEDIT --> FPTS
+    SLAB --> MAPF["geo/map-floor.js + geo/map-view.js<br/>Piso do mapa: área, elevação, textura (MapSkins)"]
+    MAPF --> ELEM
+    MAPF -->|"/api/mapa/*"| GEOS
+    SLAB --> CONT["geo/contours.js<br/>terreno por curvas de nível (DWG/DXF)"]
+    CONT --> ELEM
+    APP --> ORIENT["geo/orientations.js<br/>norte verdadeiro, orientações, norte por vista"]
+    ORIENT --> VIEWS
+    PROJ -->|"dados.geo / norte / orientacoes"| ORIENT
     FPTS -->|"slab.talude"| SLOPES["slopes.js<br/>talude: corte e aterro com bermas"]
     SLOPES --> CUTS
     FPTS -->|"slab.sobrepor"| DRAPE["drape.js<br/>piso sobreposto acompanha o hospedeiro"]
@@ -89,6 +97,8 @@ flowchart LR
     IDX --> LIB["library.js<br/>biblioteca, ferramentas, presets"]
     IDX --> MCPS["mcp.js<br/>servidor MCP /mcp + tokens"]
     IDX --> RT["realtime.js<br/>WebSocket /ws (salas por projeto)"]
+    IDX --> GEOS["geo.js<br/>/api/mapa: ladrilhos OSM, Sentinel-2, OpenTopoMap,<br/>elevação Terrarium, Nominatim, imagens (cache)"]
+    GEOS -. "HTTPS + User-Agent" .-> OPENMAP(["serviços abertos de mapa"])
     RPC --> AI["lib/ai.js<br/>OpenAI-compat, Claude, Gemini"]
     RPC --> MCPC["lib/mcp-client.js<br/>cliente MCP (HTTP/SSE)"]
     RPC --> STORE["lib/store.js<br/>configurações, chaves cifradas,<br/>agentes, skills, memórias"]
@@ -198,7 +208,8 @@ flowchart LR
 | 2026-10-29 | 2.65.1 | `7fe1eaa` | Talude: Total de movimentação (corte + aterro) |
 | 2026-10-29 | 2.65.2 | `6d9e645` | Comprimento digitado (grips.setLength → followEnd): a linha ligada acompanha paralela, as do outro lado esticam, arco anda inteiro |
 | 2026-10-29 | 2.66.0 | `e8a0e7d` | Arame: viewer.wireOnly (viewstyle.js) — pickHit ignora faces e usa _edgeHits (arestas a ~6 px do raio) |
-| 2026-10-29 | 2.67.0 | este commit | Parede: sem gizmo automático (transform.onSelect); setas cima/baixo/esquerda/direita em grips.js (altura, base, comprimento) |
+| 2026-10-29 | 2.67.0 | `1bb808c` | Parede: sem gizmo automático (transform.onSelect); setas cima/baixo/esquerda/direita em grips.js (altura, base, comprimento) |
+| 2026-10-29 | 2.68.0 | este commit | Geolocalização: Piso do mapa (OSM/Sentinel-2/OpenTopoMap, elevação Terrarium, textura), orientações do projeto e norte por vista, terreno por curvas de nível (DWG/DXF); server/geo.js com cache; slabShapeFn em grade e com cache |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.67.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.68.0</a>

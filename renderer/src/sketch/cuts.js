@@ -85,7 +85,7 @@ function worldBox(el) {
   el.updateMatrixWorld(true);
   const box = new THREE.Box3();
   el.traverse(o => {
-    if (!o.isMesh || o.userData.isEdge || o.userData.rodape || o.userData.taludeSkin || !o.geometry) return;
+    if (!o.isMesh || o.userData.isEdge || o.userData.rodape || o.userData.taludeSkin || o.userData.mapSkin || !o.geometry) return;
     const g = o.userData._csgOrig || o.geometry;
     if (!g.boundingBox) g.computeBoundingBox();
     box.union(g.boundingBox.clone().applyMatrix4(o.matrixWorld));
@@ -115,7 +115,7 @@ function deepened(geo, matrixWorld, from, to) {
 
 const meshesOf = el => {
   const out = [];
-  el.traverse(o => { if (o.isMesh && !o.userData.isEdge && !o.userData.rodape && !o.userData.taludeSkin) out.push(o); }); // rodapé e pele do talude não entram
+  el.traverse(o => { if (o.isMesh && !o.userData.isEdge && !o.userData.rodape && !o.userData.taludeSkin && !o.userData.mapSkin) out.push(o); }); // rodapé e peles (talude, mapa) não entram
   return out;
 };
 

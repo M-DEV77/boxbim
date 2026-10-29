@@ -148,6 +148,7 @@ export class ViewStyles extends EventTarget {
     this.viewer.model.traverse(o => {
       if (!o.isMesh || o.userData.isEdge) return;
       const ud = o.userData;
+      if (ud.keepMaterial) { o.visible = style !== 'arame'; return; } // textura do mapa: fica, menos no arame
       const selected = !!ud._origMat;
       const cur = selected ? ud._origMat : o.material;
       if (!force && this.styleSet.has(cur) && ud._styleKey === style) return;

@@ -878,13 +878,15 @@ export class FloorPoints {
     const num = (v, onset, title) => h('input', { type: 'number', step: unitStep(), value: toUnit(v), title, style: 'width:100%',
       onchange: e => { const x = fromUnit(e.target.value); if (Number.isFinite(x)) onset(x); } });
     const rows = [];
-    s.points.forEach((p, i) => rows.push(h('tr', {},
+    // muitos pontos (terreno do mapa, curvas de nível): a tabela fica de fora — edição na vista
+    const many = s.points.length + (s.forma || []).length > 80;
+    if (!many) s.points.forEach((p, i) => rows.push(h('tr', {},
       h('td', {}, String(i + 1)),
       h('td', {}, num(p[0], x => { s.points[i] = [round6(x), p[1]]; this.commit(el); }, 'X')),
       h('td', {}, num(p[1], y => { s.points[i] = [p[0], round6(y)]; this.commit(el); }, 'Y')),
       h('td', {}, num(s.alturas?.[i] || 0, v => this.setHeight('v', i, v, el), 'Altura do ponto (deslocamento do topo do piso)')),
       h('td', {}, h('button', { class: 'icon-btn', title: 'Apagar o ponto', onclick: () => { this.el = el; this.remove('v', i); } }, '×')))));
-    (s.forma || []).forEach((p, i) => rows.push(h('tr', { class: 'floor-shape-row' },
+    if (!many) (s.forma || []).forEach((p, i) => rows.push(h('tr', { class: 'floor-shape-row' },
       h('td', { title: 'Ponto de forma (interno)' }, `◆${i + 1}`),
       h('td', {}, num(p[0], x => { p[0] = round6(x); this.commit(el); }, 'X')),
       h('td', {}, num(p[1], y => { p[1] = round6(y); this.commit(el); }, 'Y')),
@@ -896,7 +898,8 @@ export class FloorPoints {
       h('label', { class: 'inline', title: 'Terreno: só a superfície se desloca com os pontos (o fundo fica plano) e os outros pisos cortam o terreno' },
         h('input', { type: 'checkbox', checked: !!s.terreno, onchange: e => this.setTerrain(el, e.target.checked) }), 'Terreno'),
       h('div', { class: 'small muted' }, 'Arraste os pontos na vista; o "+" no meio de um lado coloca um ponto novo; clique num ponto para a altura; botão direito apaga.'),
-      h('div', { class: 'floor-points-table' }, h('table', {},
+      many ? h('div', { class: 'small muted' }, `${s.points.length} pontos no contorno e ${(s.forma || []).length} no meio — edite na vista (dois cliques com uma pausa no piso).`) : null,
+      many ? null : h('div', { class: 'floor-points-table' }, h('table', {},
         h('tr', {}, h('th', {}, '#'), h('th', {}, `X (${u})`), h('th', {}, `Y (${u})`), h('th', {}, `Altura (${u})`), h('th', {}, '')),
         rows)),
       h('div', { class: 'row-buttons' },

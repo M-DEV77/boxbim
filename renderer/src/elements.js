@@ -231,24 +231,49 @@ function delaunay(pts) {
   return tris.filter(t => t.v.every(v => v < n)).map(t => t.v);
 }
 
-/** Função (x, y) → deslocamento vertical do piso, ou null se ele é plano. */
+// as últimas superfícies montadas (a triangulação de muitos pontos — terreno do mapa, curvas de nível — custa)
+const shapeCache = new Map();
+
+/**
+ * Função (x, y) → deslocamento vertical do piso, ou null se ele é plano. Os triângulos ficam numa GRADE (cada
+ * célula sabe quais triângulos a tocam): com milhares de pontos a consulta continua rápida.
+ */
 export function slabShapeFn(s) {
   const cp = slabControlPoints(s);
   if (!cp) return null;
+  const key = JSON.stringify(cp);
+  if (shapeCache.has(key)) return shapeCache.get(key);
   const tris = delaunay(cp);
-  return (x, y) => {
-    for (const [a, b, c] of tris) {
-      const [ax, ay, az] = cp[a], [bx, by, bz] = cp[b], [qx, qy, qz] = cp[c];
-      const D = (by - qy) * (ax - qx) + (qx - bx) * (ay - qy);
-      if (Math.abs(D) < 1e-14) continue;
-      const l1 = ((by - qy) * (x - qx) + (qx - bx) * (y - qy)) / D, l2 = ((qy - ay) * (x - qx) + (ax - qx) * (y - qy)) / D, l3 = 1 - l1 - l2;
-      if (l1 >= -1e-7 && l2 >= -1e-7 && l3 >= -1e-7) return l1 * az + l2 * bz + l3 * qz;
+  // grade dos triângulos
+  const xs = cp.map(p => p[0]), ys = cp.map(p => p[1]);
+  const x0 = Math.min(...xs), y0 = Math.min(...ys), W = Math.max(...xs) - x0 || 1, H = Math.max(...ys) - y0 || 1;
+  const G = Math.max(1, Math.min(256, Math.round(Math.sqrt(tris.length / 2))));
+  const cell = Array.from({ length: G * G }, () => []);
+  const cx = v => Math.min(G - 1, Math.max(0, Math.floor((v - x0) / W * G))), cy = v => Math.min(G - 1, Math.max(0, Math.floor((v - y0) / H * G)));
+  tris.forEach((t, k) => {
+    const tx = t.map(i => cp[i][0]), ty = t.map(i => cp[i][1]);
+    for (let gx = cx(Math.min(...tx)); gx <= cx(Math.max(...tx)); gx++) for (let gy = cy(Math.min(...ty)); gy <= cy(Math.max(...ty)); gy++) cell[gy * G + gx].push(k);
+  });
+  const inTri = (k, x, y) => {
+    const [a, b, c] = tris[k];
+    const [ax, ay, az] = cp[a], [bx, by, bz] = cp[b], [qx, qy, qz] = cp[c];
+    const D = (by - qy) * (ax - qx) + (qx - bx) * (ay - qy);
+    if (Math.abs(D) < 1e-14) return null;
+    const l1 = ((by - qy) * (x - qx) + (qx - bx) * (y - qy)) / D, l2 = ((qy - ay) * (x - qx) + (ax - qx) * (y - qy)) / D, l3 = 1 - l1 - l2;
+    return l1 >= -1e-7 && l2 >= -1e-7 && l3 >= -1e-7 ? l1 * az + l2 * bz + l3 * qz : null;
+  };
+  const fn = (x, y) => {
+    if (x >= x0 && x <= x0 + W && y >= y0 && y <= y0 + H) {
+      for (const k of cell[cy(y) * G + cx(x)]) { const z = inTri(k, x, y); if (z !== null) return z; }
     }
     // fora da triangulação (borda de piso côncavo, arredondamentos): o ponto de controle mais perto
     let best = Infinity, z = 0;
     for (const p of cp) { const dd = (p[0] - x) ** 2 + (p[1] - y) ** 2; if (dd < best) { best = dd; z = p[2]; } }
     return z;
   };
+  if (shapeCache.size > 12) shapeCache.delete(shapeCache.keys().next().value);
+  shapeCache.set(key, fn);
+  return fn;
 }
 
 /**
@@ -378,7 +403,13 @@ export function applySlabShape(geo, s) {
   if (!f) return geo;
   const xs = s.points.map(p => p[0]), ys = s.points.map(p => p[1]);
   const size = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
-  const out = subdivide(geo, Math.max(size / 24, 0.15));
+  // malha: 1/24 do piso, ou mais fina quando há muitos pontos (terreno do mapa, curvas de nível) — no terreno o fundo
+  // (plano, escondido) não é subdividido
+  const n = slabControlPoints(s).length, area = Math.max(1e-6, Math.abs(xs.reduce((a, x, i) => a + x * ys[(i + 1) % xs.length] - xs[(i + 1) % xs.length] * ys[i], 0)) / 2);
+  const len = Math.max(Math.min(size / 24, Math.sqrt(area / n) * 0.9), 0.15, size / 400);
+  geo.computeBoundingBox();
+  const zBottom = geo.boundingBox.min.z;
+  const out = subdivide(geo, s.terreno ? (cx, cy, cz) => (cz <= zBottom + 1e-4 ? Infinity : len) : len);
   const pos = out.attributes.position;
   if (s.terreno) {
     // TERRENO: só a superfície acompanha os pontos; o fundo fica plano (abaixo do ponto mais baixo) e as camadas
