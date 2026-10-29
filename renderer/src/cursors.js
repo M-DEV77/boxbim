@@ -24,6 +24,7 @@ const ICONS = {
   copiar: '<rect x="17" y="20" width="8" height="8"/><rect x="21" y="16" width="8" height="8"/>',
   espelhar: '<path d="M23.5 15.5 V30" stroke-dasharray="2 1.5"/><path d="M21.5 18 L16.5 23 L21.5 28 Z M25.5 18 L30.5 23 L25.5 28 Z"/>',
   // piso
+  guia: '<path d="M16 29 L30 15" stroke-dasharray="2.4 1.8"/><path d="M22 29 A6 6 0 0 0 20.2 24.8"/>',
   puxar: '<path d="M21 16 V30"/><path d="M24 23 H31 M28.5 20.5 L31 23 L28.5 25.5"/>',
   ponto: '<path d="M23.5 17 L28.5 22 L23.5 27 L18.5 22 Z"/><path d="M23.5 20 V24 M21.5 22 H25.5"/>',
   hospedeiro: '<circle cx="23.5" cy="23" r="5"/><circle cx="23.5" cy="23" r="1.8"/>',

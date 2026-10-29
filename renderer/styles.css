@@ -614,6 +614,17 @@ table.budget tr.muted td { color: var(--muted); }
 .floor-points-table td:last-child { width: 1.8em; }
 .floor-shape-row td:first-child { color: #1fbf3b; }
 .slope-table { width: 100%; margin: 4px 0 8px; }
+/* linha guia da edição do piso: campo de ângulo pequeno e discreto */
+.guide-row { align-items: center; }
+.guide-angle { width: 44px; padding: 0 3px; height: 20px; font-size: 11px; color: #cfd6de; background: transparent; border: 1px solid #ffffff1f; border-radius: 3px;
+  font-variant-numeric: tabular-nums; -moz-appearance: textfield; }
+.guide-angle::-webkit-inner-spin-button, .guide-angle::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.guide-angle:focus { border-color: #2f9bff; outline: none; }
+.guide-deg { margin-left: -4px; font-size: 11px; opacity: .6; }
+.snap-marker[data-kind="guia"] { border-style: dashed; }
+.snap-marker[data-kind="intersecao"] { border: 0; background: none; width: 14px; height: 14px; margin: -7px 0 0 -7px; }
+.snap-marker[data-kind="intersecao"]::before, .snap-marker[data-kind="intersecao"]::after { content: ''; position: absolute; left: 6px; top: -1px; width: 2px; height: 16px; background: #ff9f1a; transform: rotate(45deg); }
+.snap-marker[data-kind="intersecao"]::after { transform: rotate(-45deg); }
 .slope-volume td { padding-top: 3px; font-variant-numeric: tabular-nums; }
 .slope-volume output { font-weight: 600; color: #1fbf3b; }
 .slope-balance { border-top: 1px solid #ffffff14; padding-top: 4px; }

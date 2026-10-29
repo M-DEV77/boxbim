@@ -209,7 +209,8 @@ flowchart LR
 | 2026-10-29 | 2.65.2 | `6d9e645` | Comprimento digitado (grips.setLength → followEnd): a linha ligada acompanha paralela, as do outro lado esticam, arco anda inteiro |
 | 2026-10-29 | 2.66.0 | `e8a0e7d` | Arame: viewer.wireOnly (viewstyle.js) — pickHit ignora faces e usa _edgeHits (arestas a ~6 px do raio) |
 | 2026-10-29 | 2.67.0 | `1bb808c` | Parede: sem gizmo automático (transform.onSelect); setas cima/baixo/esquerda/direita em grips.js (altura, base, comprimento) |
-| 2026-10-29 | 2.68.0 | este commit | Geolocalização: Piso do mapa (OSM/Sentinel-2/OpenTopoMap, elevação Terrarium, textura), orientações do projeto e norte por vista, terreno por curvas de nível (DWG/DXF); server/geo.js com cache; slabShapeFn em grade e com cache |
+| 2026-10-29 | 2.68.0 | `5e249d1` | Geolocalização: Piso do mapa (OSM/Sentinel-2/OpenTopoMap, elevação Terrarium, textura), orientações do projeto e norte por vista, terreno por curvas de nível (DWG/DXF); server/geo.js com cache; slabShapeFn em grade e com cache |
+| 2026-10-29 | 2.69.0 | este commit | Edição do piso: linha guia tracejada com ângulo (floor-sketch.pickGuide); osnap encaixa na guia e nas interseções |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.68.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.69.0</a>

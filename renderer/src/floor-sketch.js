@@ -11,6 +11,12 @@ import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { toolCursor } from './cursors.js';
+import { snapSegments, snapPick, showSnapMarker } from './osnap.js';
+
+// linhas guia (informativas) da edição do piso: tracejadas, por cima de tudo
+const GUIDE_MAT = new THREE.LineDashedMaterial({ color: 0x7fc4ff, dashSize: 0.3, gapSize: 0.2, depthTest: false, transparent: true, opacity: 0.85 });
+const GUIDE_PREVIEW = new THREE.LineDashedMaterial({ color: 0xffd23f, dashSize: 0.3, gapSize: 0.2, depthTest: false, transparent: true, opacity: 0.9 });
+const guideAngleSaved = () => { try { const v = Number(localStorage.getItem('boxbim.guiaAngulo')); return Number.isFinite(v) && localStorage.getItem('boxbim.guiaAngulo') !== null ? v : 90; } catch { return 90; } };
 
 // NEON (rosa, fino) das linhas do esboço: núcleo claro e brilho, por cima de tudo (na cena de sobreposição)
 const NEON_CORE = new LineMaterial({ color: 0xffd6f6, linewidth: 1.3, depthTest: false, transparent: true });
@@ -96,6 +102,12 @@ export class FloorSketch {
         h('button', { onclick: () => this.pickSolidEdges(), title: 'Clique nas arestas (cantos) dos sólidos: entram como linhas do contorno, projetadas na planta' }, '⧉ Copiar arestas de sólidos'),
         h('button', { onclick: () => this.pickFloorOutline(), title: 'Clique na face de outro piso: o contorno dele (e os furos) entram como linhas do contorno' }, '⧉ Copiar contorno de piso'),
         this.closeBtn = h('button', { onclick: () => this.closeGaps(), title: 'Liga cada ponta solta (X vermelho) à mais perto com uma linha nova', hidden: true }, '⟷ Fechar pontas')),
+      h('div', { class: 'row-buttons guide-row' },
+        h('button', { onclick: () => this.pickGuide(), title: 'Linha guia tracejada (informativa, não entra no piso): passa pelo ponto clicado, no ângulo ao lado — em relação à linha sob o cursor, ou ao eixo X longe de linhas. As ferramentas encaixam nela e nos cruzamentos.' }, '┄ Linha guia'),
+        this.guideAngle = h('input', { type: 'number', class: 'guide-angle', step: 'any', value: guideAngleSaved(), title: 'Ângulo da linha guia (graus) em relação à linha sob o cursor — 90° = perpendicular',
+          onchange: e => { const a = Number(e.target.value); if (Number.isFinite(a)) { try { localStorage.setItem('boxbim.guiaAngulo', String(a)); } catch { /* sem armazenamento */ } } } }),
+        h('span', { class: 'guide-deg' }, '°'),
+        this.clearGuidesBtn = h('button', { class: 'mini', hidden: true, onclick: () => { this.guides = []; this.drawGuides(); }, title: 'Tira todas as linhas guia' }, '✕ Guias')),
       h('div', { class: 'row-buttons' },
         h('button', { class: 'primary', onclick: () => this.finish(true), title: 'Refaz o piso com as linhas (Enter)' }, '✔ Concluir'),
         h('button', { onclick: () => this.finish(false), title: 'Volta o piso como estava (Esc)' }, '✖ Cancelar')));
@@ -149,6 +161,121 @@ export class FloorSketch {
     draw(arr, [NEON_HALO, NEON_GLOW, NEON_CORE]);
     draw(open, [OPEN_HALO, OPEN_GLOW, OPEN_CORE]);
     draw(sel, [SEL_HALO, SEL_GLOW, SEL_CORE]);
+  }
+
+  // ------------------------------------------------------------ linhas guia (informativas)
+
+  /** Trechos das linhas guia (longos, "infinitos") para o snap: [{ a, b }]. */
+  guideSegments() {
+    if (!this.active || !this.guides?.length) return [];
+    const R = this.guideReach();
+    return this.guides.map(g => ({ a: [g.p[0] - g.d[0] * R, g.p[1] - g.d[1] * R], b: [g.p[0] + g.d[0] * R, g.p[1] + g.d[1] * R] }));
+  }
+
+  /** Meio comprimento das guias: bem maior que o desenho. */
+  guideReach() {
+    const pts = this.viewer.elements().filter(e => this.isTemp(e)).flatMap(e => worldPoints(e.userData.bim.linha));
+    if (!pts.length) return 100;
+    const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+    return Math.hypot(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) * 3 + 50;
+  }
+
+  /** Desenha as guias (e a prévia) tracejadas, por cima da vista. */
+  drawGuides(preview = null) {
+    const v = this.viewer;
+    if (!this.guideGroup) { this.guideGroup = new THREE.Group(); this.guideGroup.renderOrder = 998; }
+    for (const c of [...this.guideGroup.children]) { this.guideGroup.remove(c); c.geometry.dispose(); }
+    if (this.clearGuidesBtn) this.clearGuidesBtn.hidden = !this.guides?.length;
+    if (!this.active) { this.guideGroup.parent?.remove(this.guideGroup); return; }
+    if (!this.guideGroup.parent) v.overlay.add(this.guideGroup);
+    const R = this.guideReach(), z = this.active.z + 0.02;
+    // traço proporcional ao zoom: ~12 px na tela
+    const dash = Math.max(0.02, v._worldPerPixel(innerWidth / 2, innerHeight / 2) * 12);
+    for (const [g, mat] of [...(this.guides || []).map(g => [g, GUIDE_MAT]), ...(preview ? [[preview, GUIDE_PREVIEW]] : [])]) {
+      mat.dashSize = dash; mat.gapSize = dash * 0.7;
+      const geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(g.p[0] - g.d[0] * R, g.p[1] - g.d[1] * R, z), new THREE.Vector3(g.p[0] + g.d[0] * R, g.p[1] + g.d[1] * R, z)]);
+      const l = new THREE.Line(geo, mat);
+      l.computeLineDistances();
+      l.renderOrder = 998;
+      this.guideGroup.add(l);
+    }
+  }
+
+  /**
+   * Linha guia: o ponto clicado (com o snap do projeto) e a direção — o ângulo do campo em relação à linha sob o
+   * cursor (90° = perpendicular a ela) ou, longe de linhas, ao eixo X. Clique coloca; botão direito numa guia a tira;
+   * botão direito fora ou Esc termina.
+   */
+  pickGuide() {
+    if (!this.active) return;
+    this.picking?.();
+    const v = this.viewer, cv = v.renderer.domElement;
+    for (const t of [this.app.sketchTool, this.app.wallTool, this.app.placeTool]) if (t?.active) t.stop();
+    this.guides ||= [];
+    const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -this.active.z);
+    const toS = p => { const q = new THREE.Vector3(p[0], p[1], this.active.z).project(v.camera), r = cv.getBoundingClientRect(); return [(q.x + 1) / 2 * r.width + r.left, (1 - q.y) / 2 * r.height + r.top]; };
+    const distSeg = (p, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], L = dx * dx + dy * dy || 1, t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L)); return [Math.hypot(a[0] + dx * t - p[0], a[1] + dy * t - p[1]), t]; };
+    const marker = this.guideMarker ||= (() => { const m = h('div', { class: 'snap-marker', hidden: true }); document.querySelector('.center').append(m); return m; })();
+    const at = e => {
+      const r = cv.getBoundingClientRect(), ray = new THREE.Raycaster();
+      ray.setFromCamera(new THREE.Vector2((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1), v.camera);
+      const hit = ray.ray.intersectPlane(plane, new THREE.Vector3());
+      if (!hit) return null;
+      const segs = snapSegments(this.app);
+      // linha de referência: a mais perto do cursor (até 12 px), fora as guias
+      let ref = null, bd = 12;
+      for (const s of segs) {
+        if (s.guia) continue;
+        const [d] = distSeg([e.clientX, e.clientY], toS(s.a), toS(s.b));
+        if (d < bd) { bd = d; ref = s; }
+      }
+      const best = snapPick({ segs, toScreen: toS, cursor: [e.clientX, e.clientY] });
+      let p = best ? best.p : [hit.x, hit.y];
+      if (!best && ref) { // em cima da linha: o ponto dela sob o cursor
+        const dx = ref.b[0] - ref.a[0], dy = ref.b[1] - ref.a[1], L2 = dx * dx + dy * dy || 1, t = ((hit.x - ref.a[0]) * dx + (hit.y - ref.a[1]) * dy) / L2;
+        p = [ref.a[0] + dx * t, ref.a[1] + dy * t];
+      }
+      const base = ref ? Math.atan2(ref.b[1] - ref.a[1], ref.b[0] - ref.a[0]) : 0;
+      const ang = base + (Number(this.guideAngle?.value) || 0) * Math.PI / 180;
+      return { p: p.map(x => +x.toFixed(6)), d: [Math.cos(ang), Math.sin(ang)], kind: best?.kind || null, ref: !!ref };
+    };
+    const move = e => {
+      const g = at(e);
+      this.drawGuides(g);
+      const pr = document.querySelector('.center').getBoundingClientRect();
+      if (g) { const s = toS(g.p); showSnapMarker(marker, g.kind, s[0] - pr.left, s[1] - pr.top); } else marker.hidden = true;
+    };
+    const stop = () => {
+      cv.removeEventListener('pointerdown', down, true); cv.removeEventListener('pointermove', move);
+      cv.removeEventListener('contextmenu', ctx, true);
+      document.removeEventListener('keydown', key, true);
+      cv.style.cursor = ''; marker.hidden = true; this.picking = null; this.drawGuides();
+    };
+    const key = e => { if (e.key === 'Escape') { e.stopPropagation(); stop(); this.app.status('Linhas guia: terminado.'); } };
+    const ctx = e => { e.preventDefault(); e.stopPropagation(); };
+    const down = e => {
+      if (e.button === 2) {
+        e.preventDefault(); e.stopPropagation();
+        // botão direito numa guia: tira ela; fora: termina
+        const near = this.guideSegments().map((s, i) => [distSeg([e.clientX, e.clientY], toS(s.a), toS(s.b))[0], i]).filter(([d]) => d < 8).sort((a, b) => a[0] - b[0])[0];
+        if (near) { this.guides.splice(near[1], 1); this.drawGuides(at(e)); return; }
+        stop(); this.app.status('Linhas guia: terminado.'); return;
+      }
+      if (e.button !== 0) return;
+      e.preventDefault(); e.stopPropagation();
+      const g = at(e);
+      if (!g) return;
+      this.guides.push({ p: g.p, d: g.d });
+      this.drawGuides(g);
+      this.app.status(`Linha guia a ${Number(this.guideAngle?.value) || 0}° ${g.ref ? 'da linha' : 'do eixo X'} · clique para outra · botão direito numa guia a tira · Esc termina.`);
+    };
+    cv.addEventListener('pointerdown', down, true);
+    cv.addEventListener('pointermove', move);
+    cv.addEventListener('contextmenu', ctx, true);
+    document.addEventListener('keydown', key, true);
+    cv.style.cursor = toolCursor('guia');
+    this.picking = stop;
+    this.app.status(`Linha guia · ${Number(this.guideAngle?.value) || 0}° em relação à linha sob o cursor (ou ao eixo X) · clique coloca · Esc termina.`);
   }
 
   /** Copiar contorno de piso: cada clique na face de outro piso põe o contorno e os furos dele no esboço. Esc termina. */
@@ -402,6 +529,8 @@ export class FloorSketch {
     this.panel?.remove(); this.panel = null;
     this.viewer.selectFilter = null; // libera a seleção
     this.active = null;
+    this.guides = [];
+    this.drawGuides(); // tira as guias (são só da edição)
     this.neon(); // tira o neon
     el.visible = true;
     this.viewer.select([el]);

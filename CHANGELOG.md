@@ -6,12 +6,25 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.68.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.69.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.69.0] — 2026-10-29 · Linha guia na edição do piso
+
+### Adicionado
+- **┄ Linha guia** na edição do contorno do piso: linha **tracejada informativa** (não entra no piso, só na tela).
+  - Passa pelo ponto clicado, com o snap do projeto.
+  - O ângulo vem de um **campo pequeno e discreto**, por padrão **90°**, e fica lembrado neste navegador.
+  - O ângulo é em relação à linha sob o cursor (90° = perpendicular) ou, longe de linhas, ao eixo X.
+  - A prévia aparece em amarelo antes do clique e o ponteiro muda para o de "guia".
+  - Botão direito numa guia apaga ela; Esc termina; **✕ Guias** tira todas.
+  - Somem ao concluir ou cancelar a edição.
+- **Snap nas guias**: as ferramentas 2D (Linha, pontos, cotas…) encaixam ao longo da guia ("guia") e no cruzamento
+  dela com as outras linhas e guias ("interseção", marcador ✕).
 
 ## [2.68.0] — 2026-10-29 · Geolocalização, orientações e curvas de nível
 

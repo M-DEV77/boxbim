@@ -139,6 +139,10 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
   **⧉ Copiar linhas** (clique numa linha 2D: entram cópias dela e das ligadas) e **⧉ Copiar arestas de sólidos**
   (clique nas arestas dos sólidos: entram projetadas na planta) e **⧉ Copiar contorno de piso** (clique na face de
   outro piso: entram o contorno e os furos dele) para montar o contorno.
+  **┄ Linha guia**: uma linha **tracejada informativa**, que não entra no piso. Ela passa pelo ponto clicado (com o
+  snap) no ângulo do campo pequeno ao lado, que vem em **90°**: em relação à linha sob o cursor (90° = perpendicular)
+  ou, longe de linhas, ao eixo X. As ferramentas 2D encaixam na guia e nos cruzamentos dela (✕). Botão direito numa
+  guia apaga ela; Esc termina; **✕ Guias** tira todas. As guias somem ao concluir ou cancelar.
 - **Barras das ferramentas flutuantes** (desenho 2D, Canto, Aparar, Mover/Girar, Cota…), quadradas e compactas: arraste
   pela alça **⠿** para onde quiser na vista; a posição fica guardada e o duplo clique na alça devolve ao lugar.
 - **Snap do projeto** (osnap.js) em todas as ferramentas que pegam pontos (desenho 2D, parede, pontos de linhas,
@@ -506,4 +510,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.68.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.69.0</a>

@@ -38,6 +38,8 @@ export function snapSegments(app, { level = null, except = [] } = {}) {
       out.push({ a: [A.x, A.y], b: [B.x, B.y], el });
     }
   }
+  // linhas guia da edição do piso (informativas): encaixe nelas e nos cruzamentos delas
+  for (const g of app.floorSketch?.guideSegments?.() || []) out.push({ ...g, guia: true });
   return out;
 }
 
@@ -45,6 +47,7 @@ export function snapSegments(app, { level = null, except = [] } = {}) {
 export function snapPointsOfSegments(segs) {
   const pts = [];
   for (const s of segs) {
+    if (s.guia) continue; // a guia é "infinita": sem pontas nem meio
     pts.push({ p: s.a, kind: 'ponta' }, { p: s.b, kind: 'ponta' });
     if (!s.arc) pts.push({ p: [(s.a[0] + s.b[0]) / 2, (s.a[1] + s.b[1]) / 2], kind: 'meio' });
   }
@@ -57,7 +60,7 @@ export function snapPointsOfSegments(segs) {
  */
 export function snapPick({ segs, points = [], toScreen, cursor, from = null, tol = SNAP_PX }) {
   const same = p => from && Math.hypot(p[0] - from[0], p[1] - from[1]) < 1e-6; // não encaixa no próprio ponto de partida
-  const order = { ponta: 0, centro: 1, meio: 2, perpendicular: 3 };
+  const order = { ponta: 0, centro: 1, intersecao: 1.5, meio: 2, perpendicular: 3, guia: 4 };
   let best = null;
   const consider = (p, kind) => {
     if (same(p)) return;
@@ -68,6 +71,23 @@ export function snapPick({ segs, points = [], toScreen, cursor, from = null, tol
     if (!best || rank < best.rank || (rank === best.rank && d < best.d)) best = { p: [p[0], p[1]], kind, d, rank };
   };
   for (const c of [...points, ...snapPointsOfSegments(segs)]) consider(c.p, c.kind);
+  // linhas guia: cruzamento com as outras linhas (e entre guias) e o ponto da guia sob o cursor
+  const guides = segs.filter(s => s.guia);
+  if (guides.length) {
+    const cross = (s, t) => {
+      const r = [s.b[0] - s.a[0], s.b[1] - s.a[1]], q = [t.b[0] - t.a[0], t.b[1] - t.a[1]], den = r[0] * q[1] - r[1] * q[0];
+      if (Math.abs(den) < 1e-12) return null;
+      const u = ((t.a[0] - s.a[0]) * q[1] - (t.a[1] - s.a[1]) * q[0]) / den, w = ((t.a[0] - s.a[0]) * r[1] - (t.a[1] - s.a[1]) * r[0]) / den;
+      return u >= -1e-9 && u <= 1 + 1e-9 && w >= -1e-9 && w <= 1 + 1e-9 ? [s.a[0] + r[0] * u, s.a[1] + r[1] * u] : null;
+    };
+    for (const g of guides) for (const s of segs) if (s !== g && !s.arc) { const p = cross(g, s); if (p) consider(p, 'intersecao'); }
+    for (const g of guides) {
+      const A = toScreen(g.a), B = toScreen(g.b), dx = B[0] - A[0], dy = B[1] - A[1], L2 = dx * dx + dy * dy;
+      if (L2 < 1) continue;
+      const t = Math.max(0, Math.min(1, ((cursor[0] - A[0]) * dx + (cursor[1] - A[1]) * dy) / L2));
+      consider([g.a[0] + (g.b[0] - g.a[0]) * t, g.a[1] + (g.b[1] - g.a[1]) * t], 'guia');
+    }
+  }
   if (from) {
     for (const s of segs) {
       if (s.arc) continue;
