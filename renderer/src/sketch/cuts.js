@@ -85,7 +85,7 @@ function worldBox(el) {
   el.updateMatrixWorld(true);
   const box = new THREE.Box3();
   el.traverse(o => {
-    if (!o.isMesh || o.userData.isEdge || o.userData.rodape || o.userData.taludeSkin || o.userData.mapSkin || !o.geometry) return;
+    if (!o.isMesh || o.userData.isEdge || o.userData.rodape || o.userData.arrimo || o.userData.taludeSkin || o.userData.mapSkin || !o.geometry) return;
     const g = o.userData._csgOrig || o.geometry;
     if (!g.boundingBox) g.computeBoundingBox();
     box.union(g.boundingBox.clone().applyMatrix4(o.matrixWorld));
@@ -115,7 +115,7 @@ function deepened(geo, matrixWorld, from, to) {
 
 const meshesOf = el => {
   const out = [];
-  el.traverse(o => { if (o.isMesh && !o.userData.isEdge && !o.userData.rodape && !o.userData.taludeSkin && !o.userData.mapSkin) out.push(o); }); // rodapé e peles (talude, mapa) não entram
+  el.traverse(o => { if (o.isMesh && !o.userData.isEdge && !o.userData.rodape && !o.userData.arrimo && !o.userData.taludeSkin && !o.userData.mapSkin) out.push(o); }); // rodapé, arrimo e peles (talude, mapa) não entram
   return out;
 };
 
@@ -248,7 +248,7 @@ export class Cuts {
     let pts = s.points.map(([x, y]) => new THREE.Vector3(x, y, 0).applyMatrix4(pad.matrixWorld)).map(p => new THREE.Vector2(p.x, p.y));
     if (THREE.ShapeUtils.isClockWise(pts)) pts = pts.reverse();
     const box = new THREE.Box3();
-    pad.traverse(o => { if (o.isMesh && !o.userData.isEdge && !o.userData.rodape && o.geometry) { const g = o.userData._csgOrig || o.geometry; g.computeBoundingBox(); box.union(g.boundingBox.clone().applyMatrix4(o.matrixWorld)); } });
+    pad.traverse(o => { if (o.isMesh && !o.userData.isEdge && !o.userData.rodape && !o.userData.arrimo && o.geometry) { const g = o.userData._csgOrig || o.geometry; g.computeBoundingBox(); box.union(g.boundingBox.clone().applyMatrix4(o.matrixWorld)); } });
     // terreno menor: corta o maior em toda a profundidade (ele mesmo desce e preenche)
     const z0 = s.terreno ? -1000 : Number.isFinite(box.min.z) ? box.min.z : s.elevation - s.thickness;
     const geo = new THREE.ExtrudeGeometry(new THREE.Shape(pts), { depth: s.terreno ? 2000 : 1000, bevelEnabled: false });

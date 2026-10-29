@@ -230,7 +230,7 @@ export class MapSkins {
     const m = el.userData.bim.slab.mapa;
     let top = null;
     el.traverse(o => {
-      if (!o.isMesh || o.userData.isEdge || o.userData.mapSkin || o.userData.rodape || o.userData.taludeSkin || !o.geometry) return;
+      if (!o.isMesh || o.userData.isEdge || o.userData.mapSkin || o.userData.rodape || o.userData.arrimo || o.userData.taludeSkin || !o.geometry) return;
       o.geometry.boundingBox || o.geometry.computeBoundingBox();
       if (!top || o.geometry.boundingBox.max.z > top.geometry.boundingBox.max.z) top = o;
     });

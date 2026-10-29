@@ -55,6 +55,8 @@ flowchart LR
     APP --> ORIENT["geo/orientations.js<br/>norte verdadeiro, orientações, norte por vista"]
     ORIENT --> VIEWS
     PROJ -->|"dados.geo / norte / orientacoes"| ORIENT
+    FPTS -->|"slab.arrimo"| RETAIN["retaining.js<br/>muro de arrimo (corte/aterro, lados)"]
+    RETAIN --> SLOPES
     FPTS -->|"slab.talude"| SLOPES["slopes.js<br/>talude: corte e aterro com bermas"]
     SLOPES --> CUTS
     FPTS -->|"slab.sobrepor"| DRAPE["drape.js<br/>piso sobreposto acompanha o hospedeiro"]
@@ -210,7 +212,8 @@ flowchart LR
 | 2026-10-29 | 2.66.0 | `e8a0e7d` | Arame: viewer.wireOnly (viewstyle.js) — pickHit ignora faces e usa _edgeHits (arestas a ~6 px do raio) |
 | 2026-10-29 | 2.67.0 | `1bb808c` | Parede: sem gizmo automático (transform.onSelect); setas cima/baixo/esquerda/direita em grips.js (altura, base, comprimento) |
 | 2026-10-29 | 2.68.0 | `5e249d1` | Geolocalização: Piso do mapa (OSM/Sentinel-2/OpenTopoMap, elevação Terrarium, textura), orientações do projeto e norte por vista, terreno por curvas de nível (DWG/DXF); server/geo.js com cache; slabShapeFn em grade e com cache |
-| 2026-10-29 | 2.69.0 | este commit | Edição do piso: linha guia tracejada com ângulo (floor-sketch.pickGuide); osnap encaixa na guia e nas interseções |
+| 2026-10-29 | 2.69.0 | `b4ce1d4` | Edição do piso: linha guia tracejada com ângulo (floor-sketch.pickGuide); osnap encaixa na guia e nas interseções |
+| 2026-10-29 | 2.70.0 | este commit | Piso: arrimo (retaining.js) — muro por fora dos lados no corte/aterro, lados ligados/desligados na vista; talude não age nos lados com arrimo |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.69.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.70.0</a>

@@ -91,4 +91,4 @@ Copie o volume `/data` (por exemplo, com o backup de volumes do Easypanel). O ar
 | `BOXBIM_DEMO_MIN` | 5 | minutos da demonstração antes de o login cobrir a tela |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.69.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.70.0</a>

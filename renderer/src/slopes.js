@@ -12,6 +12,7 @@
 // o perfil de aterro (embaixo) e o de corte (em cima), medidos a partir do contorno do piso, na cota do topo dele.
 import * as THREE from 'three';
 import { slabShapeFn, subdivide } from './elements.js';
+import { retainEdges } from './retaining.js';
 
 export const SLOPE_DEFAULTS = {
   corte: { ativo: true, v: 1, h: 1, altura: 3, berma: 2 },
@@ -65,20 +66,20 @@ const smax = (a, b, k) => -smin(-a, -b, k);
  * lista plana [x0, y0, x1, y1, …] (sem objetos por lado: roda para cada ponto da malha).
  */
 function nearestOnPoly(x, y, F) {
-  let best = Infinity, nx = x, ny = y, inn = false;
+  let best = Infinity, nx = x, ny = y, inn = false, bi = 0;
   const n = F.length;
   for (let i = 0, j = n - 2; i < n; j = i, i += 2) {
     const ax = F[i], ay = F[i + 1], k = (i + 2) % n, dx = F[k] - ax, dy = F[k + 1] - ay, L2 = dx * dx + dy * dy || 1;
     let u = ((x - ax) * dx + (y - ay) * dy) / L2;
     u = u < 0 ? 0 : u > 1 ? 1 : u;
     const px = ax + dx * u, py = ay + dy * u, dd = (px - x) * (px - x) + (py - y) * (py - y);
-    if (dd < best) { best = dd; nx = px; ny = py; }
+    if (dd < best) { best = dd; nx = px; ny = py; bi = i / 2; }
     // dentro/fora (par/ímpar) com o lado j → i
     const xj = F[j], yj = F[j + 1];
     if ((ay > y) !== (yj > y) && x < (xj - ax) * (y - ay) / (yj - ay) + ax) inn = !inn;
   }
   best = Math.sqrt(best);
-  return inn ? { d: 0, x, y, edge: best } : { d: best, x: nx, y: ny, edge: best };
+  return inn ? { d: 0, x, y, edge: best, i: bi } : { d: best, x: nx, y: ny, edge: best, i: bi };
 }
 
 /** Pisos com talude ligado (menos o próprio terreno). */
@@ -106,7 +107,7 @@ function floorTop(o, terrainEl, inv) {
   };
   const cfg = slopeConfig(so);
   const pl = poly.map(p => [p.x, p.y]);
-  return { poly: pl, flat: Float64Array.from(pl.flat()), zAt, cfg, r: cfg.suavizar ? cfg.raio : 0, thick: so.thickness || 0.15 };
+  return { poly: pl, flat: Float64Array.from(pl.flat()), zAt, cfg, r: cfg.suavizar ? cfg.raio : 0, thick: so.thickness || 0.15, arr: retainEdges(so) };
 }
 
 /** Cota do terreno com o talude de UM piso, a uma distância d (> 0) do contorno, partindo da cota natural nat. */
@@ -154,6 +155,7 @@ export function slopeVolumes(terrainEl, floorEl) {
       const n = nearestOnPoly(x, y, t.flat), z0 = t.zAt(n.x, n.y);
       let fin;
       if (n.d === 0) fin = (nat > z0 - t.thick || t.cfg.aterro.ativo) ? z0 - t.thick : nat; // plataforma: fundo do piso
+      else if (t.arr?.edges.has(n.i) && (nat >= z0 ? t.arr.corte : t.arr.aterro)) fin = nat; // arrimo: sem talude
       else fin = slopedZ(t, nat, n.d, z0);
       fin = Math.max(fin, zb);
       const dz = fin - nat;
@@ -245,6 +247,8 @@ export function applySlopes(geo, terrainEl, floors) {
         else if (!cutSide && t.cfg.aterro.ativo) top = z0 + e * (t.cfg.aterro.v / t.cfg.aterro.h);
         continue;
       }
+      // lado com muro de arrimo (no corte ou no aterro): o terreno fica natural até o muro
+      if (t.arr?.edges.has(n.i) && (top >= z0 ? t.arr.corte : t.arr.aterro)) continue;
       const hi = t.cfg.corte.ativo ? z0 + slopeRiseSmooth(d, t.cfg.corte, t.r) : Infinity;
       const lo = t.cfg.aterro.ativo ? z0 - slopeRiseSmooth(d, t.cfg.aterro, t.r) : -Infinity;
       // suavizado: o encontro com o terreno natural também concorda (largura em altura ≈ raio × inclinação)

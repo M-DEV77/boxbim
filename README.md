@@ -201,6 +201,12 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
   **proporção V : H** das instâncias (trechos inclinados), **altura da instância** (0 = talude contínuo) e
   **distância entre instâncias** (berma plana). Recalcula sozinho ao mover ou editar o piso ou o terreno.
   **Material do talude** reveste a superfície do corte e do aterro (grama, pedra…).
+- **Arrimo** (opção do piso, em Propriedades › Arrimo): um **muro de arrimo** por fora de cada lado do piso, da
+  espessura do piso (ou a informada). Pode ser **no corte**, onde o terreno está acima do piso (o muro vai do fundo
+  do piso até o terreno), e/ou **no aterro**, onde o terreno está abaixo (vai do terreno até o topo do piso). A
+  altura acompanha o terreno ao longo do lado. **▭ Escolher lados…**: clique nos lados, na vista, para ligar ou
+  desligar o muro de cada um (laranja = com muro, tracejado = sem). Onde há arrimo, o talude não age: o terreno fica
+  natural até o muro.
   **Volume de corte** e **Volume de aterro** (m³) aparecem embaixo de cada um. Contam o talude mais a plataforma (sob
   o piso, até o fundo dele), e entre parênteses só o talude. São recalculados quando o piso ou o terreno muda.
   Abaixo vêm três linhas:
@@ -510,4 +516,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.69.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.70.0</a>

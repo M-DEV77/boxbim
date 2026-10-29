@@ -6,12 +6,27 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.69.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.70.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.70.0] — 2026-10-29 · Arrimo no piso
+
+### Adicionado
+- **Arrimo** (Propriedades do piso › Arrimo): muro de arrimo por fora de cada lado do contorno.
+  - A espessura é a do piso, ou outra informada.
+  - **No corte**: onde o terreno natural está acima do topo do piso, o muro vai do fundo do piso até o terreno.
+  - **No aterro**: onde o terreno está abaixo, o muro vai do terreno até o topo do piso.
+  - A altura segue o terreno ao longo do lado (amostras a cada 0,5 m) e as pontas cobrem a quina do lado vizinho.
+  - O material é o "Concreto".
+- **▭ Escolher lados…**: clique nos lados do piso, na vista, para ligar ou desligar o muro de cada um.
+  - Laranja = com muro, tracejado = sem, verde = sob o cursor; o ponteiro muda para o de "arrimo".
+  - "Todos os lados" liga todos de novo.
+- **Talude e arrimo**: nos lados com arrimo o talude não age, e o terreno fica natural até o muro. Os volumes de
+  corte e aterro seguem a mesma regra.
 
 ## [2.69.0] — 2026-10-29 · Linha guia na edição do piso
 

@@ -12,6 +12,7 @@ import { GuideDims } from './guide-dims.js';
 import { FloorPoints } from './floor-points.js';
 import { FloorSketch } from './floor-sketch.js';
 import { Skirting } from './skirting.js';
+import { Retaining, retainSection } from './retaining.js';
 import { openMapFloor, MapSkins } from './geo/map-floor.js';
 import { Orientations } from './geo/orientations.js';
 import { floorFromContours } from './geo/contours.js';
@@ -117,6 +118,7 @@ class App {
     this.mapSkins = new MapSkins(this);         // textura do mapa por cima do terreno (Piso do mapa)
     this.floorSketch = new FloorSketch(this);
     this.skirting = new Skirting(this); // rodapé dos pisos (perfil de objeto)
+    this.retaining = new Retaining(this); // muro de arrimo dos pisos (corte/aterro)
     this.smartDims = new SmartDims(this); // cotas até as peças paralelas da seleção
     // widget de eixos (orbitar em X/Y/Z) no canto da vista 3D
     const axes = new AxisWidget({ getCamera: () => this.viewer.camera, getControls: () => this.viewer.controls });
@@ -1242,7 +1244,7 @@ class App {
       h('button', { onclick: () => editFloor(this, o), title: 'Nome, tipo, cota do topo e contorno num diálogo' }, 'Diálogo do piso…'),
       h('button', { onclick: () => this.floorPoints.showPoints(o), title: 'Pontos de elevação na vista (também com dois cliques pausados no piso)' }, 'Pontos de elevação')),
       // (as seções têm itens condicionais = null: fora, senão o append escreve "null" na tela)
-      ...[...this.floorPoints.propsSection(o), ...this.floorPoints.slopeSection(o), ...this.floorPoints.overlaySection(o), ...this.floorPoints.skirtSection(o)].filter(Boolean));
+      ...[...this.floorPoints.propsSection(o), ...this.floorPoints.slopeSection(o), ...retainSection(this, o), ...this.floorPoints.overlaySection(o), ...this.floorPoints.skirtSection(o)].filter(Boolean));
     this.renderTypeProps(root, o);
     this.renderObjectProps(root, o);
     this.renderMaterialProps(root, o);
