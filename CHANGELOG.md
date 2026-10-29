@@ -6,12 +6,22 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.65.1** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.65.2** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.65.2] — 2026-10-29 · Cota do contorno leva a linha ligada junto
+
+### Corrigido
+- **Digitar o comprimento** de uma linha 2D (na medida da linha ou na cota guia da edição do piso) movia só a ponta.
+  A linha ligada nela ficava para trás e o contorno abria (vermelho). Agora:
+  - a linha ligada na ponta que anda (a perpendicular) vai junto, paralela a si mesma;
+  - as linhas presas na outra ponta dela esticam ou encolhem até ela;
+  - uma linha na mesma direção só estica;
+  - um arco de canto anda inteiro, levando a linha seguinte.
 
 ## [2.65.1] — 2026-10-29 · Total de movimentação no talude
 

@@ -2,6 +2,7 @@
 // aparecem uma cota com a medida e dois pontos nas extremidades.
 //   arrastar um ponto ...... move aquela ponta (snap nas pontas de linhas/paredes/vigas; ORTO/F8 ou Shift trava 0°/90°)
 //   clicar na medida ....... digita o comprimento (Enter): a primeira ponta fica, a segunda anda na direção da linha
+//                            (linhas 2D: as linhas ligadas na ponta que anda acompanham — followEnd)
 //   pegar a linha (ou o losango do meio) e puxar ... a linha anda paralela a si mesma; as linhas LIGADAS nas pontas
 //                            esticam/encolhem até ela (na direção delas) e os arcos dos cantos vão junto — nada descola
 //   nas linhas 2D, arrastar uma ponta leva junto as pontas das outras linhas ligadas nela
@@ -424,8 +425,60 @@ export class Grips {
     const [k0, k1] = b.linha ? ['a', 'b'] : ['start', 'end'];
     const p0 = d[k0], p1 = d[k1];
     const cur = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]) || 1;
-    d[k1] = [p0[0] + (p1[0] - p0[0]) / cur * L, p0[1] + (p1[1] - p0[1]) / cur * L].map(v => +v.toFixed(6));
+    const next = [p0[0] + (p1[0] - p0[0]) / cur * L, p0[1] + (p1[1] - p0[1]) / cur * L].map(v => +v.toFixed(6));
+    // linha 2D: as linhas ligadas na ponta que anda acompanham (a perpendicular vai junto, paralela a si mesma)
+    const touched = b.linha ? this.followEnd(el, [...p1], next) : [];
+    d[k1] = next;
+    for (const n of touched) this.viewer._prepare2D(n);
     this.commit(el);
     this.app.status(`Comprimento: ${fmtLen(L, { suffix: true })}.`);
+  }
+
+  /**
+   * A ponta oldP da linha el vai para newP (dados da linha): as linhas ligadas nela acompanham. Reta ligada (não
+   * paralela) anda junto, paralela a si mesma, passando pela ponta nova, e as linhas presas na outra ponta dela
+   * esticam ou encolhem até ela. Reta na mesma direção só estica ou encolhe. Arco ligado anda inteiro, e as retas
+   * presas nele seguem a mesma regra. Devolve os elementos mexidos.
+   */
+  followEnd(el, oldP, newP) {
+    const l = el.userData.bim.linha, M = planeMatrix(frameOf(l)), inv = M.clone().invert();
+    const toD = w => { const q = w.clone().applyMatrix4(inv); return [q.x, q.y]; };
+    const fromD = p => new THREE.Vector3(p[0], p[1], 0).applyMatrix4(M);
+    const own = lk => ({ to: p => toD(new THREE.Vector3(p[0], p[1], 0).applyMatrix4(lk.M)), set: (key, p) => { const q = fromD(p).applyMatrix4(lk.inv); lk.el.userData.bim.linha[key] = [+q.x.toFixed(6), +q.y.toFixed(6)]; } });
+    const D = [newP[0] - oldP[0], newP[1] - oldP[1]];
+    const seen = new Set([el]), touched = [];
+    const carry = (lk, P) => {
+      const o = lk.orig, ok = lk.key === 'a' ? 'b' : 'a', f = own(lk);
+      const E = f.to(o[lk.key]), F = f.to(o[ok]), u = [F[0] - E[0], F[1] - E[1]], uu = u[0] * u[0] + u[1] * u[1] || 1;
+      const dd = [P[0] - E[0], P[1] - E[1]];
+      touched.push(lk.el);
+      if (Math.abs(u[0] * dd[1] - u[1] * dd[0]) < 1e-9 * Math.sqrt(uu) * Math.hypot(...dd) + 1e-12) { f.set(lk.key, P); rebuildSketch(lk.el); return; }
+      // anda paralela a si mesma: só a parte do deslocamento que é perpendicular a ela
+      const al = (dd[0] * u[0] + dd[1] * u[1]) / uu, tv = [dd[0] - u[0] * al, dd[1] - u[1] * al];
+      const F2 = [F[0] + tv[0], F[1] + tv[1]];
+      const far = this.linksAt(fromD(F), el, false, seen); // antes de mexer: acha pela posição atual
+      f.set(lk.key, P); f.set(ok, F2); rebuildSketch(lk.el);
+      for (const g of far) {
+        const go = g.orig, gk = g.key === 'a' ? 'b' : 'a', gf = own(g);
+        const Ge = gf.to(go[g.key]), Gf = gf.to(go[gk]), v = [Ge[0] - Gf[0], Ge[1] - Gf[1]];
+        const cr = v[0] * u[1] - v[1] * u[0];
+        let W;
+        if (Math.abs(cr) < 1e-9 * Math.hypot(...v) * Math.sqrt(uu) + 1e-12) W = [Ge[0] + tv[0], Ge[1] + tv[1]];
+        else { const s = ((P[0] - Gf[0]) * u[1] - (P[1] - Gf[1]) * u[0]) / cr; W = [Gf[0] + v[0] * s, Gf[1] + v[1] * s]; }
+        gf.set(g.key, W); rebuildSketch(g.el); touched.push(g.el);
+      }
+    };
+    for (const lk of this.linksAt(fromD(oldP), el, true, seen)) {
+      if (!lk.arc) { carry(lk, newP); continue; }
+      // arco: anda inteiro; as retas presas na outra ponta dele seguem a outra ponta
+      const o = lk.orig, f = own(lk), sh = p => { const q = f.to(p); return [q[0] + D[0], q[1] + D[1]]; };
+      const farKey = lk.key === 'a' ? 'b' : 'a', farNew = sh(o[farKey]);
+      f.set('a', sh(o.a)); f.set('b', sh(o.b));
+      const c = fromD(sh(o.arco.c)).applyMatrix4(lk.inv);
+      lk.el.userData.bim.linha.arco = { ...o.arco, c: [+c.x.toFixed(6), +c.y.toFixed(6)] };
+      rebuildSketch(lk.el); touched.push(lk.el);
+      for (const nx of lk.next) carry(nx, farNew);
+    }
+    return touched;
   }
 }

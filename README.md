@@ -97,7 +97,9 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
   arraste os pontos (snap e ORTO) ou clique na medida para digitar o comprimento. Nas linhas 2D (inclusive na edição
   do contorno do piso), **pegue a própria linha** (ou o losango do meio) e **puxe**: ela anda paralela a si mesma e as
   linhas ligadas nas pontas esticam ou encolhem até ela, com os arcos dos cantos indo junto. Nada descola. Arrastar
-  uma ponta também leva as pontas das linhas ligadas nela.
+  uma ponta também leva as pontas das linhas ligadas nela. Ao **digitar o comprimento** (na medida ou na cota guia),
+  a linha ligada na ponta que anda vai junto, paralela a si mesma, e as do outro lado dela esticam até ela. Assim um
+  retângulo continua retângulo e o contorno não abre.
 - **Estilo das linhas 2D**: tipo (contínua, tracejada, pontilhada, traço e ponto…), espessura por pena (mm) e cor —
   no painel de propriedades (uma ou várias linhas) e na barra da ferramenta de desenho (linhas novas).
 - **Unidade** (m, cm, mm) no rodapé: exibição e digitação de comprimentos no projeto todo (os dados ficam em metros).
@@ -485,4 +487,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.65.1</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.65.2</a>
