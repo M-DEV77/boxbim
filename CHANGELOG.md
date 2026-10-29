@@ -6,12 +6,25 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.63.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.64.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.64.0] — 2026-10-29 · Nível do piso na vista e volumes de corte e aterro
+
+### Adicionado
+- **Nível do piso na vista**: com um piso selecionado, uma etiqueta discreta **▲ cota** aparece embaixo dele (no
+  ponto do contorno mais baixo na tela), com a cota do topo no projeto, na unidade do projeto.
+  - É um campo: clique, digite e Enter para o piso inteiro subir ou descer; Esc cancela.
+  - Fica escondida durante as ferramentas e na edição do contorno.
+- **Volumes de corte e aterro do talude (m³)**: embaixo de Corte e de Aterro, na seção Talude do piso.
+  - Somam o talude e a plataforma (sob o piso, até o fundo dele); entre parênteses, só o talude.
+  - Calculados por amostragem numa grade (até ~250 mil pontos, ~70 ms), nos terrenos em volta.
+  - Guardados até o piso ou o terreno mudar.
+  - Conferido à mão: piso de 8×6 m a 1,20 m sobre terreno plano, aterro 1:1,5 → 82,3 m³ (talude 33,8 m³).
 
 ## [2.63.0] — 2026-10-28 · Ponto de altura no meio do terreno
 

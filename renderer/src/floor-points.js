@@ -16,7 +16,7 @@
 import * as THREE from 'three';
 import { h, toast, floatBar } from './ui.js';
 import { rebuildElement, slabShapeFn } from './elements.js';
-import { slopeConfig } from './slopes.js';
+import { slopeConfig, slopeVolumes } from './slopes.js';
 import { fmtLen, fromUnit, toUnit, unitLabel, unitStep } from './units.js';
 import { toolCursor } from './cursors.js';
 import { snapSegments, snapPick, showSnapMarker } from './osnap.js';
@@ -119,6 +119,59 @@ export class FloorPoints {
       h('span', { class: 'muted' }, 'arraste os pontos · clique num ponto para a altura · botão direito apaga'),
       h('button', { onclick: () => { this.stopPlacing(); this.pointsFor = null; this.update(); } }, 'Sair'));
     floatBar(this.bar, 'pontos-terreno');
+    // NÍVEL do piso selecionado (cota do topo, no projeto), com um campo discreto para ajustar
+    this.levelInput = h('input', { type: 'number', step: unitStep(), class: 'floor-level-input',
+      title: 'Cota do topo do piso no projeto — digite e Enter para mudar (o piso sobe ou desce inteiro)',
+      onkeydown: e => { if (e.key === 'Enter') e.target.blur(); if (e.key === 'Escape') { e.target.dataset.cancel = '1'; e.target.blur(); } e.stopPropagation(); },
+      onchange: e => { if (!e.target.dataset.cancel) this.setLevel(fromUnit(e.target.value)); delete e.target.dataset.cancel; },
+      onblur: e => { delete e.target.dataset.cancel; } });
+    this.levelUnit = h('span', { class: 'floor-level-unit' });
+    this.levelTag = h('div', { class: 'floor-level-tag', hidden: true }, h('span', {}, '▲'), this.levelInput, this.levelUnit);
+    center.append(this.levelTag);
+  }
+
+  /** Cota (no projeto) do topo do piso, no ponto do meio do contorno. */
+  levelOf(el) {
+    const s = el.userData.bim.slab;
+    const cx = s.points.reduce((a, p) => a + p[0], 0) / s.points.length, cy = s.points.reduce((a, p) => a + p[1], 0) / s.points.length;
+    el.updateMatrixWorld(true);
+    return new THREE.Vector3(cx, cy, s.elevation).applyMatrix4(el.matrixWorld).z;
+  }
+
+  /** Muda a cota do topo do piso (o piso inteiro sobe ou desce). */
+  setLevel(z) {
+    const el = this.el = this.live(this.el);
+    if (!el || !Number.isFinite(z)) return;
+    const dz = z - this.levelOf(el);
+    if (Math.abs(dz) < 1e-6) return;
+    const s = el.userData.bim.slab;
+    s.elevation = round6(s.elevation + dz);
+    this.commit(el);
+    this.app.status(`Piso no nível ${fmtLen(z, { suffix: true })}.`);
+  }
+
+  /** A cada quadro: a etiqueta do nível fica embaixo do piso selecionado, na tela. */
+  updateLevelTag(el) {
+    const tag = this.levelTag;
+    const show = el && el.parent && el.visible && !this.viewer.tool && !this.viewer.renderOverride && !this.app.floorSketch?.active;
+    if (!show) { if (!tag.hidden) tag.hidden = true; return; }
+    const s = el.userData.bim.slab;
+    el.updateMatrixWorld(true);
+    let low = null;
+    for (const [x, y] of s.points) {
+      const p = this.screen(new THREE.Vector3(x, y, s.elevation).applyMatrix4(el.matrixWorld));
+      if (p.behind) continue;
+      if (!low || p.y > low.y) low = p;
+    }
+    if (!low) { tag.hidden = true; return; }
+    tag.hidden = false;
+    tag.style.transform = `translate(${low.x}px, ${low.y + 10}px) translateX(-50%)`;
+    if (document.activeElement !== this.levelInput) {
+      const val = String(+toUnit(this.levelOf(el)).toFixed(4));
+      if (this.levelInput.value !== val) this.levelInput.value = val;
+      const u = unitLabel();
+      if (this.levelUnit.textContent !== u) this.levelUnit.textContent = u;
+    }
   }
 
   get viewer() { return this.app.viewer; }
@@ -241,6 +294,7 @@ export class FloorPoints {
   /** A cada quadro: os pontos acompanham a câmera. */
   update() {
     const el = this.el;
+    this.updateLevelTag(el);
     const show = el && el.parent && el.visible && !this.viewer.tool && !this.viewer.renderOverride
       && (this.pointsFor === el.userData.bim.guid || this.placing);
     const terrainBar = !!(show && el.userData.bim.slab.terreno);
@@ -643,8 +697,11 @@ export class FloorPoints {
       this.commit(cur);
     };
     const u = unitLabel();
+    const vol = cfg.ativo ? this.volumes(el) : null;
+    const m3 = v => `${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m³`;
     const part = (key, title) => {
       const c = cfg[key];
+      const V = vol && (key === 'corte' ? [vol.corte, vol.corteTalude] : [vol.aterro, vol.aterroTalude]);
       const set = (k, v) => save({ [key]: { ...c, [k]: v } });
       const num = (val, onset, attrs = {}) => h('input', { type: 'number', step: 'any', value: val, style: 'width:100%', ...attrs, onchange: e => { const x = Number(e.target.value); if (Number.isFinite(x)) onset(x); } });
       return h('table', { class: 'slope-table' },
@@ -655,7 +712,9 @@ export class FloorPoints {
         h('tr', { title: 'Altura de cada instância (trecho inclinado). 0 = um talude contínuo, sem bermas' }, h('td', {}, `Altura da instância (${u})`),
           h('td', {}, num(toUnit(c.altura), x => set('altura', Math.max(0, fromUnit(x))), { min: 0, step: unitStep() }))),
         h('tr', { title: 'Distância horizontal (berma, plana) entre uma instância e a próxima' }, h('td', {}, `Distância entre instâncias (${u})`),
-          h('td', {}, num(toUnit(c.berma), x => set('berma', Math.max(0, fromUnit(x))), { min: 0, step: unitStep() }))));
+          h('td', {}, num(toUnit(c.berma), x => set('berma', Math.max(0, fromUnit(x))), { min: 0, step: unitStep() }))),
+        V ? h('tr', { class: 'slope-volume', title: `Volume de ${key} nos terrenos em volta: o talude mais a plataforma (sob o piso, até o fundo dele). Entre parênteses, só o talude.` },
+          h('td', {}, `Volume de ${key}`), h('td', {}, h('output', {}, m3(V[0])), h('span', { class: 'muted' }, ` (talude ${m3(V[1])})`))) : null);
     };
     return [
       h('h4', {}, 'Talude'),
@@ -674,6 +733,21 @@ export class FloorPoints {
       cfg.ativo ? part('corte', 'Corte') : null,
       cfg.ativo ? part('aterro', 'Aterro') : null,
     ];
+  }
+
+  /** Volumes de corte e aterro do talude deste piso (somados nos terrenos), guardados até o piso ou o terreno mudar. */
+  volumes(el) {
+    const v = this.viewer, terrains = v.elements().filter(o => o !== el && o.userData.bim.slab?.terreno);
+    if (!terrains.length) return null;
+    const sig = [el, ...terrains].map(o => { o.updateMatrixWorld(true); return `${o.userData.bim.guid}:${o.matrixWorld.elements.map(x => x.toFixed(4)).join(',')}:${JSON.stringify(o.userData.bim.slab)}`; }).join('|');
+    if (this._vol?.sig !== sig) {
+      const sum = { corte: 0, aterro: 0, corteTalude: 0, aterroTalude: 0 };
+      for (const tr of terrains) {
+        try { const r = slopeVolumes(tr, el); for (const k in sum) sum[k] += r[k]; } catch (err) { console.warn('volume', err); }
+      }
+      this._vol = { sig, sum };
+    }
+    return this._vol.sum;
   }
 
   // ------------------------------------------------------------ altura de um ponto

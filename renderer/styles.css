@@ -608,6 +608,18 @@ table.budget tr.muted td { color: var(--muted); }
 .floor-points-table td:last-child { width: 1.8em; }
 .floor-shape-row td:first-child { color: #1fbf3b; }
 .slope-table { width: 100%; margin: 4px 0 8px; }
+.slope-volume td { padding-top: 3px; font-variant-numeric: tabular-nums; }
+.slope-volume output { font-weight: 600; color: #1fbf3b; }
+/* nível do piso selecionado (floor-points.js) */
+.floor-level-tag { position: absolute; left: 0; top: 0; z-index: 6; display: flex; align-items: center; gap: 2px; padding: 0 4px;
+  font-size: 11px; line-height: 16px; color: #dfe5ec; background: rgba(15, 19, 23, .55); border-radius: 3px; pointer-events: auto; white-space: nowrap; }
+.floor-level-tag > span:first-child { color: #2f9bff; font-size: 9px; }
+.floor-level-input { width: 52px; padding: 0 2px; font-size: 11px; line-height: 15px; height: 16px; color: inherit; background: transparent;
+  border: 1px solid transparent; border-radius: 2px; font-variant-numeric: tabular-nums; -moz-appearance: textfield; }
+.floor-level-input::-webkit-inner-spin-button, .floor-level-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.floor-level-input:hover { border-color: #2f9bff66; }
+.floor-level-input:focus { border-color: #2f9bff; background: #0f1317; outline: none; }
+.floor-level-unit { opacity: .6; }
 .slope-table td:first-child { font-size: 12px; }
 .slope-ratio { display: grid; grid-template-columns: 1fr auto 1fr; gap: 4px; align-items: center; }
 .row-buttons { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }

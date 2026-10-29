@@ -87,6 +87,78 @@ export function slopeSignature(floors) {
   return floors.map(o => { o.updateMatrixWorld(true); return `${o.userData.bim.guid}:${o.matrixWorld.elements.map(x => x.toFixed(5)).join(',')}:${JSON.stringify(o.userData.bim.slab)}`; }).join('|');
 }
 
+/** O piso do talude nas coordenadas locais do terreno: contorno, cota do topo em cada ponto, configuração. */
+function floorTop(o, terrainEl, inv) {
+  o.updateMatrixWorld(true);
+  const so = o.userData.bim.slab, fo = slabShapeFn(so);
+  const toFloor = o.matrixWorld.clone().invert().multiply(terrainEl.matrixWorld), fromFloor = inv.clone().multiply(o.matrixWorld);
+  const poly = so.points.map(([x, y]) => new THREE.Vector3(x, y, so.elevation).applyMatrix4(fromFloor));
+  const v = new THREE.Vector3();
+  // topo do piso (com as alturas dos pontos) num ponto do terreno (coordenadas locais do terreno)
+  const zAt = (x, y) => {
+    v.set(x, y, 0).applyMatrix4(toFloor);
+    v.z = so.elevation + (fo ? fo(v.x, v.y) : 0);
+    return v.applyMatrix4(fromFloor).z;
+  };
+  const cfg = slopeConfig(so);
+  const pl = poly.map(p => [p.x, p.y]);
+  return { poly: pl, flat: Float64Array.from(pl.flat()), zAt, cfg, r: cfg.suavizar ? cfg.raio : 0, thick: so.thickness || 0.15 };
+}
+
+/** Cota do terreno com o talude de UM piso, a uma distância d (> 0) do contorno, partindo da cota natural nat. */
+function slopedZ(t, nat, d, z0) {
+  const hi = t.cfg.corte.ativo ? z0 + slopeRiseSmooth(d, t.cfg.corte, t.r) : Infinity;
+  const lo = t.cfg.aterro.ativo ? z0 - slopeRiseSmooth(d, t.cfg.aterro, t.r) : -Infinity;
+  const kc = t.r * (t.cfg.corte.v / t.cfg.corte.h), ka = t.r * (t.cfg.aterro.v / t.cfg.aterro.h);
+  let top = nat;
+  if (t.r > 0) {
+    top = Number.isFinite(lo) ? smax(top, lo, ka) : top;
+    top = Number.isFinite(hi) ? smin(top, hi, kc) : top;
+  } else top = Math.min(Math.max(top, lo), hi);
+  return top;
+}
+
+/**
+ * VOLUMES de corte e aterro (m³) do talude de um piso num terreno — por amostragem numa grade (até ~250 mil pontos):
+ * em cada ponto, a diferença entre o terreno natural e o terreno final. Dentro do piso o terreno final fica no
+ * FUNDO do piso (a plataforma: o piso corta o que está acima e o aterro preenche o que está abaixo).
+ * Devolve { corte, aterro, corteTalude, aterroTalude } (os dois últimos: só fora do piso).
+ */
+export function slopeVolumes(terrainEl, floorEl) {
+  terrainEl.updateMatrixWorld(true);
+  const inv = terrainEl.matrixWorld.clone().invert();
+  const s = terrainEl.userData.bim.slab, f = slabShapeFn(s);
+  const t = floorTop(floorEl, terrainEl, inv);
+  const hs = [0, ...(s.alturas || []), ...(s.forma || []).map(p => p[2])].filter(Number.isFinite);
+  const zTop = s.elevation + Math.max(...hs), zLow = s.elevation + Math.min(...hs);
+  const zb = zLow - (s.thickness || 0.15); // fundo plano do terreno
+  const zs = t.poly.map(([x, y]) => t.zAt(x, y));
+  const reach = (c, need) => { if (!c.ativo || need <= 0) return 0; let d = 0; while (d < 2000 && slopeRise(d, c) < need) d += 0.25; return d; };
+  const R = Math.max(reach(t.cfg.corte, zTop - Math.min(...zs)), reach(t.cfg.aterro, Math.max(...zs) - zb)) + t.r + 0.5;
+  // região: o terreno ∩ (o piso + o alcance do talude)
+  const txs = s.points.map(p => p[0]), tys = s.points.map(p => p[1]), fxs = t.poly.map(p => p[0]), fys = t.poly.map(p => p[1]);
+  const x0 = Math.max(Math.min(...txs), Math.min(...fxs) - R), x1 = Math.min(Math.max(...txs), Math.max(...fxs) + R);
+  const y0 = Math.max(Math.min(...tys), Math.min(...fys) - R), y1 = Math.min(Math.max(...tys), Math.max(...fys) + R);
+  const out = { corte: 0, aterro: 0, corteTalude: 0, aterroTalude: 0 };
+  if (!(x1 > x0 && y1 > y0)) return out;
+  const step = Math.max(0.05, Math.sqrt((x1 - x0) * (y1 - y0) / 250000)), dA = step * step;
+  const tFlat = Float64Array.from(s.points.flat()), holes = (s.holes || []).map(hl => Float64Array.from(hl.flat()));
+  for (let y = y0 + step / 2; y < y1; y += step) {
+    for (let x = x0 + step / 2; x < x1; x += step) {
+      if (nearestOnPoly(x, y, tFlat).d > 0 || holes.some(H => nearestOnPoly(x, y, H).d === 0)) continue;
+      const nat = s.elevation + (f ? f(x, y) : 0);
+      const n = nearestOnPoly(x, y, t.flat), z0 = t.zAt(n.x, n.y);
+      let fin;
+      if (n.d === 0) fin = (nat > z0 - t.thick || t.cfg.aterro.ativo) ? z0 - t.thick : nat; // plataforma: fundo do piso
+      else fin = slopedZ(t, nat, n.d, z0);
+      fin = Math.max(fin, zb);
+      const dz = fin - nat;
+      if (dz < 0) { out.corte -= dz * dA; if (n.d > 0) out.corteTalude -= dz * dA; } else if (dz > 0) { out.aterro += dz * dA; if (n.d > 0) out.aterroTalude += dz * dA; }
+    }
+  }
+  return out;
+}
+
 /**
  * Aplica os taludes na geometria de um terreno (coordenadas locais do terreno). Devolve uma geometria nova
  * (subdividida para o perfil aparecer) ou a mesma, se nenhum talude chega nela.
@@ -96,21 +168,7 @@ export function applySlopes(geo, terrainEl, floors) {
   terrainEl.updateMatrixWorld(true);
   const inv = terrainEl.matrixWorld.clone().invert();
   const s = terrainEl.userData.bim.slab, f = slabShapeFn(s);
-  const tops = floors.map(o => {
-    o.updateMatrixWorld(true);
-    const so = o.userData.bim.slab, fo = slabShapeFn(so);
-    const toFloor = o.matrixWorld.clone().invert().multiply(terrainEl.matrixWorld), fromFloor = inv.clone().multiply(o.matrixWorld);
-    const poly = so.points.map(([x, y]) => new THREE.Vector3(x, y, so.elevation).applyMatrix4(fromFloor));
-    const v = new THREE.Vector3();
-    // topo do piso (com as alturas dos pontos) num ponto do terreno (coordenadas locais do terreno)
-    const zAt = (x, y) => {
-      v.set(x, y, 0).applyMatrix4(toFloor);
-      v.z = so.elevation + (fo ? fo(v.x, v.y) : 0);
-      return v.applyMatrix4(fromFloor).z;
-    };
-    const cfg = slopeConfig(so);
-    return { poly: poly.map(p => [p.x, p.y]), zAt, cfg, r: cfg.suavizar ? cfg.raio : 0, thick: so.thickness || 0.15 };
-  });
+  const tops = floors.map(o => floorTop(o, terrainEl, inv));
   const xs = s.points.map(p => p[0]), ys = s.points.map(p => p[1]);
   const size = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
   // malha: fina perto da aresta dos pisos (o talude começa ali), mais grossa longe
@@ -128,7 +186,6 @@ export function applySlopes(geo, terrainEl, floors) {
     t.reach = Math.max(reach(t.cfg.corte, zTop - fmin), reach(t.cfg.aterro, fmax - zLow)) + t.r + 0.5;
   }
   // distância até o contorno (só a conta, sem objetos nem teste de dentro/fora: roda para cada aresta da malha)
-  for (const t of tops) t.flat = Float64Array.from(t.poly.flat());
   const edgeDist = (x, y, F) => {
     let best = Infinity;
     const n = F.length;

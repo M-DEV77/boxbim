@@ -159,6 +159,8 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
   como o Editar parede: nome, tipo, cota do topo e as **linhas do piso** num editor em planta — arrastar pontos
   (Shift trava 0°/90°), clique duplo num lado acrescenta, botão direito/Delete tira, clique num lado mostra e muda o
   comprimento, X/Y do ponto selecionado, **＋ Furo** / **Apagar furo** e **Retângulo**. As alturas dos pontos acompanham.
+- **Nível do piso na vista**: com um piso selecionado, uma etiqueta discreta **▲ cota** aparece embaixo dele, com a
+  cota do topo no projeto. Clique nela, digite e Enter para subir ou descer o piso inteiro (Esc cancela).
 - **Terreno** (opção do piso, em Propriedades › Pontos do piso ou no Editar piso): só a **superfície** se desloca com os
   pontos (o fundo fica plano, abaixo do ponto mais baixo) e os **outros pisos cortam o terreno** — sai o volume do
   contorno deles, do fundo do piso para cima (escavação). O corte acompanha quando o piso se move ou muda.
@@ -174,6 +176,8 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
   **proporção V : H** das instâncias (trechos inclinados), **altura da instância** (0 = talude contínuo) e
   **distância entre instâncias** (berma plana). Recalcula sozinho ao mover ou editar o piso ou o terreno.
   **Material do talude** reveste a superfície do corte e do aterro (grama, pedra…).
+  **Volume de corte** e **Volume de aterro** (m³) aparecem embaixo de cada um. Contam o talude mais a plataforma (sob
+  o piso, até o fundo dele), e entre parênteses só o talude. São recalculados quando o piso ou o terreno muda.
   **Suavizar** (com raio) arredonda a crista, o pé, as bordas das bermas e o encontro com o terreno natural.
   O recálculo do terreno roda em etapas, uma camada por vez, com o "carregando" na tela. A página continua
   respondendo mesmo num terreno grande.
@@ -476,4 +480,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.63.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.64.0</a>
