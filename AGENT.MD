@@ -196,7 +196,8 @@ flowchart LR
 | 2026-10-29 | 2.64.0 | `b63bd46` | Etiqueta de nível do piso selecionado com campo de ajuste (floor-points.js); volumes de corte/aterro do talude em m³ (slopeVolumes em slopes.js) |
 | 2026-10-29 | 2.65.0 | `47109b4` | Talude: restante (corte − aterro, verde/vermelho), metros da caçamba e total de caminhões; slabKey tira a caçamba das assinaturas; "null" nas propriedades do piso |
 | 2026-10-29 | 2.65.1 | `7fe1eaa` | Talude: Total de movimentação (corte + aterro) |
-| 2026-10-29 | 2.65.2 | este commit | Comprimento digitado (grips.setLength → followEnd): a linha ligada acompanha paralela, as do outro lado esticam, arco anda inteiro |
+| 2026-10-29 | 2.65.2 | `6d9e645` | Comprimento digitado (grips.setLength → followEnd): a linha ligada acompanha paralela, as do outro lado esticam, arco anda inteiro |
+| 2026-10-29 | 2.66.0 | este commit | Arame: viewer.wireOnly (viewstyle.js) — pickHit ignora faces e usa _edgeHits (arestas a ~6 px do raio) |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.65.2</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.66.0</a>

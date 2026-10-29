@@ -396,7 +396,7 @@ Em **todas as vistas** (no rodapé, ao lado do status):
 
 | Estilo | Como fica |
 |---|---|
-| Arame | só as linhas, tudo vazado |
+| Arame | só as linhas, tudo vazado; o clique pega só as linhas dos objetos (arestas e linhas 2D), nunca as faces |
 | Projeto | desenho técnico: faces brancas, linhas pretas, fundo de papel, corte cinza |
 | Colorido | uma cor por categoria (Vista › Cores do estilo Colorido…) |
 | Transparente | as cores do Colorido, translúcidas — mostra o que está escondido |
@@ -487,4 +487,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.65.2</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.66.0</a>

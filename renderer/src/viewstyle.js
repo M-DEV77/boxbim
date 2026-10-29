@@ -84,6 +84,7 @@ export class ViewStyles extends EventTarget {
     this.restoreMaterials();
     this.current = style;
     const viewer = this.viewer;
+    viewer.wireOnly = style === 'arame'; // em arame, o clique só pega as linhas dos objetos (viewer.pickHit)
     if (style === 'render') {
       viewer.setEdges(false);
       viewer.capsEnabled = true;

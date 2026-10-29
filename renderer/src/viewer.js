@@ -718,8 +718,13 @@ export class Viewer extends EventTarget {
     const visibleThroughCut = p => this.clipPlanes.every(pl => pl.distanceToPoint(p) >= -1e-4);
     const owner = o => { while (o && !o.userData?.bim && o.parent !== this.model) o = o.parent; return o; };
     let hits = this.raycaster.intersectObject(this.model, true)
-      .filter(h => h.object.visible && (h.object.isMesh || h.object.userData.sketchLine) && visibleThroughCut(h.point))
+      // em ARAME as faces não existem para o clique: só as linhas (arestas dos objetos e linhas 2D)
+      .filter(h => h.object.visible && (this.wireOnly ? h.object.userData.sketchLine : h.object.isMesh || h.object.userData.sketchLine) && visibleThroughCut(h.point))
       .map(h => ({ h, obj: owner(h.object) })).filter(x => x.obj);
+    if (this.wireOnly) {
+      hits.push(...this._edgeHits(x, y, visibleThroughCut).map(h => ({ h, obj: owner(h.object) })).filter(q => q.obj));
+      hits.sort((a, b) => a.h.distance - b.h.distance);
+    }
     // com filtro de seleção (ex.: editando o contorno do piso), o clique atravessa o que não pode ser selecionado
     if (this.selectFilter) hits = hits.filter(x => this.selectFilter(x.obj));
     if (!hits.length) return null;
@@ -728,6 +733,42 @@ export class Viewer extends EventTarget {
     const line = hits.find(x => x.h.object.userData.sketchLine);
     if (line && line !== pick && line.h.distance - pick.h.distance < 0.25) pick = line;
     return { obj: pick.obj, point: pick.h.point.clone() };
+  }
+
+  /**
+   * Arestas dos objetos perto do raio do clique (em arame): até ~6 px na tela. Devolve [{ object, point, distance }]
+   * — object é a malha dona da aresta.
+   */
+  _edgeHits(x, y, visible) {
+    const ray = this.raycaster.ray, persp = !this.camera.isOrthographicCamera;
+    const wpp = this._worldPerPixel(x, y);
+    // tolerância: 6 px; na perspectiva cresce com a distância (6 px valem mais longe)
+    const ref = persp ? ray.origin.distanceTo(this.controls.target) || 1 : 1;
+    const tol = t => wpp * 6 * (persp ? Math.max(t, 1e-3) / ref : 1);
+    const out = [], a = new THREE.Vector3(), b = new THREE.Vector3(), onRay = new THREE.Vector3(), onSeg = new THREE.Vector3();
+    const sphere = new THREE.Sphere();
+    this.model.traverseVisible(o => {
+      const ed = o.userData?.edges;
+      if (!o.isMesh || !ed || !ed.visible) return;
+      const g = ed.geometry, s = g.attributes.instanceStart, en = g.attributes.instanceEnd;
+      if (!s || !en) return;
+      if (!g.boundingSphere) g.computeBoundingSphere();
+      sphere.copy(g.boundingSphere).applyMatrix4(ed.matrixWorld);
+      const tc = Math.max(0, ray.origin.distanceTo(sphere.center) - sphere.radius);
+      if (ray.distanceToPoint(sphere.center) > sphere.radius + tol(tc + 2 * sphere.radius)) return;
+      const m = ed.matrixWorld;
+      let best = null;
+      for (let i = 0; i < s.count; i++) {
+        a.fromBufferAttribute(s, i).applyMatrix4(m); b.fromBufferAttribute(en, i).applyMatrix4(m);
+        const d2 = ray.distanceSqToSegment(a, b, onRay, onSeg);
+        const t = onRay.distanceTo(ray.origin);
+        const tl = tol(t);
+        if (d2 > tl * tl || (best && t >= best.distance) || !visible(onSeg)) continue;
+        best = { object: o, point: onSeg.clone(), distance: t };
+      }
+      if (best) out.push(best);
+    });
+    return out;
   }
 
   /** Metros por pixel perto do ponto da tela (para tolerâncias de clique). */

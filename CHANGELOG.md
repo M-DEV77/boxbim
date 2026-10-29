@@ -6,12 +6,20 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.65.2** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.66.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.66.0] — 2026-10-29 · Arame: seleção só pelas linhas
+
+### Alterado
+- **Estilo Arame**: o clique só pega as **linhas dos objetos** (as arestas desenhadas e as linhas 2D), até ~6 px
+  delas na tela. As faces vazadas não são mais clicáveis: clicar no "vazio" do meio de um objeto não o seleciona, e
+  dá para pegar o que está atrás. Vale para a seleção e para as ferramentas que escolhem um elemento na vista. Nos
+  outros estilos nada muda.
 
 ## [2.65.2] — 2026-10-29 · Cota do contorno leva a linha ligada junto
 
