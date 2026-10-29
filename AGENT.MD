@@ -194,7 +194,8 @@ flowchart LR
 | 2026-10-28 | 2.62.0 | `b0414c7` | Terreno 7,2 s → 2,6 s: limite da subdivisão e perfil do talude sem objetos/por ponto, booleano só perto do piso, creaseEdges numérico; recálculo em etapas (cuts.steps/updateAsync) sem travar a página |
 | 2026-10-28 | 2.63.0 | `b42e660` | Terreno: barra flutuante "▲ Terreno › ＋ Ponto de altura" nos pontos à mostra (floor-points.js) para pontos no meio do terreno |
 | 2026-10-29 | 2.64.0 | `b63bd46` | Etiqueta de nível do piso selecionado com campo de ajuste (floor-points.js); volumes de corte/aterro do talude em m³ (slopeVolumes em slopes.js) |
-| 2026-10-29 | 2.65.0 | este commit | Talude: restante (corte − aterro, verde/vermelho), metros da caçamba e total de caminhões; slabKey tira a caçamba das assinaturas; "null" nas propriedades do piso |
+| 2026-10-29 | 2.65.0 | `47109b4` | Talude: restante (corte − aterro, verde/vermelho), metros da caçamba e total de caminhões; slabKey tira a caçamba das assinaturas; "null" nas propriedades do piso |
+| 2026-10-29 | 2.65.1 | este commit | Talude: Total de movimentação (corte + aterro) |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.65.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.65.1</a>

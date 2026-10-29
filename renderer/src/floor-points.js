@@ -752,7 +752,9 @@ export class FloorPoints {
       h('tr', { title: 'Restante ÷ metros do caminhão (entre parênteses, arredondado para cima: viagens inteiras)' },
         h('td', {}, rest < -0.005 ? 'Total de caminhões faltante' : 'Total de caminhões sobrando'),
         h('td', {}, trucks === null ? h('span', { class: 'muted' }, 'informe os metros do caminhão')
-          : h('output', { class: sinal }, `${fmt1(trucks)} `, h('span', { class: 'muted' }, `(${Math.ceil(trucks - 1e-9)} viagens)`)))));
+          : h('output', { class: sinal }, `${fmt1(trucks)} `, h('span', { class: 'muted' }, `(${Math.ceil(trucks - 1e-9)} viagens)`)))),
+      h('tr', { title: 'Corte + aterro: todo o volume de terra mexido (o que sai mais o que entra)' },
+        h('td', {}, 'Total de movimentação'), h('td', {}, h('output', { class: 'total' }, m3(vol.corte + vol.aterro)))));
   }
 
   /** Volumes de corte e aterro do talude deste piso (somados nos terrenos), guardados até o piso ou o terreno mudar. */

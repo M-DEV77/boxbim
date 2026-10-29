@@ -614,6 +614,7 @@ table.budget tr.muted td { color: var(--muted); }
 .slope-balance output { font-weight: 600; font-variant-numeric: tabular-nums; }
 .slope-balance output.pos { color: #1fbf3b; }
 .slope-balance output.neg { color: #ff4d4d; }
+.slope-balance output.total { color: #dfe5ec; }
 /* nível do piso selecionado (floor-points.js) */
 .floor-level-tag { position: absolute; left: 0; top: 0; z-index: 6; display: flex; align-items: center; gap: 2px; padding: 0 4px;
   font-size: 11px; line-height: 16px; color: #dfe5ec; background: rgba(15, 19, 23, .55); border-radius: 3px; pointer-events: auto; white-space: nowrap; }

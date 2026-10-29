@@ -182,6 +182,7 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
   - **Restante** (corte − aterro): verde se sobra terra, vermelho se falta.
   - **Metros caminhões** (m³ da caçamba).
   - **Total de caminhões sobrando / faltante**: restante ÷ caçamba, com as viagens inteiras entre parênteses.
+  - **Total de movimentação**: corte + aterro, todo o volume de terra mexido.
   **Suavizar** (com raio) arredonda a crista, o pé, as bordas das bermas e o encontro com o terreno natural.
   O recálculo do terreno roda em etapas, uma camada por vez, com o "carregando" na tela. A página continua
   respondendo mesmo num terreno grande.
@@ -484,4 +485,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.65.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.65.1</a>
