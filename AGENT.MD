@@ -213,7 +213,8 @@ flowchart LR
 | 2026-10-29 | 2.67.0 | `1bb808c` | Parede: sem gizmo automático (transform.onSelect); setas cima/baixo/esquerda/direita em grips.js (altura, base, comprimento) |
 | 2026-10-29 | 2.68.0 | `5e249d1` | Geolocalização: Piso do mapa (OSM/Sentinel-2/OpenTopoMap, elevação Terrarium, textura), orientações do projeto e norte por vista, terreno por curvas de nível (DWG/DXF); server/geo.js com cache; slabShapeFn em grade e com cache |
 | 2026-10-29 | 2.69.0 | `b4ce1d4` | Edição do piso: linha guia tracejada com ângulo (floor-sketch.pickGuide); osnap encaixa na guia e nas interseções |
-| 2026-10-29 | 2.70.0 | este commit | Piso: arrimo (retaining.js) — muro por fora dos lados no corte/aterro, lados ligados/desligados na vista; talude não age nos lados com arrimo |
+| 2026-10-29 | 2.70.0 | `8750a12` | Piso: arrimo (retaining.js) — muro por fora dos lados no corte/aterro, lados ligados/desligados na vista; talude não age nos lados com arrimo |
+| 2026-10-29 | 2.71.0 | este commit | Puxar linha: ímã em arestas paralelas (grips.magnet/showMagnet), marcador "paralela" |
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.70.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.71.0</a>

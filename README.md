@@ -101,7 +101,9 @@ Arraste arquivos para a vista 3D ou use **Importar** / **Ctrl+O**.
 - **Edição pelos pontos**: linha, parede ou viga selecionada mostra a cota com a medida e dois pontos nas pontas —
   arraste os pontos (snap e ORTO) ou clique na medida para digitar o comprimento. Nas linhas 2D (inclusive na edição
   do contorno do piso), **pegue a própria linha** (ou o losango do meio) e **puxe**: ela anda paralela a si mesma e as
-  linhas ligadas nas pontas esticam ou encolhem até ela, com os arcos dos cantos indo junto. Nada descola. Arrastar
+  linhas ligadas nas pontas esticam ou encolhem até ela, com os arcos dos cantos indo junto. Nada descola. Com
+  **ímã**: chegando a até 14 px de uma aresta paralela (linha, piso, parede, guia), a linha gruda nela, alinhada, e
+  a aresta acende em laranja. Arrastar
   uma ponta também leva as pontas das linhas ligadas nela. Ao **digitar o comprimento** (na medida ou na cota guia),
   a linha ligada na ponta que anda vai junto, paralela a si mesma, e as do outro lado dela esticam até ela. Assim um
   retângulo continua retângulo e o contorno não abre.
@@ -516,4 +518,4 @@ assets/      ícone
 ```
 
 ---
-<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.70.0</a>
+<a href="https://marceloolimpio.com.br/">BoxHoney By Marcelo Olimpio – Eng. de software v2.71.0</a>

@@ -6,12 +6,22 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 | Componente | Versão atual | Onde aparece |
 |---|---|---|
-| BoxBim (aplicativo) | **2.70.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
+| BoxBim (aplicativo) | **2.71.0** | `package.json`, título da janela, indicador `v…` no canto inferior direito, ⚙ › Sobre |
 | BoxBim Bridge (add-in do Revit 2025) | **1.1.0** | `revit-addin/BoxBimBridge.csproj`, campo `addin` da rota `/status` |
 | Formato de Objeto (`.bbo`) | **1** | campo `version` de cada arquivo `.bbo` (a revisão de cada objeto fica em `revision`) |
 | Formato de tipos (`tipos.json`) | **1** | campo `version` de `Documentos\BoxBim\tipos.json` |
 
 ---
+
+## [2.71.0] — 2026-10-29 · Ímã ao puxar a linha
+
+### Adicionado
+- **Encaixe magnético ao puxar uma linha** (edição do piso e linhas 2D): perto de uma **aresta paralela**, até 14 px
+  na tela, a linha gruda nela e fica alinhada.
+  - Vale para linhas, lados de outros pisos, paredes, vigas e linhas guia.
+  - A aresta acende em **laranja** e o marcador mostra "paralela" (duas barras).
+  - O encaixe em ponta ou meio sob o cursor continua tendo prioridade. Longe de tudo, o passo é de 1 cm.
+  - Só conta uma aresta que fica ao lado da linha: a projeção dela tem que encostar no trecho da linha, com folga.
 
 ## [2.70.0] — 2026-10-29 · Arrimo no piso
 

@@ -20,6 +20,7 @@ import { snapSegments, snapPick, showSnapMarker } from './osnap.js';
 const SVGNS = 'http://www.w3.org/2000/svg';
 const SNAP_PX = 12;
 const JOIN = 0.005; // pontas a menos de 5 mm estão ligadas
+const MAGNET_MAT = new THREE.LineBasicMaterial({ color: 0xff9f1a, depthTest: false, transparent: true, opacity: 0.95 });
 const GRID = 0.01;
 const fmtM = v => fmtLen(v);
 const svg = (tag, attrs = {}) => { const e = document.createElementNS(SVGNS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
@@ -426,8 +427,15 @@ export class Grips {
     if (Math.abs(d.plane.normal.z) > 0.999) {
       const toS = q => { const s = this.screen(new THREE.Vector3(q[0], q[1], hit.z)); return [s.cx, s.cy]; };
       const except = [d.el, ...d.links.flat().flatMap(l => [l.el, ...l.next.map(x => x.el)])];
-      const best = snapPick({ segs: snapSegments(this.app, { except }), toScreen: toS, cursor: [e.clientX, e.clientY] });
-      if (best) { const q = d.toData(new THREE.Vector3(best.p[0], best.p[1], hit.z)); t = (q[0] - d.A0[0]) * n[0] + (q[1] - d.A0[1]) * n[1]; kind = best.kind; }
+      const segs = snapSegments(this.app, { except });
+      const best = snapPick({ segs, toScreen: toS, cursor: [e.clientX, e.clientY] });
+      if (best) { const q = d.toData(new THREE.Vector3(best.p[0], best.p[1], hit.z)); t = (q[0] - d.A0[0]) * n[0] + (q[1] - d.A0[1]) * n[1]; kind = best.kind; this.showMagnet(null); }
+      else {
+        // ÍMÃ: perto (até 14 px) de uma aresta paralela, a linha gruda nela (alinhada) — a aresta acende em laranja
+        const mag = this.magnet(segs, t, hit.z, e);
+        if (mag) { t = mag.t; kind = 'paralela'; }
+        this.showMagnet(mag?.seg || null, hit.z);
+      }
     }
     if (!kind) t = Math.round(t / GRID) * GRID;
     this.applyPull(t);
@@ -441,9 +449,44 @@ export class Grips {
     this.tip.hidden = false;
   }
 
+  /**
+   * Aresta paralela mais perto da posição t (distância perpendicular, em px na tela) da linha puxada: { t, seg } ou
+   * null. Só as que ficam ao lado da linha (a projeção delas encosta na faixa da linha, com folga).
+   */
+  magnet(segs, t, z, e) {
+    const d = this.drag, n = d.n, ux = -n[1], uy = n[0]; // u = direção da linha
+    const L = Math.hypot(d.B0[0] - d.A0[0], d.B0[1] - d.A0[1]);
+    const wpp = this.viewer._worldPerPixel(e.clientX, e.clientY);
+    let best = null, gap = 14;
+    for (const s of segs) {
+      if (s.arc) continue;
+      const a = d.toData(new THREE.Vector3(s.a[0], s.a[1], z)), b = d.toData(new THREE.Vector3(s.b[0], s.b[1], z));
+      const sx = b[0] - a[0], sy = b[1] - a[1], sl = Math.hypot(sx, sy);
+      if (sl < 1e-6 || Math.abs(sx * n[0] + sy * n[1]) / sl > Math.sin(2 * Math.PI / 180)) continue; // não é paralela
+      const ts = (a[0] - d.A0[0]) * n[0] + (a[1] - d.A0[1]) * n[1];
+      // ao lado da linha: a projeção ao longo dela encosta em [−L, 2L] (a partir de A0)
+      const pa = (a[0] - d.A0[0]) * ux + (a[1] - d.A0[1]) * uy, pb = (b[0] - d.A0[0]) * ux + (b[1] - d.A0[1]) * uy;
+      if (Math.max(pa, pb) < -L || Math.min(pa, pb) > 2 * L) continue;
+      const g = Math.abs(ts - t) / wpp;
+      if (g < gap) { gap = g; best = { t: ts, seg: s }; }
+    }
+    return best;
+  }
+
+  /** Acende (em laranja, por cima) a aresta em que a linha grudou. */
+  showMagnet(seg, z) {
+    if (this._mag) { this.viewer.overlay.remove(this._mag); this._mag.geometry.dispose(); this._mag = null; }
+    if (!seg) return;
+    const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(seg.a[0], seg.a[1], z + 0.01), new THREE.Vector3(seg.b[0], seg.b[1], z + 0.01)]);
+    this._mag = new THREE.Line(g, MAGNET_MAT);
+    this._mag.renderOrder = 1001;
+    this.viewer.overlay.add(this._mag);
+  }
+
   endDrag() {
     const d = this.drag;
     if (!d) return;
+    this.showMagnet(null);
     this.drag = null;
     this.viewer.controls.enabled = true;
     this.tip.hidden = true; this.marker.hidden = true;

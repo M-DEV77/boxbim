@@ -622,6 +622,9 @@ table.budget tr.muted td { color: var(--muted); }
 .guide-angle:focus { border-color: #2f9bff; outline: none; }
 .guide-deg { margin-left: -4px; font-size: 11px; opacity: .6; }
 .snap-marker[data-kind="guia"] { border-style: dashed; }
+.snap-marker[data-kind="paralela"] { border: 0; background: none; width: 16px; height: 14px; margin: -7px 0 0 -8px; }
+.snap-marker[data-kind="paralela"]::before, .snap-marker[data-kind="paralela"]::after { content: ''; position: absolute; left: 0; width: 16px; height: 2px; background: #ff9f1a; top: 3px; }
+.snap-marker[data-kind="paralela"]::after { top: 9px; }
 .snap-marker[data-kind="intersecao"] { border: 0; background: none; width: 14px; height: 14px; margin: -7px 0 0 -7px; }
 .snap-marker[data-kind="intersecao"]::before, .snap-marker[data-kind="intersecao"]::after { content: ''; position: absolute; left: 6px; top: -1px; width: 2px; height: 16px; background: #ff9f1a; transform: rotate(45deg); }
 .snap-marker[data-kind="intersecao"]::after { transform: rotate(-45deg); }
